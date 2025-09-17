@@ -301,8 +301,41 @@ class CartItem(models.Model):
     
     def __str__(self):
         return f" Cart Items {self.product.name}"
-    
+
+
+
+# --------------------------
+#  Shipping Address
+# -------------------------
+class ShippingAddress(models.Model):
+    pass
     
 # ------------------------
 #  Order
 # -----------------------
+class Order(models.Model):
+    STATUS_CHOICES=(
+        ('pending','Pending'),
+        ('processing','Processing'),
+        ('shipped','Shipped'),
+        ('delivered','Delivered'),
+        ('cancelled','Cancelled')
+    )
+
+    user=models.ForeignKey(User,on_delete=models.CASCADE)
+    product=models.ForeignKey(Product,on_delete=models.CASCADE)
+    quantity=models.PositiveIntegerField(default=1)
+    total_price=models.DecimalField(max_digits=10,decimal_places=2)
+    status=models.CharField(max_length=50,choices=STATUS_CHOICES,default='pending')
+    payment_method=models.CharField(max_length=100 ,null=True,blank=True)
+    shipping_address=models.ForeignKey(ShippingAddress,on_delete=models.CASCADE)
+    order_at=models.DateTimeField(auto_now_add=True)
+    
+    
+    def calculate_total(self):
+        total
+    
+    
+    # ===== Here whne status is delivedred or shipped remove the product from database or make inactive ========= )
+    # ======== See webiste that  i medtioned in note file =================
+    # ====== 
