@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Your modern ecommerce store for quality products">
+  <meta name="theme-color" content="#bd5e00ff">
+  <title>{% block title %}Modern Ecommerce{% endblock %}</title>
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="/static/favicon.png">
+
+  <!-- External CSS Libraries -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
+
+  <!-- Tailwind (Browser Build) -->
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Theme Styles -->
+  <style>
+    :root {
+      /* Primary Colors */
+      --primary: #FF7F00;
+      --primary-light: #FFA64D;
+      --primary-dark: #CC6600;
+      --secondary: #2B3467;
+      --accent: #FFD700;
+
+      /* Background Colors */
+      --bg-light: #fff8f0;
+      --bg-dark: #1a1a1a;
+      --bg-brown: #735120;
+
+      /* Text Colors */
+      --text-primary: #333333;
+      --text-secondary: #666666;
+      --text-light: #ffffff;
+      --text-muted: #7a7a7a;
+
+      /* Status Colors */
+      --success: #2ecc71;
+      --warning: #f1c40f;
+      --error: #e74c3c;
+      --info: #3498db;
+
+      /* Shadows */
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.12);
+      --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+      --shadow-lg: 0 10px 15px rgba(0,0,0,0.1);
+    }
+
+    /* Typography */
+    h1, h2, h3, h4, h5, h6 {
+      font-family: 'Poppins', sans-serif;
+    }
+    body, p, span, li, button, input {
+      font-family: 'Inter', sans-serif;
+    }
+
+    /* Buttons */
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.5rem;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+    .btn-primary {
+      background-color: var(--primary);
+      color: var(--text-light);
+      box-shadow: var(--shadow-sm);
+    }
+    .btn-primary:hover {
+      background-color: var(--primary-dark);
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-md);
+    }
+
+    /* Card */
+    .card {
+      background: white;
+      border-radius: 1rem;
+      box-shadow: var(--shadow-md);
+      transition: transform 0.3s ease;
+    }
+    .card:hover {
+      transform: translateY(-5px);
+    }
+
+    /* Animations */
+    .fade-in {
+      animation: fadeIn 0.5s ease-in;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+  </style>
+
+  {% block extra_head %}{% endblock %}
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <!-- Loading Overlay -->
+  <div id="loading-overlay" class="fixed inset-0 bg-white z-50 flex items-center justify-center hidden">
+    <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-primary"></div>
+  </div>
+
+  <!-- Navbar -->
+  {% include 'website/components/navbar.html' %}
+
+  <!-- Main Content -->
+  <main class="lg:mt-28 mt-8 flex-grow container mx-auto px-4 py-8">
+    {% if messages %}
+      <div class="messages space-y-2">
+        {% for message in messages %}
+          <div class="alert alert-{{ message.tags }} p-4 rounded-lg shadow-md fade-in">
+            {{ message }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Footer -->
+  {% include 'website/components/footer.html' %}
+
+  <!-- External JS Libraries -->
+  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.7.12/sweetalert2.all.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+
+  <!-- Base JS -->
+  <script>
+    // Loading overlay helpers
+    function showLoading() {
+      document.getElementById('loading-overlay').classList.remove('hidden');
+    }
+    function hideLoading() {
+      document.getElementById('loading-overlay').classList.add('hidden');
+    }
+
+    // Global AJAX setup with SweetAlert error handling
+    $.ajaxSetup({
+      beforeSend: function() { showLoading(); },
+      complete: function() { hideLoading(); },
+      error: function(xhr, status, error) {
+        Swal.fire('Error', 'Something went wrong!', 'error');
+      }
+    });
+  </script>
+
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

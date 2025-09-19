@@ -1,0 +1,118 @@
+<!-- Top Bar (Desktop Only) -->
+<div id="top-bar" class="hidden lg:flex fixed top-0 left-0 right-0 bg-[var(--bg-brown)] text-[var(--text-light)] text-sm z-50 shadow-md transition-all duration-300">
+  <div class="container mx-auto flex justify-between items-center px-4 py-2">
+    <p>Welcome to Miteri Mart</p>
+    <p>
+      Need help? Call Us:
+      <a href="tel:+61430967789" class="hover:text-[var(--primary)] font-medium">+61 430 967 789</a>
+    </p>
+    <ul class="hidden md:flex space-x-4">
+      <li><a href="#" class="hover:text-[var(--primary)] transition">FAQS</a></li>
+      <li><a href="#" class="hover:text-[var(--primary)] transition">Blog</a></li>
+      <li><a href="#" class="hover:text-[var(--primary)] transition">Contact</a></li>
+    </ul>
+  </div>
+</div>
+
+<!-- Main Header -->
+<header id="main-header" class="bg-white shadow-lg fixed top-9 lg:top-9 left-0 right-0 z-50 transition-all duration-300">
+  <div class="hidden  mx-auto lg:flex  lg:flex-col lg:flex-row items-center justify-between px-4 py-3 lg:py-4 space-y-4 lg:space-y-0">
+
+    <!-- Logo -->
+    <a href="#" class="flex-shrink-0">
+      <img src="https://miterimart.com.au/storage/logos/SsuLCBRVmQBygoKXIQUHenxnUDwT0lC6pwYPCF5v.png" alt="Miteri" class="h-12">
+    </a>
+
+    <!-- Desktop Categories Dropdown -->
+    <div class="hidden lg:block relative group w-full lg:w-auto">
+      <button class="flex items-center justify-between w-full lg:w-auto px-4 py-2 bg-gray-100 text-gray-900 rounded shadow-sm hover:bg-[var(--bg-brown)] hover:text-white transition-colors">
+        <div class="flex items-center space-x-2">
+          <i class="fa-solid fa-bars h-5 w-5"></i>
+          <span>Shop by Departments</span>
+        </div>
+        <i class="fa-solid fa-chevron-down text-sm"></i>
+      </button>
+      <ul class="absolute top-full left-0 bg-white shadow-xl rounded w-full lg:w-64 mt-1 hidden group-hover:block z-50">
+        <li class="flex items-center px-4 py-2 hover:bg-gray-50 space-x-2 transition">
+          <i class="fa-solid fa-seedling text-[var(--primary)]"></i>
+          <span>Lentils & Beans</span>
+        </li>
+        <li class="flex items-center px-4 py-2 hover:bg-gray-50 space-x-2 transition">
+          <i class="fa-solid fa-leaf text-[var(--primary)]"></i>
+          <span>Spices & Herbs</span>
+        </li>
+        <li class="flex items-center px-4 py-2 hover:bg-gray-50 space-x-2 transition">
+          <i class="fa-solid fa-bottle-droplet text-[var(--primary)]"></i>
+          <span>Pickles / Sauce</span>
+        </li>
+        <li class="flex items-center px-4 py-2 hover:bg-gray-50 space-x-2 transition">
+          <i class="fa-solid fa-oil-can text-[var(--primary)]"></i>
+          <span>Oil & Ghee</span>
+        </li>
+        <li class="flex items-center px-4 py-2 hover:bg-gray-50 space-x-2 transition">
+          <i class="fa-solid fa-cookie text-[var(--primary)]"></i>
+          <span>Snacks & Biscuits</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Desktop Search -->
+    <form class="hidden lg:flex flex-1 max-w-xl w-full shadow-sm rounded overflow-hidden">
+      <input type="text" placeholder="Search for products" class="flex-1 px-4 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] rounded-l">
+      <button type="submit" class="px-4 bg-[var(--bg-brown)] text-white rounded-r hover:bg-[var(--bg-dark)] transition-colors flex items-center justify-center">
+        <i class="fa-solid fa-magnifying-glass"></i>
+      </button>
+    </form>
+
+    <!-- Desktop Account & Cart -->
+    <div class="hidden lg:flex items-center space-x-3">
+      <a href="#" class="border-2 border-gray-300 rounded-lg p-2 flex items-center space-x-1 bg-white text-gray-900 hover:bg-[var(--bg-brown)] hover:text-white transition shadow-sm">
+        <i class="fa-regular fa-user"></i>
+        <span>Account</span>
+      </a>
+      <a href="#" class="relative border-2 border-gray-300 rounded-lg p-2 flex items-center space-x-1 bg-white text-gray-900 hover:bg-[var(--bg-brown)] hover:text-white transition shadow-sm">
+        <i class="fa-solid fa-cart-shopping"></i>
+        <span>My Cart</span>
+        <span class="absolute -top-2 -right-2 w-5 h-5 bg-[var(--primary)] text-black text-xs rounded-full flex items-center justify-center">0</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Desktop Nav Menu -->
+  <nav class="hidden lg:flex justify-center container mx-auto px-4 py-2 space-x-6 items-center bg-[var(--bg-light)] shadow-inner">
+    <a href="#" class="text-[var(--text-secondary)] hover:text-[var(--primary)] font-medium transition">Home</a>
+    <a href="#" class="text-[var(--text-secondary)] hover:text-[var(--primary)] font-medium transition">All Collections</a>
+    <a href="#" class="text-[var(--text-secondary)] hover:text-[var(--primary)] font-medium transition">Flash Sales</a>
+    <a href="#" class="text-[var(--text-secondary)] hover:text-[var(--primary)] font-medium transition">Nepali Products</a>
+    <a href="#" class="text-[var(--text-secondary)] hover:text-[var(--primary)] font-medium transition">New Arrivals</a>
+  </nav>
+</header>
+
+<!-- Mobile Header -->
+<div class="lg:hidden fixed top-0 left-0 right-0 bg-white shadow-lg z-50">
+  <div class="container mx-auto px-4 py-2 flex items-center justify-between">
+    
+    <!-- Logo -->
+    <a href="#" class="flex-none">
+      <img src="https://miterimart.com.au/storage/logos/SsuLCBRVmQBygoKXIQUHenxnUDwT0lC6pwYPCF5v.png" alt="Miteri" class="h-10">
+    </a>
+
+    <!-- Search Bar -->
+    <form class="flex-1 mx-2">
+      <input type="text" placeholder="Search..." class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[var(--primary)] text-sm shadow-sm">
+    </form>
+
+    <!-- Account & Cart Icons -->
+    <div class="flex items-center space-x-2 flex-none">
+      <a href="#" class="p-2 text-gray-900 hover:bg-[var(--bg-brown)] hover:text-white rounded transition-colors shadow-sm">
+        <i class="fa-regular fa-user text-xl"></i>
+      </a>
+      <a href="#" class="relative p-2 text-gray-900 hover:bg-[var(--bg-brown)] hover:text-white rounded transition-colors shadow-sm">
+        <i class="fa-solid fa-cart-shopping text-xl"></i>
+        <span class="absolute -top-1 -right-1 w-4 h-4 bg-[var(--primary)] text-black text-xs rounded-full flex items-center justify-center">0</span>
+      </a>
+    </div>
+    
+  </div>
+</div>
+

@@ -11,7 +11,7 @@ import os
 # User & Vendor Models
 # ----------------------
 class UserManager(BaseUserManager):
-    def create_user(self, email, full_name, phone_number, gender=None, dob=None, password=None, **extra_fields):
+    def create_user(self, email, full_name,gender, phone_number=None, dob=None, password=None, **extra_fields):
         if not email:
             raise ValueError('User must have an email address')
         email = self.normalize_email(email)
@@ -27,10 +27,10 @@ class UserManager(BaseUserManager):
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, email, full_name, phone_number, gender, password=None, **extra_fields):
+    def create_superuser(self, email, full_name,gender, password=None, **extra_fields):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
-        return self.create_user(email, full_name, phone_number, gender, password=password, **extra_fields)
+        return self.create_user(email, full_name, gender, password=password, **extra_fields)
 
 
 class User(AbstractBaseUser, PermissionsMixin):
@@ -39,9 +39,9 @@ class User(AbstractBaseUser, PermissionsMixin):
         ('female', 'Female'),
         ('other', 'Other')
     )
-    email = models.EmailField(unique=True, db_index=True)
+    email = models.EmailField(unique=True, db_index=True,null=True,blank=True)
     full_name = models.CharField(max_length=255)
-    phone_number = models.CharField(max_length=20, db_index=True)
+    phone_number = models.CharField(max_length=20, db_index=True,null=True,blank=True)
     dob = models.DateField(null=True)
     gender = models.CharField(max_length=10, choices=GENDER_CHOICES)
     is_active = models.BooleanField(default=True)
@@ -164,25 +164,31 @@ class FlashSale(models.Model):
         return self.is_active and self.start_time <= now <= self.end_time
 
 
-
-class ShippingOption(models.Model):
-    """Delivery options for products"""
-    name = models.CharField(max_length=100)  # e.g., Standard Delivery, Express Delivery
-    estimated_days = models.PositiveIntegerField(default=3)  # delivery estimate in days
-    price = models.PositiveIntegerField(default=0)  # shipping fee
-    cash_on_delivery = models.BooleanField(default=True)  # COD available
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def estimated_date_range(self):
-        """Return estimated delivery date range"""
-        start_date = timezone.now().date() + timedelta(days=self.estimated_days)
-        end_date = start_date + timedelta(days=1)  # e.g., 1-day window
-        return f"{start_date.strftime('%d-%b')} – {end_date.strftime('%d-%b')}"
-
+# -----------------
+#  Banner
+# -------------------
+class Banner(models.Model):
+    title=models.CharField(max_length=255,blank=True,null=True)
+    image=models.ImageField(upload_to='banners/')
+    link=models.URLField(blank=True,null=True)
+    is_active=models.DateTimeField(auto_now_add=True)
+    
+    def delete(self,*args,**kwargs):
+        if self.image:
+            os.remove(self.image.path)
+        super().save(*args,**kwargs)
+        
+    
     def __str__(self):
-        return f"{self.name} - Rs. {self.price}"
+        return self.title or f"Banner {self.id}"
+    
 
+    
+        
 
+# --------------------
+# Shipping Option
+# ---------------------
 
 class ShippingOption(models.Model):
     """Delivery options for products"""
@@ -249,7 +255,9 @@ class Product(models.Model):
     def __str__(self):
         return self.name
 
-
+# ------------------
+#  Product Image
+# -------------------
 class ProductImage(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='images')
     image = models.ImageField(upload_to='products/')
@@ -266,7 +274,9 @@ class ProductImage(models.Model):
         return f"{self.product.name} Image"
 
 
-
+# ------------------
+#  Cart
+# -------------------
 class Cart(models.Model):
     user=models.ForeignKey(User,on_delete=models.CASCADE)
     created_at=models.DateTimeField(auto_now_add=True)
@@ -283,6 +293,10 @@ class Cart(models.Model):
     def __str__(self):
         return f" Cart {self.user.full_name} "
     
+
+#-------------------
+#  Cart Items
+# ------------------ 
 class CartItem(models.Model):
     cart=models.ForeignKey(Cart,on_delete=models.CASCADE,related_name='cart_items')
     product=models.ForeignKey(Product,on_delete=models.CASCADE)
@@ -308,7 +322,29 @@ class CartItem(models.Model):
 #  Shipping Address
 # -------------------------
 class ShippingAddress(models.Model):
-    pass
+    STATE_CHOICES = (
+        ('bagmati', 'Bagmati'),
+        ('gandaki', 'Gandaki'),
+        ('karnali', 'Karnali'),
+        ('lumbini', 'Lumbini'),
+        ('madhesh', 'Madhesh'),
+        ('province1', 'Province 1'),
+        ('sudurpaschim', 'Sudurpaschim')
+    )
+    country=models.CharField(max_length=50,default="Nepal")
+    state = models.CharField(max_length=50, choices=STATE_CHOICES)
+    user=models.ForeignKey(User,on_delete=models.CASCADE)
+    address_line1=models.CharField(max_length=255)
+    address_line2=models.CharField(max_length=255)
+    city=models.CharField(max_length=100)
+    state=models.CharField(max_length=50,choices=STATE_CHOICES)
+    created_at=models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"{self.user.full_name} -{self.address_line1}"
+    
+    
+    
     
 # ------------------------
 #  Order
@@ -325,17 +361,34 @@ class Order(models.Model):
     user=models.ForeignKey(User,on_delete=models.CASCADE)
     product=models.ForeignKey(Product,on_delete=models.CASCADE)
     quantity=models.PositiveIntegerField(default=1)
-    total_price=models.DecimalField(max_digits=10,decimal_places=2)
+    total_price=models.DecimalField(max_digits=10,decimal_places=2,default=0.00)
     status=models.CharField(max_length=50,choices=STATUS_CHOICES,default='pending')
     payment_method=models.CharField(max_length=100 ,null=True,blank=True)
     shipping_address=models.ForeignKey(ShippingAddress,on_delete=models.CASCADE)
     order_at=models.DateTimeField(auto_now_add=True)
     
+    def save(self,*args,**kwargs):
+        if self.product.sales_price< self.product.price:
+            self.total_price=self.product.sales_price * self.quantity
+        else:
+            self.total_price=self.product.price * self.quantity
+        super().save(*args,**kwargs)
+            
+        if self.status in ['delivered']:
+            if self.product.quantity>=self.quantity:
+                self.product.quantity -= self.quantity
+                self.product.save()
+        
+        
+        
+        
+        
     
-    def calculate_total(self):
-        total
+
     
     
     # ===== Here whne status is delivedred or shipped remove the product from database or make inactive ========= )
     # ======== See webiste that  i medtioned in note file =================
-    # ====== 
+    # ======= Crate  a tags like New Arrivalsand others
+    #======== Create a banner from differnt section in home page =============
+    
