@@ -14,6 +14,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
 
   <!-- Tailwind (Browser Build) -->
   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
@@ -24,82 +25,29 @@
   <!-- Theme Styles -->
   <style>
     :root {
-      /* Primary Colors */
       --primary: #FF7F00;
-      --primary-light: #FFA64D;
       --primary-dark: #CC6600;
-      --secondary: #2B3467;
-      --accent: #FFD700;
-
-      /* Background Colors */
-      --bg-light: #fff8f0;
-      --bg-dark: #1a1a1a;
-      --bg-brown: #735120;
-
-      /* Text Colors */
+      --bg-brown: #8B4513;
+      --text-light: #ffffff;
       --text-primary: #333333;
       --text-secondary: #666666;
-      --text-light: #ffffff;
-      --text-muted: #7a7a7a;
-
-      /* Status Colors */
+      --bg-light: #fff8f0;
       --success: #2ecc71;
-      --warning: #f1c40f;
-      --error: #e74c3c;
-      --info: #3498db;
-
-      /* Shadows */
       --shadow-sm: 0 1px 3px rgba(0,0,0,0.12);
       --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
-      --shadow-lg: 0 10px 15px rgba(0,0,0,0.1);
     }
 
-    /* Typography */
-    h1, h2, h3, h4, h5, h6 {
-      font-family: 'Poppins', sans-serif;
-    }
     body, p, span, li, button, input {
       font-family: 'Inter', sans-serif;
     }
+    h1,h2,h3,h4,h5,h6 { font-family: 'Poppins', sans-serif; }
 
-    /* Buttons */
-    .btn {
-      padding: 0.75rem 1.5rem;
-      border-radius: 0.5rem;
-      font-weight: 600;
-      transition: all 0.3s ease;
-      cursor: pointer;
-    }
-    .btn-primary {
-      background-color: var(--primary);
-      color: var(--text-light);
-      box-shadow: var(--shadow-sm);
-    }
-    .btn-primary:hover {
-      background-color: var(--primary-dark);
-      transform: translateY(-1px);
-      box-shadow: var(--shadow-md);
-    }
+    .btn { padding: 0.75rem 1.5rem; border-radius: 0.5rem; font-weight: 600; transition: all 0.3s ease; cursor: pointer; }
+    .btn-primary { background-color: var(--primary); color: var(--text-light); box-shadow: var(--shadow-sm); }
+    .btn-primary:hover { background-color: var(--primary-dark); transform: translateY(-1px); box-shadow: var(--shadow-md); }
 
-    /* Card */
-    .card {
-      background: white;
-      border-radius: 1rem;
-      box-shadow: var(--shadow-md);
-      transition: transform 0.3s ease;
-    }
-    .card:hover {
-      transform: translateY(-5px);
-    }
-
-    /* Animations */
-    .fade-in {
-      animation: fadeIn 0.5s ease-in;
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
+    .fade-in { animation: fadeIn 0.5s ease-in; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
   </style>
 
   {% block extra_head %}{% endblock %}
@@ -116,16 +64,6 @@
 
   <!-- Main Content -->
   <main class="lg:mt-28 mt-8 flex-grow container mx-auto px-4 py-8">
-    {% if messages %}
-      <div class="messages space-y-2">
-        {% for message in messages %}
-          <div class="alert alert-{{ message.tags }} p-4 rounded-lg shadow-md fade-in">
-            {{ message }}
-          </div>
-        {% endfor %}
-      </div>
-    {% endif %}
-
     {% block content %}{% endblock %}
   </main>
 
@@ -134,21 +72,19 @@
 
   <!-- External JS Libraries -->
   <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.7.12/sweetalert2.all.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 
   <!-- Base JS -->
   <script>
-    // Loading overlay helpers
-    function showLoading() {
-      document.getElementById('loading-overlay').classList.remove('hidden');
-    }
-    function hideLoading() {
-      document.getElementById('loading-overlay').classList.add('hidden');
-    }
+    // -------------------------------
+    // Loading overlay
+    // -------------------------------
+    function showLoading() { $('#loading-overlay').removeClass('hidden'); }
+    function hideLoading() { $('#loading-overlay').addClass('hidden'); }
 
-    // Global AJAX setup with SweetAlert error handling
     $.ajaxSetup({
       beforeSend: function() { showLoading(); },
       complete: function() { hideLoading(); },
@@ -156,6 +92,86 @@
         Swal.fire('Error', 'Something went wrong!', 'error');
       }
     });
+
+    // -------------------------------
+    // Cart Badge + Add to Cart Button
+    // -------------------------------
+    $(document).ready(function() {
+      let cartCount = 0;
+
+      // Quantity controls
+      $(document).on('click', '.increaseQty', function() {
+        let $input = $(this).siblings('.qtyInput');
+        $input.val((parseInt($input.val())||1)+1);
+      });
+
+      $(document).on('click', '.decreaseQty', function() {
+        let $input = $(this).siblings('.qtyInput');
+        let val = parseInt($input.val())||1;
+        if(val>1) $input.val(val-1);
+      });
+
+      // Add to cart
+      $(document).on('click', '.btn-primary.add-to-cart', function() {
+        let $card = $(this).closest('.product-card');
+        let qty = parseInt($card.find('.qtyInput').val()) || 1;
+        let productName = $card.find('h3').text();
+
+        cartCount += qty;
+        $('#desktopCartBadge').text(cartCount);
+        $('#mobileCartBadge').text(cartCount);
+
+        toastr.options = {
+          "closeButton": true,
+          "progressBar": true,
+          "positionClass": "toast-top-right",
+          "timeOut": "3000"
+        };
+        toastr.success(qty + " × " + productName + " added to cart!");
+      });
+
+      // Scroll Hide/Show Navbar
+      let lastScrollY = $(window).scrollTop();
+      const $topBar = $('#top-bar');
+      const $mainHeader = $('#main-header');
+      $topBar.css('transition','transform 0.3s ease');
+      $mainHeader.css('transition','transform 0.3s ease');
+
+      $(window).on('scroll', function() {
+        let currentScroll = $(this).scrollTop();
+        if(currentScroll > lastScrollY && currentScroll > 50) {
+          $topBar.css('transform','translateY(-100%)');
+          $mainHeader.css('transform','translateY(-100%)');
+        } else {
+          $topBar.css('transform','translateY(0)');
+          $mainHeader.css('transform','translateY(0)');
+        }
+        lastScrollY = currentScroll;
+      });
+    });
+
+    // -------------------------------
+    // Backend Messages as Toastr
+    // -------------------------------
+    {% if messages %}
+      {% for message in messages %}
+        toastr.options = {
+          "closeButton": true,
+          "progressBar": true,
+          "positionClass": "toast-top-right",
+          "timeOut": "3000"
+        };
+        {% if message.tags == 'success' %}
+          toastr.success("{{ message|escapejs }}");
+        {% elif message.tags == 'error' %}
+          toastr.error("{{ message|escapejs }}");
+        {% elif message.tags == 'warning' %}
+          toastr.warning("{{ message|escapejs }}");
+        {% else %}
+          toastr.info("{{ message|escapejs }}");
+        {% endif %}
+      {% endfor %}
+    {% endif %}
   </script>
 
   {% block extra_js %}{% endblock %}

@@ -391,4 +391,7 @@ class Order(models.Model):
     # ======== See webiste that  i medtioned in note file =================
     # ======= Crate  a tags like New Arrivalsand others
     #======== Create a banner from differnt section in home page =============
+    # =====  In category after the banner in home page show top 6 most sales list of category ========
+    # ======== In featured products add Load more ================
+    # ======think needed to add top vendor of feature vendor in home page ===========
     

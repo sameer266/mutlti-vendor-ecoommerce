@@ -1,0 +1,299 @@
+{% extends 'website/components/base.html' %}
+
+{% block title %}All Collections{% endblock %}
+
+{% block content %}
+
+<div class="container mx-auto px-4 py-8">
+
+  <div class="flex flex-col lg:flex-row gap-8">
+
+    <!-- Sidebar -->
+    <aside class="lg:w-1/5 w-full order-2 lg:order-1">
+      {% include 'website/components/sidebar.html' %}
+    </aside>
+
+    <!-- Products Section -->
+    <section class="lg:w-3/4 w-full order-1 lg:order-2">
+      
+      <!-- Page Header -->
+      <div class="mb-6 flex items-center justify-between">
+         <h1 class="text-2xl sm:text-3xl font-extrabold text-[var(--text-primary)] inline-block relative pb-2">
+      Featured Products
+      <span class="absolute left-0 bottom-0 w-20 h-1 bg-[var(--bg-brown)] rounded-full"></span>
+    </h1>
+      <div class="flex items-center space-x-2 text-sm">
+  <label for="sort" class="text-gray-600 font-medium">Sort by:</label>
+  <select id="sort" class="border border-gray-300 rounded px-3 py-1 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] transition">
+    <option value="latest">Latest</option>
+    <option value="price-low">Price: Low to High</option>
+    <option value="price-high">Price: High to Low</option>
+  </select>
+</div>
+
+      </div>
+
+<!-- Products Grid -->
+<div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+
+  <!-- Product Card -->
+      <div class="product-card relative bg-gray-100 rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 w-full max-w-[250px] mx-auto">
+    <!-- Product Image -->
+    <a href="#" class="block relative group bg-white rounded-xl m-2">
+      <img src="https://miterimart.com.au/storage/products/featured/FXRhSV3nmUMK8BjTfYt9btYVTE36MhMm8VWDEWzN.jpg"
+        alt="Product 1"
+        class="w-full h-48 sm:h-56 md:h-60 object-contain rounded-xl transition-transform duration-300 group-hover:scale-105">
+
+      <!-- Discount Tag -->
+      <div class="absolute top-2 left-2 flex flex-col items-center z-20">
+        <i class="fa-solid fa-bookmark text-5xl text-yellow-500"></i>
+        <span class="-mt-9 text-xs sm:text-xs font-bold text-[var(--text-primary)] text-center leading-tight">20%<br>OFF</span>
+      </div>
+
+      <!-- Hover Overlay -->
+      <div class="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-2 sm:gap-3 transition-opacity duration-300 rounded-xl">
+        <button class="p-2 sm:p-3 bg-[var(--bg-brown)] text-white rounded-full shadow-md hover:bg-[var(--primary)] transition cursor-pointer">
+          <i class="fa-regular fa-heart text-sm sm:text-base"></i>
+        </button>
+        <button class="p-2 sm:p-3 bg-[var(--bg-brown)] text-white rounded-full shadow-md hover:bg-[var(--primary)] transition cursor-pointer">
+          <i class="fa-regular fa-eye text-sm sm:text-base"></i>
+        </button>
+      </div>
+    </a>
+
+    <!-- Product Info -->
+    <section class="p-2 sm:p-3 text-center space-y-1 sm:space-y-2">
+      <h3 class="font-semibold text-[var(--text-primary)] text-sm sm:text-base">Product 1</h3>
+
+      <div class="flex items-center justify-center mt-1 space-x-2 sm:space-x-3">
+        <div class="flex items-center gap-1 sm:gap-2">
+          <p class="text-xs sm:text-sm text-[var(--text-secondary)] line-through">$10.00</p>
+          <p class="font-bold text-green-600 text-sm sm:text-base">$8.00</p>
+        </div>
+        <p class="text-xs sm:text-sm font-medium text-gray-600">In Stock</p>
+      </div>
+
+      <div class="flex flex-wrap items-center justify-center gap-2 mt-2">
+        <div class="flex items-center border border-gray-300 rounded overflow-hidden">
+          <button class="decreaseQty px-2 py-1 bg-gray-200 hover:bg-gray-300 text-sm">-</button>
+          <input type="number" value="1" min="1"
+            class="qtyInput w-10 text-center text-sm border-l border-r border-gray-300 focus:outline-none">
+          <button class="increaseQty px-2 py-1 bg-gray-200 hover:bg-gray-300 text-sm">+</button>
+        </div>
+
+        <button class="btn btn-primary flex items-center justify-center gap-1 text-xs sm:text-sm px-2 py-1 bg-[var(--bg-brown)] text-white rounded hover:bg-[var(--primary)] transition">
+          <i class="fa-solid fa-cart-shopping text-xs sm:text-sm"></i> Add
+        </button>
+      </div>
+    </section>
+  </div>
+
+
+
+  <!-- Duplicate product cards here -->
+
+      <div class="product-card relative bg-gray-100 rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 w-full max-w-[250px] mx-auto">
+    <!-- Product Image -->
+    <a href="#" class="block relative group bg-white rounded-xl m-2">
+      <img src="https://miterimart.com.au/storage/products/featured/FXRhSV3nmUMK8BjTfYt9btYVTE36MhMm8VWDEWzN.jpg"
+        alt="Product 1"
+        class="w-full h-48 sm:h-56 md:h-60 object-contain rounded-xl transition-transform duration-300 group-hover:scale-105">
+
+      <!-- Discount Tag -->
+      <div class="absolute top-2 left-2 flex flex-col items-center z-20">
+        <i class="fa-solid fa-bookmark text-5xl text-yellow-500"></i>
+        <span class="-mt-9 text-xs sm:text-xs font-bold text-[var(--text-primary)] text-center leading-tight">20%<br>OFF</span>
+      </div>
+
+      <!-- Hover Overlay -->
+      <div class="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-2 sm:gap-3 transition-opacity duration-300 rounded-xl">
+        <button class="p-2 sm:p-3 bg-[var(--bg-brown)] text-white rounded-full shadow-md hover:bg-[var(--primary)] transition cursor-pointer">
+          <i class="fa-regular fa-heart text-sm sm:text-base"></i>
+        </button>
+        <button class="p-2 sm:p-3 bg-[var(--bg-brown)] text-white rounded-full shadow-md hover:bg-[var(--primary)] transition cursor-pointer">
+          <i class="fa-regular fa-eye text-sm sm:text-base"></i>
+        </button>
+      </div>
+    </a>
+
+    <!-- Product Info -->
+    <section class="p-2 sm:p-3 text-center space-y-1 sm:space-y-2">
+      <h3 class="font-semibold text-[var(--text-primary)] text-sm sm:text-base">Product 1</h3>
+
+      <div class="flex items-center justify-center mt-1 space-x-2 sm:space-x-3">
+        <div class="flex items-center gap-1 sm:gap-2">
+          <p class="text-xs sm:text-sm text-[var(--text-secondary)] line-through">$10.00</p>
+          <p class="font-bold text-green-600 text-sm sm:text-base">$8.00</p>
+        </div>
+        <p class="text-xs sm:text-sm font-medium text-gray-600">In Stock</p>
+      </div>
+
+      <div class="flex flex-wrap items-center justify-center gap-2 mt-2">
+        <div class="flex items-center border border-gray-300 rounded overflow-hidden">
+          <button class="decreaseQty px-2 py-1 bg-gray-200 hover:bg-gray-300 text-sm">-</button>
+          <input type="number" value="1" min="1"
+            class="qtyInput w-10 text-center text-sm border-l border-r border-gray-300 focus:outline-none">
+          <button class="increaseQty px-2 py-1 bg-gray-200 hover:bg-gray-300 text-sm">+</button>
+        </div>
+
+        <button class="btn btn-primary flex items-center justify-center gap-1 text-xs sm:text-sm px-2 py-1 bg-[var(--bg-brown)] text-white rounded hover:bg-[var(--primary)] transition">
+          <i class="fa-solid fa-cart-shopping text-xs sm:text-sm"></i> Add
+        </button>
+      </div>
+    </section>
+  </div>
+
+      <div class="product-card relative bg-gray-100 rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 w-full max-w-[250px] mx-auto">
+    <!-- Product Image -->
+    <a href="#" class="block relative group bg-white rounded-xl m-2">
+      <img src="https://miterimart.com.au/storage/products/featured/FXRhSV3nmUMK8BjTfYt9btYVTE36MhMm8VWDEWzN.jpg"
+        alt="Product 1"
+        class="w-full h-48 sm:h-56 md:h-60 object-contain rounded-xl transition-transform duration-300 group-hover:scale-105">
+
+      <!-- Discount Tag -->
+      <div class="absolute top-2 left-2 flex flex-col items-center z-20">
+        <i class="fa-solid fa-bookmark text-5xl text-yellow-500"></i>
+        <span class="-mt-9 text-xs sm:text-xs font-bold text-[var(--text-primary)] text-center leading-tight">20%<br>OFF</span>
+      </div>
+
+      <!-- Hover Overlay -->
+      <div class="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-2 sm:gap-3 transition-opacity duration-300 rounded-xl">
+        <button class="p-2 sm:p-3 bg-[var(--bg-brown)] text-white rounded-full shadow-md hover:bg-[var(--primary)] transition cursor-pointer">
+          <i class="fa-regular fa-heart text-sm sm:text-base"></i>
+        </button>
+        <button class="p-2 sm:p-3 bg-[var(--bg-brown)] text-white rounded-full shadow-md hover:bg-[var(--primary)] transition cursor-pointer">
+          <i class="fa-regular fa-eye text-sm sm:text-base"></i>
+        </button>
+      </div>
+    </a>
+
+    <!-- Product Info -->
+    <section class="p-2 sm:p-3 text-center space-y-1 sm:space-y-2">
+      <h3 class="font-semibold text-[var(--text-primary)] text-sm sm:text-base">Product 1</h3>
+
+      <div class="flex items-center justify-center mt-1 space-x-2 sm:space-x-3">
+        <div class="flex items-center gap-1 sm:gap-2">
+          <p class="text-xs sm:text-sm text-[var(--text-secondary)] line-through">$10.00</p>
+          <p class="font-bold text-green-600 text-sm sm:text-base">$8.00</p>
+        </div>
+        <p class="text-xs sm:text-sm font-medium text-gray-600">In Stock</p>
+      </div>
+
+      <div class="flex flex-wrap items-center justify-center gap-2 mt-2">
+        <div class="flex items-center border border-gray-300 rounded overflow-hidden">
+          <button class="decreaseQty px-2 py-1 bg-gray-200 hover:bg-gray-300 text-sm">-</button>
+          <input type="number" value="1" min="1"
+            class="qtyInput w-10 text-center text-sm border-l border-r border-gray-300 focus:outline-none">
+          <button class="increaseQty px-2 py-1 bg-gray-200 hover:bg-gray-300 text-sm">+</button>
+        </div>
+
+        <button class="btn btn-primary flex items-center justify-center gap-1 text-xs sm:text-sm px-2 py-1 bg-[var(--bg-brown)] text-white rounded hover:bg-[var(--primary)] transition">
+          <i class="fa-solid fa-cart-shopping text-xs sm:text-sm"></i> Add
+        </button>
+      </div>
+    </section>
+  </div>
+  
+</div>
+
+
+
+
+      <!-- Pagination -->
+<div class="mt-6 flex justify-center space-x-1 text-sm">
+  <a href="#" class="px-3 py-1 rounded border border-gray-300 hover:bg-[var(--bg-brown)] hover:text-white transition">&laquo; Prev</a>
+  <a href="#" class="px-3 py-1 rounded border border-gray-300 hover:bg-[var(--bg-brown)] hover:text-white transition">1</a>
+  <a href="#" class="px-3 py-1 rounded border border-gray-300 hover:bg-[var(--bg-brown)] hover:text-white transition">2</a>
+  <a href="#" class="px-3 py-1 rounded border border-gray-300 hover:bg-[var(--bg-brown)] hover:text-white transition">3</a>
+  <a href="#" class="px-3 py-1 rounded border border-gray-300 hover:bg-[var(--bg-brown)] hover:text-white transition">Next &raquo;</a>
+</div>
+
+
+    </section>
+
+  </div>
+</div>
+
+{% endblock %}
+{% block extra_js %}
+<script>
+  // Global cart count
+  let cartCount = 0;
+
+
+  function showToast(message, type = 'info') {
+    toastr.options = {
+      closeButton: true,
+      progressBar: true,
+      positionClass: "toast-top-right",
+      timeOut: "3000"
+    };
+
+    switch (type) {
+      case 'success': toastr.success(message); break;
+      case 'error': toastr.error(message); break;
+      case 'warning': toastr.warning(message); break;
+      default: toastr.info(message); break;
+    }
+  }
+
+  /**
+   * Initialize Product Card Interactions
+   */
+  function initializeProductCards() {
+    // Wishlist toggle
+    $('.wishlist-btn').on('click', function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const $heart = $(this).find('.fa-heart');
+      const liked = $heart.hasClass('fas');
+
+      if (!liked) {
+        $heart.removeClass('far').addClass('fas').css('color', '#ef4444');
+        $(this).css('transform', 'scale(1.2)').delay(200).queue(function (next) {
+          $(this).css('transform', 'scale(1)');
+          next();
+        });
+        showToast('Added to wishlist!', 'success');
+      } else {
+        $heart.removeClass('fas').addClass('far').css('color', '#6b7280');
+        showToast('Removed from wishlist', 'info');
+      }
+    });
+
+    // Add to Cart (just update count + toast, no button animation)
+    $('.product-card .btn-primary').on('click', function (e) {
+      e.preventDefault();
+
+      const $card = $(this).closest('.product-card');
+      const qty = parseInt($card.find('.qtyInput').val()) || 1;
+      const productName = $card.find('h3').text();
+
+      // Update cart count badges
+      cartCount += qty;
+      $('#desktopCartBadge, #mobileCartBadge').text(cartCount);
+
+      // Show toast
+      showToast(`${qty} × ${productName} added to cart!`, 'success');
+    });
+
+    // Quantity increment/decrement
+    $('.increaseQty').on('click', function() {
+      const $input = $(this).siblings('.qtyInput');
+      $input.val(Math.max(1, parseInt($input.val() || 1) + 1));
+    });
+
+    $('.decreaseQty').on('click', function() {
+      const $input = $(this).siblings('.qtyInput');
+      $input.val(Math.max(1, parseInt($input.val() || 1) - 1));
+    });
+  }
+
+  // Initialize on document ready
+  $(document).ready(() => {
+    initializeProductCards();
+  });
+</script>
+
+{% endblock %}
