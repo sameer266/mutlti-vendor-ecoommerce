@@ -25,8 +25,14 @@ urlpatterns = [
     
     path('',views.home_page,name="home"),
     path('all-collections/',views.all_collections,name="all_collections"),
+    path("new-arrivals/",views.new_arrivals,name="new_arrivals"),
+    path("vendors/",views.vendors,name="vendors"),
+    path("vendors/vendor-details/",views.vendor_details,name="vendor_details"),
     path('carts/',views.carts,name="carts"),
+    
+    
     path("login/",views.login_page,name="login_page"),
     path("signup/",views.signup_page,name='signup_page'),
+    
     
 ]

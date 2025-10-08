@@ -1,0 +1,187 @@
+{% extends 'website/components/base.html' %}
+
+{% block title %}Our Vendors{% endblock %}
+
+{% block content %}
+<section class="container  mx-auto px-4 py-8  ">
+
+  <!-- Page Header -->
+  <div class="text-center mb-8 bg-[var(--bg-brown)] p-4 rounded shadow">
+    <h1 class="text-2xl sm:text-3xl font-extrabold text-[var(--text-light)]">
+      Our Trusted Vendors
+    </h1>
+    <p class="text-[var(--text-light)] text-sm mt-2">
+      Discover quality products from verified sellers across our marketplace
+    </p>
+  </div>
+
+  <!-- Search & Filter Section -->
+  <div class="bg-white rounded-lg shadow-sm p-4 lg:p-6 mb-8">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <!-- Search -->
+      <div class="md:col-span-2">
+        <div class="relative">
+          <input 
+            type="text" 
+            id="vendorSearch" 
+            placeholder="Search vendors by name or category..."
+            class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-[var(--primary)] transition"
+          >
+          <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-[var(--text-secondary)]"></i>
+        </div>
+      </div>
+      
+      <!-- Category Filter -->
+      <div>
+        <select id="categoryFilter" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-[var(--primary)] transition">
+          <option value="">All Categories</option>
+          <option value="electronics">Electronics</option>
+          <option value="fashion">Fashion & Apparel</option>
+          <option value="food">Food & Beverages</option>
+          <option value="home">Home & Living</option>
+          <option value="beauty">Beauty & Health</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Vendors Grid -->
+  <div id="vendorsGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+
+    <!-- Vendor Card 1 -->
+    <div class="vendor-card bg-white rounded-xl shadow-md hover:shadow-lg transition transform hover:-translate-y-1 overflow-hidden" data-category="food">
+      <div class="h-28 w-full overflow-hidden rounded-t-xl">
+        <img 
+          src="https://previews.123rf.com/images/paulprescott72/paulprescott721803/paulprescott72180300013/97597858-goa-india-january-27-2015-street-fruit-vendor-sitting-at-fruit-stand-with-a-big-smile.jpg" 
+          alt="Fresh Mart Vendor Banner" 
+          class="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+          loading="lazy"
+        >
+      </div>
+      <div class="p-4 text-center">
+        <h3 class="text-lg font-semibold text-[var(--text-primary)] mb-1">Fresh Mart Store</h3>
+        <span class="inline-block px-3 py-0.5 bg-[var(--bg-light)] text-[var(--primary)] text-xs font-medium rounded-full mb-2">
+          Food & Beverages
+        </span>
+        <div class="flex items-center justify-center gap-1 mb-2 text-yellow-400 text-sm">
+          <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star-half-alt"></i>
+          <span class="text-[var(--text-secondary)] ml-1">(4.5)</span>
+        </div>
+        <div class="flex items-center justify-between text-[var(--text-secondary)] text-xs mb-3 border-t pt-2">
+          <div class="flex items-center gap-1">
+            <i class="fas fa-box text-[var(--primary)]"></i>
+            <span>254 Products</span>
+          </div>
+          <div class="flex items-center gap-1">
+            <i class="fas fa-users text-[var(--primary)]"></i>
+            <span>1.2k Followers</span>
+          </div>
+        </div>
+        <a href="{% url 'vendor_details'%}" class="btn btn-primary w-full py-2 text-sm rounded-lg">
+          Visit Store
+        </a>
+      </div>
+    </div>
+
+    <!-- Vendor Card 2 -->
+    <div class="vendor-card bg-white rounded-xl shadow-md hover:shadow-lg transition transform hover:-translate-y-1 overflow-hidden" data-category="electronics">
+      <div class="h-28 w-full overflow-hidden rounded-t-xl">
+        <img 
+          src="https://www.shutterstock.com/image-photo/fruit-shop-indian-male-street-260nw-2334340005.jpg" 
+          alt="Tech Hub Vendor Banner" 
+          class="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+          loading="lazy"
+        >
+      </div>
+      <div class="p-4 text-center">
+        <h3 class="text-lg font-semibold text-[var(--text-primary)] mb-1">Tech Hub Electronics</h3>
+        <span class="inline-block px-3 py-0.5 bg-blue-50 text-blue-600 text-xs font-medium rounded-full mb-2">
+          Electronics
+        </span>
+        <div class="flex items-center justify-center gap-1 mb-2 text-yellow-400 text-sm">
+          <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+          <span class="text-[var(--text-secondary)] ml-1">(5.0)</span>
+        </div>
+        <div class="flex items-center justify-between text-[var(--text-secondary)] text-xs mb-3 border-t pt-2">
+          <div class="flex items-center gap-1">
+            <i class="fas fa-box text-[var(--primary)]"></i>
+            <span>580 Products</span>
+          </div>
+          <div class="flex items-center gap-1">
+            <i class="fas fa-users text-[var(--primary)]"></i>
+            <span>3.5k Followers</span>
+          </div>
+        </div>
+        <a href="{% url 'vendor_details'%}" class="btn btn-primary w-full py-2 text-sm rounded-lg">
+          Visit Store
+        </a>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- No Results Message -->
+  <section id="noResults" class="hidden text-center py-12">
+    <i class="fas fa-store-slash text-6xl text-gray-300 mb-4"></i>
+    <h3 class="text-2xl font-bold text-[var(--text-primary)] mb-2">No vendors found</h3>
+    <p class="text-[var(--text-secondary)]">Try adjusting your search or filter criteria</p>
+  </section>
+
+  <!-- Become a Vendor CTA -->
+  <div class="mt-12 bg-gradient-to-r from-[var(--primary)] to-[var(--primary-dark)] rounded-lg p-8 lg:p-12 text-center text-white">
+    <h2 class="text-2xl lg:text-3xl font-bold mb-4">Want to Sell on Our Platform?</h2>
+    <p class="text-lg mb-6 opacity-90">Join thousands of successful vendors and grow your business with us</p>
+    <a href="/become-vendor" class="inline-flex items-center gap-2 bg-white text-[var(--primary)] px-8 py-3 rounded-lg font-bold hover:bg-gray-100 transition">
+      <i class="fas fa-handshake"></i> Become a Vendor
+    </a>
+  </div>
+
+</section>
+
+<script>
+$(document).ready(function() {
+  // Search & Filter
+  $('#vendorSearch, #categoryFilter').on('input change', function() {
+    const searchTerm = $('#vendorSearch').val().toLowerCase();
+    const selectedCategory = $('#categoryFilter').val().toLowerCase();
+    let visibleCount = 0;
+
+    $('.vendor-card').each(function() {
+      const $card = $(this);
+      const vendorName = $card.find('h3').text().toLowerCase();
+      const vendorCategory = $card.data('category');
+
+      const matchesSearch = vendorName.includes(searchTerm);
+      const matchesCategory = !selectedCategory || vendorCategory === selectedCategory;
+
+      if(matchesSearch && matchesCategory) {
+        $card.show();
+        visibleCount++;
+      } else {
+        $card.hide();
+      }
+    });
+
+    $('#noResults').toggle(visibleCount === 0);
+  });
+
+  // Intersection Observer for scroll animation
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry, index) => {
+      if(entry.isIntersecting) {
+        entry.target.style.opacity = '1';
+        entry.target.style.transform = 'translateY(0)';
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.vendor-card').forEach(card => {
+    card.style.opacity = '0';
+    card.style.transform = 'translateY(20px)';
+    card.style.transition = 'all 0.5s ease';
+    observer.observe(card);
+  });
+});
+</script>
+{% endblock %}

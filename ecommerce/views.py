@@ -8,6 +8,15 @@ def home_page(request):
 def all_collections(request):
     return render(request,'website/pages/all_collections.html')
 
+def new_arrivals(request):
+    return render(request,'website/pages/new_arrivals.html')
+
+def vendors(request):
+    return render(request,'website/pages/vendors.html')
+
+def vendor_details(request):
+    return render(request,'website/pages/vendor_details.html')
+
 def carts(request):
     return render(request,"website/pages/cart.html")
 

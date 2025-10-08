@@ -3,110 +3,238 @@
 {% block title %}Shopping Cart{% endblock %}
 
 {% block content %}
-<div class="container mx-auto px-4 py-8">
+<div class="container mx-auto px-4 py-6 lg:py-8 max-w-7xl">
+  
+  <h1 class="text-2xl lg:text-3xl font-bold mb-6 text-[var(--text-primary)]">Shopping Cart</h1>
 
-  <div class="flex flex-col xl:flex-row gap-6">
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
 
-    <!-- Cart Items -->
-    <div class="flex-1 order-2 xl:order-1">
-      <div class="bg-white rounded-lg shadow-sm p-4">
+    <!-- Cart Items Section -->
+    <div class="lg:col-span-2">
+      <div class="bg-white border rounded-lg overflow-hidden shadow-sm">
+        
+        <!-- Mobile Card View -->
+        <div class="block lg:hidden divide-y">
+          <!-- Cart Item 1 Mobile -->
+          <div class="cart-item p-4">
+            <div class="flex gap-3 mb-3">
+              <img src="https://miterimart.com.au/storage/products/featured/DQb1htwCqaaLSmCSLHBhjnvpVkN7WrRYscFERpij.jpg" 
+                   alt="Product" 
+                   class="w-20 h-20 object-cover rounded flex-shrink-0">
+              <div class="flex-1 min-w-0">
+                <h3 class="font-semibold text-[var(--text-primary)] mb-1">Miller's Vegetable Oil 4L</h3>
+                <p class="text-xs text-[var(--text-secondary)] mb-2">SKU: MVO45767</p>
+                <p class="item-price font-bold text-[var(--primary)] text-lg">Rs 1450</p>
+              </div>
+              <button class="removeItem text-red-500 hover:text-red-700 h-8 w-8 flex items-center justify-center">
+                <i class="fa fa-trash"></i>
+              </button>
+            </div>
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <button class="decreaseQty w-9 h-9 border border-gray-300 rounded hover:bg-gray-100 flex items-center justify-center">-</button>
+                <input type="number" value="1" min="1" class="qtyInput w-16 text-center border border-gray-300 rounded py-2 text-sm">
+                <button class="increaseQty w-9 h-9 border border-gray-300 rounded hover:bg-gray-100 flex items-center justify-center">+</button>
+              </div>
+              <div class="text-right">
+                <p class="text-xs text-[var(--text-secondary)]">Subtotal</p>
+                <p class="item-subtotal font-bold text-[var(--text-primary)] text-lg">Rs 1450</p>
+              </div>
+            </div>
+          </div>
 
-        <!-- Responsive Table Wrapper -->
-        <div class="overflow-x-auto">
-          <table class="w-full table-auto border-collapse text-[var(--text-primary)] min-w-[600px]">
-            <thead>
-              <tr class="bg-gray-100 shadow-sm">
-                <th class="text-left px-3 py-2">Product</th>
-                <th class="text-center px-3 py-2">Price</th>
-                <th class="text-center px-3 py-2">Quantity</th>
-                <th class="text-left px-3 py-2">Subtotal</th>
-                <th></th>
+          <!-- Cart Item 2 Mobile -->
+          <div class="cart-item p-4">
+            <div class="flex gap-3 mb-3">
+              <img src="https://miterimart.com.au/storage/products/featured/DQb1htwCqaaLSmCSLHBhjnvpVkN7WrRYscFERpij.jpg" 
+                   alt="Product" 
+                   class="w-20 h-20 object-cover rounded flex-shrink-0">
+              <div class="flex-1 min-w-0">
+                <h3 class="font-semibold text-[var(--text-primary)] mb-1">Fortune Everyday Basmati 5kg</h3>
+                <p class="text-xs text-[var(--text-secondary)] mb-2">SKU: FEB4758</p>
+                <p class="item-price font-bold text-[var(--primary)] text-lg">Rs 1399</p>
+              </div>
+              <button class="removeItem text-red-500 hover:text-red-700 h-8 w-8 flex items-center justify-center">
+                <i class="fa fa-trash"></i>
+              </button>
+            </div>
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <button class="decreaseQty w-9 h-9 border border-gray-300 rounded hover:bg-gray-100 flex items-center justify-center">-</button>
+                <input type="number" value="1" min="1" class="qtyInput w-16 text-center border border-gray-300 rounded py-2 text-sm">
+                <button class="increaseQty w-9 h-9 border border-gray-300 rounded hover:bg-gray-100 flex items-center justify-center">+</button>
+              </div>
+              <div class="text-right">
+                <p class="text-xs text-[var(--text-secondary)]">Subtotal</p>
+                <p class="item-subtotal font-bold text-[var(--text-primary)] text-lg">Rs 1399</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Desktop Table View -->
+        <div class="hidden lg:block overflow-x-auto">
+          <table class="w-full">
+            <thead class="bg-[var(--bg-light)] border-b">
+              <tr>
+                <th class="text-left px-6 py-3 text-sm font-semibold text-[var(--text-primary)]">Product</th>
+                <th class="text-center px-6 py-3 text-sm font-semibold text-[var(--text-primary)]">Price</th>
+                <th class="text-center px-6 py-3 text-sm font-semibold text-[var(--text-primary)]">Quantity</th>
+                <th class="text-right px-6 py-3 text-sm font-semibold text-[var(--text-primary)]">Subtotal</th>
+                <th class="w-16"></th>
               </tr>
             </thead>
-            <tbody>
+            <tbody class="divide-y">
+              
+              <!-- Cart Item 1 Desktop -->
               <tr class="cart-item hover:bg-gray-50 transition">
-                <td class="px-3 py-2 flex items-center space-x-3">
-                  <img src="https://miterimart.com.au/storage/products/featured/DQb1htwCqaaLSmCSLHBhjnvpVkN7WrRYscFERpij.jpg" class="w-20 h-20 rounded object-cover">
-                  <div>
-                    <h6 class="font-semibold text-[var(--text-primary)]">Miller's Vegetable Oil 4L</h6>
-                    <span class="text-gray-500 text-sm">SKU: MVO45767</span>
+                <td class="px-6 py-4">
+                  <div class="flex items-center gap-4">
+                    <img src="https://miterimart.com.au/storage/products/featured/DQb1htwCqaaLSmCSLHBhjnvpVkN7WrRYscFERpij.jpg" 
+                         alt="Product" 
+                         class="w-16 h-16 object-cover rounded flex-shrink-0">
+                    <div>
+                      <p class="font-semibold text-[var(--text-primary)]">Miller's Vegetable Oil 4L</p>
+                      <p class="text-sm text-[var(--text-secondary)]">SKU: MVO45767</p>
+                    </div>
                   </div>
                 </td>
-                <td class="text-center item-price font-semibold text-[var(--primary)]">$14.50</td>
-                <td class="text-center">
-                  <div class="inline-flex items-center space-x-1">
-                    <button class="decreaseQty px-1 py-1 border rounded text-gray-700 text-sm">-</button>
-                    <input type="text" value="1" class="w-10 text-center border rounded text-sm qtyInput">
-                    <button class="increaseQty px-1 py-1 border rounded text-gray-700 text-sm">+</button>
+                <td class="px-6 py-4 text-center">
+                  <span class="item-price font-semibold text-[var(--primary)]">Rs 1450</span>
+                </td>
+                <td class="px-6 py-4">
+                  <div class="flex items-center justify-center gap-2">
+                    <button class="decreaseQty w-8 h-8 border border-gray-300 rounded hover:bg-gray-100 flex items-center justify-center">-</button>
+                    <input type="number" value="1" min="1" class="qtyInput w-16 text-center border border-gray-300 rounded py-1">
+                    <button class="increaseQty w-8 h-8 border border-gray-300 rounded hover:bg-gray-100 flex items-center justify-center">+</button>
                   </div>
                 </td>
-                <td class="text-left item-subtotal font-semibold text-gray-600">$14.50</td>
-                <td class="text-center">
-                  <button class="text-red-500 hover:text-red-700 removeItem"><i class="fa fa-times"></i></button>
+                <td class="px-6 py-4 text-right">
+                  <span class="item-subtotal font-bold text-[var(--text-primary)]">Rs 1450</span>
+                </td>
+                <td class="px-6 py-4 text-center">
+                  <button class="removeItem text-red-500 hover:text-red-700">
+                    <i class="fa fa-trash"></i>
+                  </button>
                 </td>
               </tr>
 
+              <!-- Cart Item 2 Desktop -->
               <tr class="cart-item hover:bg-gray-50 transition">
-                <td class="px-3 py-2 flex items-center space-x-3">
-                  <img src="https://miterimart.com.au/storage/products/featured/DQb1htwCqaaLSmCSLHBhjnvpVkN7WrRYscFERpij.jpg" class="w-20 h-20 rounded object-cover">
-                  <div>
-                    <h6 class="font-semibold text-[var(--text-primary)]">Fortune Everyday Basmati 5kg</h6>
-                    <span class="text-gray-500 text-sm">SKU: FEB4758</span>
+                <td class="px-6 py-4">
+                  <div class="flex items-center gap-4">
+                    <img src="https://miterimart.com.au/storage/products/featured/DQb1htwCqaaLSmCSLHBhjnvpVkN7WrRYscFERpij.jpg" 
+                         alt="Product" 
+                         class="w-16 h-16 object-cover rounded flex-shrink-0">
+                    <div>
+                      <p class="font-semibold text-[var(--text-primary)]">Fortune Everyday Basmati 5kg</p>
+                      <p class="text-sm text-[var(--text-secondary)]">SKU: FEB4758</p>
+                    </div>
                   </div>
                 </td>
-                <td class="text-center item-price font-semibold text-[var(--primary)]">$13.99</td>
-                <td class="text-center">
-                  <div class="inline-flex items-center space-x-1">
-                    <button class="decreaseQty px-1 py-1 border rounded text-gray-700 text-sm">-</button>
-                    <input type="text" value="1" class="w-10 text-center border rounded text-sm qtyInput">
-                    <button class="increaseQty px-1 py-1 border rounded text-gray-700 text-sm">+</button>
+                <td class="px-6 py-4 text-center">
+                  <span class="item-price font-semibold text-[var(--primary)]">Rs 1399</span>
+                </td>
+                <td class="px-6 py-4">
+                  <div class="flex items-center justify-center gap-2">
+                    <button class="decreaseQty w-8 h-8 border border-gray-300 rounded hover:bg-gray-100 flex items-center justify-center">-</button>
+                    <input type="number" value="1" min="1" class="qtyInput w-16 text-center border border-gray-300 rounded py-1">
+                    <button class="increaseQty w-8 h-8 border border-gray-300 rounded hover:bg-gray-100 flex items-center justify-center">+</button>
                   </div>
                 </td>
-                <td class="text-left item-subtotal font-semibold text-gray-600">$13.99</td>
-                <td class="text-center">
-                  <button class="text-red-500 hover:text-red-700 removeItem"><i class="fa fa-times"></i></button>
+                <td class="px-6 py-4 text-right">
+                  <span class="item-subtotal font-bold text-[var(--text-primary)]">Rs 1399</span>
+                </td>
+                <td class="px-6 py-4 text-center">
+                  <button class="removeItem text-red-500 hover:text-red-700">
+                    <i class="fa fa-trash"></i>
+                  </button>
                 </td>
               </tr>
+
             </tbody>
           </table>
         </div>
 
-        <!-- Subtotal Display -->
-        <div class="flex justify-start mt-4 border-t pt-4 text-gray-600 font-semibold">
-          <span>Subtotal: </span>
-          <span id="cartSubtotal" class="ml-2 text-gray-600">$28.49</span>
+        <!-- Cart Subtotal -->
+        <div class="bg-[var(--bg-light)] px-4 lg:px-6 py-4 border-t">
+          <div class="flex justify-between items-center">
+            <span class="text-base lg:text-lg font-semibold text-[var(--text-primary)]">Subtotal:</span>
+            <span id="cartSubtotal" class="text-xl lg:text-2xl font-bold text-[var(--primary)]">Rs 2849</span>
+          </div>
         </div>
+
       </div>
     </div>
 
-    <!-- Order Summary / Checkout -->
-    <div class="w-full xl:w-1/3 order-1 xl:order-2">
-      <div class="bg-white rounded-lg shadow-sm p-4 space-y-4">
-        <h5 class="font-bold text-[var(--text-primary)] text-lg">Order Summary</h5>
-        <div class="flex justify-between text-[var(--text-primary)]">
-          <span>Subtotal:</span>
-          <span id="summarySubtotal" class="text-gray-600">$28.49</span>
-        </div>
-        <div class="flex justify-between text-[var(--text-primary)]">
-          <span>Tax (5%):</span>
-          <span id="summaryTax" class="text-gray-600">$1.42</span>
-        </div>
-        <div class="flex justify-between font-bold text-[var(--bg-brown)] text-lg border-t pt-2">
-          <span>Total:</span>
-          <span id="summaryTotal">$29.91</span>
+    <!-- Order Summary Section -->
+    <div class="lg:col-span-1">
+      <div class="bg-white border rounded-lg p-4 lg:p-6 shadow-sm sticky top-4">
+        
+        <h2 class="text-lg lg:text-xl font-bold mb-4 text-[var(--text-primary)]">Order Summary</h2>
+
+        <!-- Payment Methods -->
+        <div class="mb-6">
+          <label class="block text-sm font-semibold text-[var(--text-primary)] mb-3">Payment Method</label>
+          
+          <div class="space-y-2">
+            <label class="flex items-center p-3 border rounded cursor-pointer hover:bg-[var(--bg-light)] transition">
+              <input type="radio" name="payment" value="cod" class="mr-3 accent-[var(--primary)]" checked>
+              <span class="text-sm lg:text-base">Cash on Delivery</span>
+            </label>
+
+            <label class="flex items-center p-3 border rounded cursor-pointer hover:bg-[var(--bg-light)] transition">
+              <input type="radio" name="payment" value="khalti" class="mr-3 accent-[var(--primary)]">
+              <span class="text-sm lg:text-base">Khalti</span>
+            </label>
+
+            <label class="flex items-center p-3 border rounded cursor-pointer hover:bg-[var(--bg-light)] transition">
+              <input type="radio" name="payment" value="esewa" class="mr-3 accent-[var(--primary)]">
+              <span class="text-sm lg:text-base">eSewa</span>
+            </label>
+          </div>
         </div>
 
-        <div class="flex flex-col gap-2 mt-4">
-          <button class="bg-[var(--bg-brown)] text-white py-2 rounded hover:bg-[var(--primary-dark)] transition font-semibold flex items-center justify-center gap-2">
-            Customer Checkout <i class="fa-solid fa-arrow-right-to-bracket"></i>
-          </button>
-          <button class="bg-gray-300 text-[var(--text-primary)] py-2 rounded hover:bg-gray-400 transition font-semibold flex items-center justify-center gap-2">
-            Guest Checkout <i class="fa-solid fa-user-secret"></i>
-          </button>
+        <!-- Total -->
+        <div class="border-t pt-4 mb-6 space-y-2">
+          <div class="flex justify-between items-center">
+            <span class="text-[var(--text-secondary)] text-sm">Subtotal</span>
+            <span id="summarySubtotal" class="font-semibold text-[var(--text-primary)]">Rs 2849</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-[var(--text-secondary)] text-sm">Delivery</span>
+            <span class="font-semibold text-[var(--success)]">Free</span>
+          </div>
+          <div class="flex justify-between items-center text-base lg:text-lg font-bold border-t pt-3 mt-3">
+            <span class="text-[var(--text-primary)]">Total</span>
+            <span id="summaryTotal" class="text-[var(--primary)]">Rs 2849</span>
+          </div>
         </div>
+
+        <!-- Place Order Button -->
+        <button class="w-full bg-[var(--primary)] text-white py-3 lg:py-4 rounded-lg hover:bg-[var(--primary-dark)] transition font-bold text-base lg:text-lg shadow-md hover:shadow-lg flex items-center justify-center gap-2">
+          <span>Place Order</span>
+          <i class="fas fa-arrow-right"></i>
+        </button>
+
+        <!-- Continue Shopping Link -->
+        <a href="/" class="block text-center mt-4 text-[var(--primary)] hover:text-[var(--primary-dark)] font-semibold text-sm">
+          <i class="fas fa-arrow-left mr-1"></i> Continue Shopping
+        </a>
+
       </div>
     </div>
 
+  </div>
+
+  <!-- Empty Cart Message (Hidden by default) -->
+  <div id="emptyCartMessage" class="hidden text-center py-12">
+    <i class="fas fa-shopping-cart text-6xl text-gray-300 mb-4"></i>
+    <h3 class="text-2xl font-bold text-[var(--text-primary)] mb-2">Your cart is empty</h3>
+    <p class="text-[var(--text-secondary)] mb-6">Add some products to get started!</p>
+    <a href="/" class="btn btn-primary inline-block">
+      <i class="fas fa-shopping-bag mr-2"></i> Start Shopping
+    </a>
   </div>
 </div>
 
@@ -121,40 +249,79 @@ $(document).ready(function() {
 
   function updateCartTotals() {
     let subtotal = 0;
+    const itemCount = $('.cart-item').length;
+    
+    if (itemCount === 0) {
+      // Show empty cart message
+      $('.grid').hide();
+      $('#emptyCartMessage').removeClass('hidden');
+      return;
+    }
+    
     $('.cart-item').each(function() {
-      const price = parseFloat($(this).find('.item-price').text().replace('$',''));
+      const priceText = $(this).find('.item-price').text().replace('Rs ', '').replace(',', '').trim();
+      const price = parseFloat(priceText);
       const qty = parseInt($(this).find('.qtyInput').val());
       const itemSubtotal = price * qty;
-      $(this).find('.item-subtotal').text(`$${itemSubtotal.toFixed(2)}`);
+      
+      $(this).find('.item-subtotal').text(`Rs ${itemSubtotal.toLocaleString()}`);
       subtotal += itemSubtotal;
     });
 
-    const tax = subtotal * 0.05;
-    const total = subtotal + tax;
-
-    $('#cartSubtotal, #summarySubtotal').text(`$${subtotal.toFixed(2)}`);
-    $('#summaryTax').text(`$${tax.toFixed(2)}`);
-    $('#summaryTotal').text(`$${total.toFixed(2)}`);
+    $('#cartSubtotal').text(`Rs ${subtotal.toLocaleString()}`);
+    $('#summarySubtotal').text(`Rs ${subtotal.toLocaleString()}`);
+    $('#summaryTotal').text(`Rs ${subtotal.toLocaleString()}`);
   }
 
   $('.increaseQty').click(function() {
     const $input = $(this).siblings('.qtyInput');
-    $input.val(parseInt($input.val()) + 1);
+    const newVal = parseInt($input.val()) + 1;
+    $input.val(newVal);
     updateCartTotals();
   });
 
   $('.decreaseQty').click(function() {
     const $input = $(this).siblings('.qtyInput');
-    const val = Math.max(1, parseInt($input.val()) - 1);
-    $input.val(val);
+    const currentVal = parseInt($input.val());
+    if (currentVal > 1) {
+      $input.val(currentVal - 1);
+      updateCartTotals();
+    }
+  });
+
+  $('.qtyInput').on('change', function() {
+    const val = parseInt($(this).val());
+    if (val < 1 || isNaN(val)) {
+      $(this).val(1);
+    }
     updateCartTotals();
   });
 
   $('.removeItem').click(function() {
-    $(this).closest('.cart-item').remove();
-    updateCartTotals();
-    toastr.success("Item removed from cart");
+    const $item = $(this).closest('.cart-item');
+    
+    Swal.fire({
+      title: 'Remove Item?',
+      text: "Are you sure you want to remove this item from your cart?",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#FF7F00',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: 'Yes, remove it!',
+      cancelButtonText: 'Cancel'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        $item.fadeOut(300, function() {
+          $(this).remove();
+          updateCartTotals();
+          toastr.success("Item removed from cart");
+        });
+      }
+    });
   });
+
+  updateCartTotals();
 });
 </script>
 {% endblock %}
+

@@ -81,12 +81,11 @@
   </div>
 
   <!-- Desktop Nav Menu -->
-  <nav class="hidden lg:flex justify-center container mx-auto px-4 py-2 space-x-6 items-center bg-[var(--bg-light)] shadow-inner">
-    <a href="{% url 'home'%}" class="text-[var(--text-secondary)] hover:text-[var(--primary)] font-medium transition">Home</a>
-    <a href="{% url 'all_collections'%}" class="text-[var(--text-secondary)] hover:text-[var(--primary)] font-medium transition">All Collections</a>
-    <a href="#" class="text-[var(--text-secondary)] hover:text-[var(--primary)] font-medium transition">Flash Sales</a>
-    <a href="#" class="text-[var(--text-secondary)] hover:text-[var(--primary)] font-medium transition">Nepali Products</a>
-    <a href="#" class="text-[var(--text-secondary)] hover:text-[var(--primary)] font-medium transition">New Arrivals</a>
+  <nav class="hidden lg:flex justify-center container mx-auto px-4 py-2 space-x-6 bg-[var(--bg-light)] shadow-inner">
+    <a href="{% url 'home'%}" class="{% if request.path == '/' %}text-[var(--primary)] font-bold{% else %}text-[var(--text-secondary)]{% endif %} hover:text-[var(--primary)] transition">Home</a>
+    <a href="{% url 'all_collections'%}" class="{% if request.path == '/all-collections/' %}text-[var(--primary)] font-bold{% else %}text-[var(--text-secondary)]{% endif %} hover:text-[var(--primary)] transition">All Collections</a>
+    <a href="{% url 'vendors'%}" class="{% if request.path == '/vendors/' %}text-[var(--primary)] font-bold{% else %}text-[var(--text-secondary)]{% endif %} hover:text-[var(--primary)] transition">Our Vendors</a>
+    <a href="{% url 'new_arrivals'%}" class="{% if request.path == '/new-arrivals/' %}text-[var(--primary)] font-bold{% else %}text-[var(--text-secondary)]{% endif %} hover:text-[var(--primary)] transition">New Arrivals</a>
   </nav>
 </header>
 
