@@ -1,0 +1,46 @@
+{% extends 'dashboard/components/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="bg-white rounded-xl shadow p-6 max-w-3xl">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-semibold text-gray-800">Add Slider</h1>
+    <a href="{% url 'admin_sliders_list' %}" class="text-blue-600 hover:text-blue-800">Back to Sliders</a>
+  </div>
+
+  <form method="post" enctype="multipart/form-data" class="space-y-5">
+    {% csrf_token %}
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Title</label>
+      <input type="text" name="title" class="w-full border-gray-300 rounded-lg" placeholder="Title" />
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Subtitle</label>
+      <input type="text" name="subtitle" class="w-full border-gray-300 rounded-lg" placeholder="Subtitle" />
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Link</label>
+      <input type="url" name="link" class="w-full border-gray-300 rounded-lg" placeholder="https://..." />
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Images</label>
+      <input type="file" name="images" accept="image/*" multiple class="w-full mb-2" />
+      <p class="text-gray-500 text-xs">Select multiple images at once. Each image will create a new slider entry.</p>
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Description for New Images</label>
+      <textarea name="description" class="w-full border-gray-300 rounded-lg h-20" placeholder="Optional description for new images"></textarea>
+    </div>
+
+    <div class="flex justify-end gap-3">
+      <a href="{% url 'admin_sliders_list' %}" class="px-4 py-2 rounded-lg border">Cancel</a>
+      <button type="submit" class="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700">Save</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

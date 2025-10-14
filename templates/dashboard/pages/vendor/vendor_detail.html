@@ -1,0 +1,145 @@
+{% extends 'dashboard/components/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="space-y-6">
+  <div class="flex items-center justify-between">
+    <h1 class="text-2xl font-semibold text-gray-800">Vendor Payments - {{ vendor.shop_name }}</h1>
+    <a href="{% url 'admin_payments_overview' %}" class="text-blue-600 hover:text-blue-800">Back to Overview</a>
+  </div>
+
+  <!-- Profile Info -->
+  <div class="bg-white rounded-xl shadow p-4">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div>
+        <div class="text-gray-500 text-sm">Vendor</div>
+        <div class="font-semibold">{{ vendor.shop_name }}</div>
+      </div>
+      <div>
+        <div class="text-gray-500 text-sm">Email</div>
+        <div>{{ vendor.email }}</div>
+      </div>
+      <div>
+        <div class="text-gray-500 text-sm">Phone</div>
+        <div>{{ vendor.phone }}</div>
+      </div>
+      <div>
+        <div class="text-gray-500 text-sm">Owner</div>
+        <div>{{ vendor.user.username }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Wallet Summary -->
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+    <div class="bg-white rounded-xl shadow p-4">
+      <div class="text-gray-500 text-sm">Total Earnings</div>
+      <div class="text-2xl font-semibold mt-1">Rs. {{ total_earning }}</div>
+    </div>
+    <div class="bg-white rounded-xl shadow p-4">
+      <div class="text-gray-500 text-sm">Admin Commission ({{ commission_rate_percent }}%)</div>
+      <div class="text-2xl font-semibold mt-1">Rs. {{ total_commission }}</div>
+    </div>
+    <div class="bg-white rounded-xl shadow p-4">
+      <div class="text-gray-500 text-sm">Paid Out</div>
+      <div class="text-2xl font-semibold mt-1">Rs. {{ paid_out }}</div>
+    </div>
+    <div class="bg-white rounded-xl shadow p-4">
+      <div class="text-gray-500 text-sm">Remaining Balance</div>
+      <div class="text-2xl font-semibold mt-1">Rs. {{ remaining }}</div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="bg-white rounded-xl shadow">
+    <div class="border-b flex">
+      <button class="px-4 py-2 text-sm font-medium tab-link active" data-tab="orders">Orders</button>
+      <button class="px-4 py-2 text-sm font-medium tab-link" data-tab="payouts">Payout History</button>
+    </div>
+
+    <div id="tab-orders" class="p-4 tab-content">
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="bg-gray-100">
+            <tr>
+              <th class="px-4 py-3 text-left">Order ID</th>
+              <th class="px-4 py-3 text-left">Date</th>
+              <th class="px-4 py-3 text-left">Order Amount</th>
+              <th class="px-4 py-3 text-left">Admin Commission</th>
+              <th class="px-4 py-3 text-left">Vendor Earnings</th>
+              <th class="px-4 py-3 text-left">Payment Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in orders_data %}
+            <tr class="hover:bg-gray-50">
+              <td class="px-4 py-3">{{ row.order.order_number }}</td>
+              <td class="px-4 py-3">{{ row.order.created_at|date:"Y-m-d H:i" }}</td>
+              <td class="px-4 py-3">Rs. {{ row.amount }}</td>
+              <td class="px-4 py-3">Rs. {{ row.admin_commission }}</td>
+              <td class="px-4 py-3">Rs. {{ row.vendor_earning }}</td>
+              <td class="px-4 py-3">
+                {% if row.payment_status == 'paid' %}
+                  <span class="bg-green-100 text-green-700 px-2 py-0.5 rounded-full text-xs font-semibold">Paid</span>
+                {% elif row.payment_status == 'unpaid' %}
+                  <span class="bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full text-xs font-semibold">Pending</span>
+                {% else %}
+                  <span class="bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full text-xs font-semibold">{{ row.payment_status|title }}</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6" class="px-4 py-6 text-center text-gray-500">No orders found.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="tab-payouts" class="p-4 tab-content hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="bg-gray-100">
+            <tr>
+              <th class="px-4 py-3 text-left">Date</th>
+              <th class="px-4 py-3 text-left">Amount</th>
+              <th class="px-4 py-3 text-left">Method</th>
+              <th class="px-4 py-3 text-left">Transaction ID</th>
+              <th class="px-4 py-3 text-left">Admin Remarks</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for p in payouts %}
+            <tr class="hover:bg-gray-50">
+              <td class="px-4 py-3">{{ p.created_at|date:"Y-m-d H:i" }}</td>
+              <td class="px-4 py-3">Rs. {{ p.amount }}</td>
+              <td class="px-4 py-3">{{ p.method|default:'-' }}</td>
+              <td class="px-4 py-3">{{ p.transaction_id|default:'-' }}</td>
+              <td class="px-4 py-3">{{ p.admin_remarks|default:'-' }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5" class="px-4 py-6 text-center text-gray-500">No payouts recorded.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  $(function(){
+    $('.tab-link').on('click', function(){
+      $('.tab-link').removeClass('active');
+      $(this).addClass('active');
+      const tab = $(this).data('tab');
+      $('.tab-content').addClass('hidden');
+      $('#tab-' + tab).removeClass('hidden');
+    });
+  });
+</script>
+{% endblock %}
+
+

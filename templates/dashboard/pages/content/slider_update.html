@@ -1,0 +1,53 @@
+{% extends 'dashboard/components/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="bg-white rounded-xl shadow p-6 max-w-3xl">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-semibold text-gray-800">Edit Slider</h1>
+    <a href="{% url 'admin_sliders_list' %}" class="text-blue-600 hover:text-blue-800">Back to Sliders</a>
+  </div>
+
+  <form method="post" enctype="multipart/form-data" class="space-y-5">
+    {% csrf_token %}
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Title</label>
+      <input type="text" name="title" value="{{ slider.title }}" class="w-full border-gray-300 rounded-lg" />
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Subtitle</label>
+      <input type="text" name="subtitle" value="{{ slider.subtitle }}" class="w-full border-gray-300 rounded-lg" />
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Link</label>
+      <input type="url" name="link" value="{{ slider.link }}" class="w-full border-gray-300 rounded-lg" />
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Existing Image</label>
+      {% if slider.image %}
+        <img src="{{ slider.image.url }}" class="h-16 w-32 object-cover rounded mb-2" />
+      {% endif %}
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Add New Images (Optional)</label>
+      <input type="file" name="images" accept="image/*" multiple class="w-full mb-2" />
+      <p class="text-gray-500 text-xs">Select multiple images to add. Each new image will create a new slider entry.</p>
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Description for New Images</label>
+      <textarea name="description" class="w-full border-gray-300 rounded-lg h-20" placeholder="Optional description for new images"></textarea>
+    </div>
+
+    <div class="flex justify-end gap-3">
+      <a href="{% url 'admin_sliders_list' %}" class="px-4 py-2 rounded-lg border">Cancel</a>
+      <button type="submit" class="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700">Update</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,75 @@
+{% extends 'dashboard/components/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="space-y-6">
+  <h1 class="text-2xl font-semibold text-gray-800">Vendor Payments Overview</h1>
+
+  <!-- Summary Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+    <div class="bg-white rounded-xl shadow p-4">
+      <div class="text-gray-500 text-sm">💰 Total Platform Revenue</div>
+      <div class="text-2xl font-semibold mt-1">Rs. {{ total_platform_revenue }}</div>
+    </div>
+    <div class="bg-white rounded-xl shadow p-4">
+      <div class="text-gray-500 text-sm">🏦 Total Vendor Earnings</div>
+      <div class="text-2xl font-semibold mt-1">Rs. {{ total_vendor_earnings }}</div>
+    </div>
+    <div class="bg-white rounded-xl shadow p-4">
+      <div class="text-gray-500 text-sm">📤 Total Payouts Made</div>
+      <div class="text-2xl font-semibold mt-1">Rs. {{ total_payouts }}</div>
+    </div>
+    <div class="bg-white rounded-xl shadow p-4">
+      <div class="text-gray-500 text-sm">⚖️ Pending Payments</div>
+      <div class="text-2xl font-semibold mt-1">Rs. {{ pending_total }}</div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <form method="get" class="bg-white rounded-xl shadow p-4 grid grid-cols-1 md:grid-cols-4 gap-3">
+    <input type="text" name="search" value="{{ request.GET.search }}" placeholder="Search vendor name..." class="border border-gray-300 rounded-lg px-3 py-2 w-full" />
+    <input type="date" name="from" value="{{ request.GET.from }}" class="border border-gray-300 rounded-lg px-3 py-2 w-full" />
+    <input type="date" name="to" value="{{ request.GET.to }}" class="border border-gray-300 rounded-lg px-3 py-2 w-full" />
+    <div class="flex gap-2">
+      <button class="bg-gray-800 text-white px-4 py-2 rounded-lg w-full md:w-auto">Apply</button>
+      <a href="?" class="px-4 py-2 rounded-lg border w-full md:w-auto">Reset</a>
+    </div>
+  </form>
+
+  <!-- Table -->
+  <div class="bg-white rounded-xl shadow p-4 overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead class="bg-gray-100">
+        <tr>
+          <th class="px-4 py-3 text-left">Vendor</th>
+          <th class="px-4 py-3 text-left">Total Revenue</th>
+          <th class="px-4 py-3 text-left">Admin Commission ({{ commission_rate_percent }}%)</th>
+          <th class="px-4 py-3 text-left">Vendor Earnings</th>
+          <th class="px-4 py-3 text-left">Total Payout</th>
+          <th class="px-4 py-3 text-left">Pending Payout</th>
+          <th class="px-4 py-3 text-center">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in vendor_rows %}
+        <tr class="hover:bg-gray-50">
+          <td class="px-4 py-3 font-medium">{{ row.vendor.shop_name }}</td>
+          <td class="px-4 py-3">Rs. {{ row.total_revenue }}</td>
+          <td class="px-4 py-3">Rs. {{ row.admin_commission }}</td>
+          <td class="px-4 py-3">Rs. {{ row.vendor_earning }}</td>
+          <td class="px-4 py-3">Rs. {{ row.paid }}</td>
+          <td class="px-4 py-3">Rs. {{ row.pending }}</td>
+          <td class="px-4 py-3 text-center">
+            <a href="{% url 'admin_vendor_payments_detail' row.vendor.id %}" class="text-blue-600 hover:text-blue-800" title="View details"><i class="fa fa-eye"></i></a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7" class="px-4 py-6 text-center text-gray-500">No vendors found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+

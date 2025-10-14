@@ -1,0 +1,74 @@
+{% extends 'dashboard/components/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="bg-white shadow rounded-xl p-6">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-semibold text-gray-800">
+      <i class="fa-solid fa-building mr-2 text-blue-600"></i>Organization Information
+    </h1>
+    <a href="{% url 'admin_organization_update' %}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+      <i class="fa-solid fa-pen mr-1"></i> Edit Info
+    </a>
+  </div>
+
+  {% if organization %}
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div>
+      {% if organization.logo %}
+        <img src="{{ organization.logo.url }}" alt="Logo" class="h-24 mb-4 rounded-lg border">
+      {% endif %}
+      <p><strong>Name:</strong> {{ organization.name }}</p>
+      <p><strong>Tagline:</strong> {{ organization.tagline }}</p>
+      <p><strong>Email:</strong> {{ organization.email }}</p>
+      <p><strong>Phone:</strong> {{ organization.phone }}</p>
+      {% if organization.phone_secondary %}
+      <p><strong>Alt Phone:</strong> {{ organization.phone_secondary }}</p>
+      {% endif %}
+      <p><strong>Address:</strong> {{ organization.address }}</p>
+    </div>
+
+    <div>
+      {% if organization.favicon %}
+        <img src="{{ organization.favicon.url }}" alt="Favicon" class="h-16 mb-4 border rounded-lg">
+      {% endif %}
+      <h3 class="text-lg font-semibold mb-2">Social Links</h3>
+      <ul class="space-y-2">
+        {% if organization.facebook %}
+        <li><i class="fab fa-facebook text-blue-600 mr-2"></i>
+          <a href="{{ organization.facebook }}" target="_blank" class="text-blue-600 hover:underline">Facebook</a>
+        </li>
+        {% endif %}
+        {% if organization.instagram %}
+        <li><i class="fab fa-instagram text-pink-500 mr-2"></i>
+          <a href="{{ organization.instagram }}" target="_blank" class="text-pink-600 hover:underline">Instagram</a>
+        </li>
+        {% endif %}
+        {% if organization.twitter %}
+        <li><i class="fab fa-twitter text-sky-500 mr-2"></i>
+          <a href="{{ organization.twitter }}" target="_blank" class="text-sky-600 hover:underline">Twitter</a>
+        </li>
+        {% endif %}
+        {% if organization.youtube %}
+        <li><i class="fab fa-youtube text-red-600 mr-2"></i>
+          <a href="{{ organization.youtube }}" target="_blank" class="text-red-600 hover:underline">YouTube</a>
+        </li>
+        {% endif %}
+        {% if organization.tiktok %}
+        <li><i class="fab fa-tiktok text-gray-800 mr-2"></i>
+          <a href="{{ organization.tiktok }}" target="_blank" class="text-gray-800 hover:underline">TikTok</a>
+        </li>
+        {% endif %}
+      </ul>
+    </div>
+  </div>
+  {% else %}
+  <div class="text-center py-10">
+    <p class="text-gray-600 text-lg">No organization information found.</p>
+    <a href="{% url 'admin_organization_update' %}" class="text-blue-600 hover:underline mt-2 inline-block">
+      Create Organization Info
+    </a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

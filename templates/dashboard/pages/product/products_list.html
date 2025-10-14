@@ -1,0 +1,123 @@
+{% extends 'dashboard/components/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="bg-white rounded-xl shadow p-6">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-semibold text-gray-800">Products</h1>
+    <a href="{% url 'admin_product_add' %}" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">+ Add Product</a>
+  </div>
+
+  <form method="get" class="mb-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+    <input type="text" name="search" value="{{ request.GET.search }}" placeholder="Search by name, SKU, brand..." class="border border-gray-300 rounded-lg p-2.5" />
+    <select name="category" class="border border-gray-300 rounded-lg p-2.5">
+      <option value="">All Categories</option>
+      {% for c in categories %}
+        <option value="{{ c.id }}" {% if request.GET.category|default:'' == c.id|stringformat:'s' %}selected{% endif %}>{{ c.name }}</option>
+      {% endfor %}
+    </select>
+    <select name="vendor" class="border border-gray-300 rounded-lg p-2.5">
+      <option value="">All Vendors</option>
+      {% for v in vendors %}
+        <option value="{{ v.id }}" {% if request.GET.vendor|default:'' == v.id|stringformat:'s' %}selected{% endif %}>{{ v.shop_name }}</option>
+      {% endfor %}
+    </select>
+    <div class="md:col-span-3">
+      <button class="bg-gray-800 text-white px-4 py-2 rounded-lg">Filter</button>
+    </div>
+  </form>
+
+  <div class="overflow-x-auto">
+    <table id="productsTable" class="display w-full border border-gray-200 rounded-lg text-sm">
+      <thead class="bg-gray-100">
+        <tr>
+          <th class="px-4 py-3 text-left">ID</th>
+          <th class="px-4 py-3 text-left">Image</th>
+          <th class="px-4 py-3 text-left">Name</th>
+          <th class="px-4 py-3 text-left">Category</th>
+          <th class="px-4 py-3 text-left">Vendor</th>
+          <th class="px-4 py-3 text-left">Price</th>
+          <th class="px-4 py-3 text-left">Stock</th>
+          <th class="px-4 py-3 text-left">Gallery</th>
+          <th class="px-4 py-3 text-left">Variants</th>
+          <th class="px-4 py-3 text-center">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for product in products %}
+        <tr class="hover:bg-gray-50">
+          <td class="px-4 py-3">{{ product.id }}</td>
+          <td class="px-4 py-3">
+            {% if product.main_image %}
+              <img src="{{ product.main_image.url }}" alt="{{ product.name }}" class="h-10 w-10 object-cover rounded"/>
+            {% else %}
+              <span class="text-gray-400">No image</span>
+            {% endif %}
+          </td>
+          <td class="px-4 py-3 font-medium">{{ product.name }}</td>
+          <td class="px-4 py-3">{{ product.category.name }}</td>
+          <td class="px-4 py-3">{{ product.vendor.shop_name }}</td>
+          <td class="px-4 py-3">{{ product.price }}</td>
+          <td class="px-4 py-3">{{ product.stock }}</td>
+          <td class="px-4 py-3">
+            <div class="flex items-center space-x-1">
+              {% for img in product.images.all %}
+                <img src="{{ img.image.url }}" alt="img" class="h-8 w-8 object-cover rounded"/>
+              {% empty %}
+                <span class="text-gray-400">-</span>
+              {% endfor %}
+            </div>
+          </td>
+          <td class="px-4 py-3">
+            {% if product.variants.all %}
+              <div class="space-y-1">
+                {% for v in product.variants.all %}
+                  <div class="text-xs text-gray-700">
+                    <span class="font-medium">{{ v.get_variant_type_display|default:v.variant_type }}:</span> {{ v.name }}
+                    {% if v.sku %} <span class="text-gray-400">[{{ v.sku }}]</span>{% endif %}
+                    {% if v.price_adjustment and v.price_adjustment|floatformat != '0' %}
+                      <span class="text-gray-500">(+{{ v.price_adjustment }})</span>
+                    {% endif %}
+                  </div>
+                {% endfor %}
+              </div>
+            {% else %}
+              <span class="text-gray-400">-</span>
+            {% endif %}
+          </td>
+          <td class="px-4 py-3 text-center">
+            <a href="{% url 'admin_product_update' product.id %}" class="text-blue-600 hover:text-blue-800 font-medium">Edit</a>
+            |
+            <a href="{% url 'admin_product_delete' product.id %}" class="text-red-600 hover:text-red-800 font-medium" onclick="return confirm('Delete this product?')">Delete</a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="8" class="text-center text-gray-500 py-6">No products found.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  $(document).ready(function () {
+    $('#productsTable').DataTable({
+      pageLength: 10,
+      lengthChange: true,
+      searching: true,
+      ordering: true,
+      responsive: true,
+      language: {
+        search: "_INPUT_",
+        searchPlaceholder: "Search products..."
+      }
+    });
+  });
+ </script>
+{% endblock %}
+
+

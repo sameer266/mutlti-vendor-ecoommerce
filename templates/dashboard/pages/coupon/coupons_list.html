@@ -1,0 +1,66 @@
+{% extends 'dashboard/components/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="bg-white rounded-xl shadow p-6">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-semibold text-gray-800">Coupons</h1>
+    <a href="{% url 'admin_coupon_add' %}" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">+ Add Coupon</a>
+  </div>
+
+  <div class="overflow-x-auto">
+    <table id="couponsTable" class="display w-full border border-gray-200 rounded-lg text-sm">
+      <thead class="bg-gray-100">
+        <tr>
+          <th class="px-4 py-3 text-left">Code</th>
+          <th class="px-4 py-3 text-left">Type</th>
+          <th class="px-4 py-3 text-left">Value</th>
+          <th class="px-4 py-3 text-left">Min Purchase</th>
+          <th class="px-4 py-3 text-left">Max Discount</th>
+          <th class="px-4 py-3 text-left">Valid From</th>
+          <th class="px-4 py-3 text-left">Valid To</th>
+          <th class="px-4 py-3 text-center">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in coupons %}
+        <tr class="hover:bg-gray-50">
+          <td class="px-4 py-3 font-medium">{{ c.code }}</td>
+          <td class="px-4 py-3">{{ c.get_discount_type_display }}</td>
+          <td class="px-4 py-3">{{ c.discount_value }}</td>
+          <td class="px-4 py-3">{{ c.min_purchase }}</td>
+          <td class="px-4 py-3">{{ c.max_discount|default:'-' }}</td>
+          <td class="px-4 py-3">{{ c.valid_from|date:"Y-m-d H:i" }}</td>
+          <td class="px-4 py-3">{{ c.valid_to|date:"Y-m-d H:i" }}</td>
+          <td class="px-4 py-3 text-center">
+            <a href="{% url 'admin_coupon_update' c.id %}" class="text-blue-600 hover:text-blue-800 font-medium">Edit</a>
+            |
+            <a href="{% url 'admin_coupon_delete' c.id %}" class="text-red-600 hover:text-red-800 font-medium" onclick="return confirm('Delete this coupon?')">Delete</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  $(document).ready(function () {
+    $('#couponsTable').DataTable({
+      pageLength: 10,
+      lengthChange: true,
+      searching: true,
+      ordering: true,
+      responsive: true,
+      language: {
+        search: "_INPUT_",
+        searchPlaceholder: "Search coupons..."
+      }
+    });
+  });
+</script>
+{% endblock %}
+
+

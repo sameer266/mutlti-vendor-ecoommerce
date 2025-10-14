@@ -1,0 +1,124 @@
+{% extends 'dashboard/components/base.html' %}
+
+{% load static %}
+
+{% block content %}
+<div class="bg-white rounded-xl shadow p-6">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-semibold text-gray-800">Add Vendor</h1>
+    <a href="{% url 'admin_vendors_list' %}" class="text-sm text-blue-600 hover:text-blue-800">Back to list</a>
+  </div>
+
+  <form method="post" action="{% url 'admin_vendor_add' %}" enctype="multipart/form-data" class="space-y-6">
+    {% csrf_token %}
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div>
+        <label class="block text-sm font-medium text-gray-700">User</label>
+        <select name="user" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5">
+          {% for u in users %}
+            <option value="{{ u.id }}">{{ u.username }} ({{ u.email }})</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Shop Name</label>
+        <input type="text" name="shop_name" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5" required>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Email</label>
+        <input type="email" name="email" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5" required>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Phone</label>
+        <input type="text" name="phone" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5" required>
+      </div>
+
+      <div class="md:col-span-2">
+        <label class="block text-sm font-medium text-gray-700">Address</label>
+        <input type="text" name="address" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5" required>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700">City</label>
+        <input type="text" name="city" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5" required>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Province</label>
+        <select name="province" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5" required>
+          {% for value, label in provinces %}
+            <option value="{{ value }}">{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700">PAN Number</label>
+        <input type="text" name="pan_number" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5" required>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Citizenship Number</label>
+        <input type="text" name="citizenship_number" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5">
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Bank Name</label>
+        <input type="text" name="bank_name" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5">
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Bank Account Number</label>
+        <input type="text" name="bank_account_number" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5">
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Bank Account Holder</label>
+        <input type="text" name="bank_account_holder" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5">
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Verification Status</label>
+        <select name="verification_status" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5">
+          <option value="pending">Pending</option>
+          <option value="approved">Approved</option>
+          <option value="rejected">Rejected</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Shop Logo</label>
+        <input type="file" name="shop_logo" accept="image/*" class="mt-1 block w-full">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Shop Banner</label>
+        <input type="file" name="shop_banner" accept="image/*" class="mt-1 block w-full">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700">PAN Document (pdf/jpg/jpeg/png)</label>
+        <input type="file" name="pan_document" accept=".pdf,image/*" class="mt-1 block w-full" required>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Citizenship Front</label>
+        <input type="file" name="citizenship_front" accept="image/*" class="mt-1 block w-full">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Citizenship Back</label>
+        <input type="file" name="citizenship_back" accept="image/*" class="mt-1 block w-full">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Company Registration</label>
+        <input type="file" name="company_registration" class="mt-1 block w-full">
+      </div>
+    </div>
+
+    <div class="pt-4">
+      <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">Save Vendor</button>
+    </div>
+  </form>
+</div>
+{% endblock %}
