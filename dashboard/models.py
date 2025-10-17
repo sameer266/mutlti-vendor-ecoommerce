@@ -4,8 +4,22 @@ from django.utils.text import slugify
 from django.utils import timezone
 from django.core.validators import FileExtensionValidator
 from decimal import Decimal
+from ckeditor.fields import RichTextField    
 
 
+
+class OTPVerification(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    otp_code = models.CharField(max_length=6)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+
+    def is_expired(self):
+        return timezone.now() > self.expires_at
+
+    def __str__(self):
+        return f"OTP for {self.user.email}"
+    
 # -------------------------
 # User Role Management
 # -------------------------
@@ -17,7 +31,7 @@ class UserRole(models.Model):
         ('admin', 'Admin'),
     ]
     
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='role')
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='role',null=True,blank=True)
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='customer')
     created_at = models.DateTimeField(auto_now_add=True)
     
@@ -38,7 +52,7 @@ class UserRole(models.Model):
 # User Management
 # -------------------------
 class UserProfile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE,related_name="profile")
     phone = models.CharField(max_length=15)
     avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)
     
@@ -261,10 +275,9 @@ class Category(models.Model):
     name = models.CharField(max_length=100)
     slug = models.SlugField(unique=True, blank=True)
     image = models.ImageField(upload_to='categories/', blank=True, null=True)
-
-    parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='subcategories')
     order = models.PositiveIntegerField(default=0, help_text='Display order')
     is_active = models.BooleanField(default=True)
+    is_featured=models.BooleanField(default=False)
     
     class Meta:
         verbose_name_plural = 'Categories'
@@ -282,21 +295,16 @@ class Category(models.Model):
         super().save(*args, **kwargs)
     
     def __str__(self):
-        if self.parent:
-            return f"{self.parent.name} > {self.name}"
         return self.name
+      
     
-    def get_all_children(self):
-        """Get all subcategories recursively"""
-        children = list(self.subcategories.all())
-        for child in list(children):
-            children.extend(child.get_all_children())
-        return children
+    
 
 
 # -------------------------
 # Product Management
 # -------------------------
+
 class Product(models.Model):
     vendor = models.ForeignKey(Vendor, on_delete=models.CASCADE, related_name='products')
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, related_name='products')
@@ -304,12 +312,10 @@ class Product(models.Model):
     # Basic Info
     name = models.CharField(max_length=255)
     slug = models.SlugField(unique=True, blank=True)
-    description = models.TextField()
-    short_description = models.TextField(max_length=500, blank=True)
+    description = RichTextField() 
     
     # Pricing
     price = models.DecimalField(max_digits=10, decimal_places=2)
-    compare_price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     cost_price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True, help_text='For vendor tracking')
     
     # Stock Management
@@ -324,10 +330,6 @@ class Product(models.Model):
     # Images
     main_image = models.ImageField(upload_to='products/')
     
-    # SEO
-    meta_title = models.CharField(max_length=200, blank=True)
-    meta_description = models.TextField(max_length=300, blank=True)
-    
     # Status & Stats
     is_active = models.BooleanField(default=True)
     is_featured = models.BooleanField(default=False)
@@ -337,6 +339,7 @@ class Product(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     
     def save(self, *args, **kwargs):
+        # Auto-generate slug if blank
         if not self.slug:
             base_slug = slugify(self.name)
             slug = base_slug
@@ -345,6 +348,11 @@ class Product(models.Model):
                 slug = f"{base_slug}-{counter}"
                 counter += 1
             self.slug = slug
+
+        import uuid
+        if not self.sku:
+            self.sku = uuid.uuid4().hex[:8].upper()
+            
         super().save(*args, **kwargs)
     
     @property
@@ -357,8 +365,8 @@ class Product(models.Model):
     
     @property
     def discount_percentage(self):
-        if self.compare_price and self.compare_price > self.price:
-            return int(((self.compare_price - self.price) / self.compare_price) * 100)
+        if self.cost_price and self.cost_price > self.price:
+            return int(((self.cost_price - self.price) / self.cost_price) * 100)
         return 0
     
     @property
@@ -392,14 +400,21 @@ class ProductVariant(models.Model):
         ('size', 'Size'),
         ('color', 'Color'),
         ('weight', 'Weight'),
+        ('storage', 'Storage Capacity'),
+        ('ram', 'RAM'),
+        ('material', 'Material'),
+        ('style', 'Style'),
+        ('pattern', 'Pattern'),
+        ('flavor', 'Flavor'),
         ('other', 'Other'),
+        
     ]
     variant_type = models.CharField(max_length=20, choices=VARIANT_TYPES)
     name = models.CharField(max_length=100)
     
     price_adjustment = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    stock = models.PositiveIntegerField(default=0)
-    sku = models.CharField(max_length=100, blank=True)
+
+
     
     class Meta:
         unique_together = ('product', 'variant_type', 'name')
@@ -411,37 +426,50 @@ class ProductVariant(models.Model):
 # -------------------------
 # Cart & Wishlist
 # -------------------------
+
+
 class Cart(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    variant = models.ForeignKey(ProductVariant, on_delete=models.CASCADE, null=True, blank=True)
+    # Authenticated user (optional for guest)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+
+    session_key = models.CharField(max_length=40, null=True, blank=True, help_text="For non-authenticated users")
+    
+    product = models.ForeignKey('Product', on_delete=models.CASCADE)
+    variant = models.ForeignKey('ProductVariant', on_delete=models.CASCADE, null=True, blank=True)
     quantity = models.PositiveIntegerField(default=1)
     added_at = models.DateTimeField(auto_now_add=True)
-    
-    class Meta:
-        unique_together = ('user', 'product', 'variant')
-    
+
     def get_total_price(self):
         price = self.product.price
         if self.variant:
             price += self.variant.price_adjustment
         return price * self.quantity
+
+    def get_item_price(self):
+        price = self.product.price
+        if self.variant:
+            price += self.variant.price_adjustment
+        return price
     
     def __str__(self):
-        return f"{self.user.username}'s cart - {self.product.name}"
+        if self.user:
+            return f"{self.user.username}'s cart - {self.product.name}"
+        return f"Guest cart ({self.session_key}) - {self.product.name}"
 
 
 class Wishlist(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    # Authenticated user (optional for guest)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    session_key = models.CharField(max_length=40, null=True, blank=True, help_text="For non-authenticated users")
+    
+    product = models.ForeignKey('Product', on_delete=models.CASCADE)
     added_at = models.DateTimeField(auto_now_add=True)
-    
-    class Meta:
-        unique_together = ('user', 'product')
-    
-    def __str__(self):
-        return f"{self.user.username}'s wishlist - {self.product.name}"
 
+
+    def __str__(self):
+        if self.user:
+            return f"{self.user.username}'s wishlist - {self.product.name}"
+        return f"Guest wishlist ({self.session_key}) - {self.product.name}"
 
 # -------------------------
 # Order Management
@@ -618,6 +646,15 @@ class Coupon(models.Model):
                 self.valid_from <= now <= self.valid_to and
                 (self.usage_limit is None or self.used_count < self.usage_limit))
     
+    def get_discount_amount(self, subtotal):
+        if self.discount_type == 'percent':
+            discount = (self.discount_value / 100) * subtotal
+            if self.max_discount is not None:
+                discount = min(discount, self.max_discount)
+        else:
+            discount = self.discount_value
+        return discount
+    
     def __str__(self):
         return self.code
 
@@ -777,18 +814,33 @@ class Slider(models.Model):
 
 
 # Banner model
+# Banner model
+from django.db import models
+
 class Banner(models.Model):
+    PAGE_CHOICES = [
+        ('home', 'Home Page'),
+        ('products', 'Products Page'),
+      
+    ]
+
     title = models.CharField(max_length=200, blank=True, null=True)
     image = models.ImageField(upload_to='banners/')
     link = models.URLField(max_length=500, blank=True, null=True)
-    position = models.PositiveIntegerField(default=0, help_text="Order of display")
+    page = models.CharField(
+        max_length=50, 
+        choices=PAGE_CHOICES, 
+        default='home', 
+        unique=True,  # Only one banner per page
+        help_text="Select where to display the banner"
+    )
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
-
     def __str__(self):
         return self.title or f"Banner {self.id}"
+
 
 # Home page category Section
 class HomeCategory(models.Model):

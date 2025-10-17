@@ -18,6 +18,9 @@ from django.contrib import admin
 from django.urls import path,include
 from . import views
 
+from django.conf import settings
+from django.conf.urls.static import static
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -25,15 +28,44 @@ urlpatterns = [
     
     
     path('',views.home_page,name="home"),
+    path('search/',views.search_page,name='search'),
     path('all-collections/',views.all_collections,name="all_collections"),
-    path("new-arrivals/",views.new_arrivals,name="new_arrivals"),
+    path("new-arrivals/",views.new_arrivals_page,name="new_arrivals"),
+
     path("vendors/",views.vendors,name="vendors"),
-    path("vendors/vendor-details/",views.vendor_details,name="vendor_details"),
-    path('carts/',views.carts,name="carts"),
+    path("vendors/<slug:slug>/",views.vendor_details,name="vendor_details"),
+    path('product/<slug:slug>/',views.product_details,name="product_details"),
+    path("category/<slug:slug>/",views.category_details,name='category_details'),
+    
+    path('cart/',views.carts,name="carts"),
+    path('api/cart/add/',views.add_to_cart,name="add_to_cart"),
+    path('api/cart/update/',views.update_cart_item,name="update_cart_item"),
+    path('api/cart/remove/',views.remove_from_cart,name="remove_from_cart"),
+    
+    path('checkout/', views.checkout, name='checkout_page'),
+    path('apply-coupon/', views.apply_coupon, name='apply_coupon'),
+    path('order-confirmation/<int:order_id>/', views.order_confirmation, name='order_confirmation'),
+ 
     
     
     path("login/",views.login_page,name="login_page"),
     path("signup/",views.signup_page,name='signup_page'),
+    path("logout",views.logout_view,name="logout"),
+    path('verify-otp/', views.verify_otp_page, name='verify_otp_page'),
     
+    
+    
+    # ============= Customer Dashboard ============
+    path("customer-profile/",views.customer_profile,name='customer_profile'),
+    path("dashboard/edit/profile/",views.edit_profile,name='edit_profile'),
+    path("dashboard/orders/",views.my_orders,name='customer_orders'),
+    path("dashboard/wishlist/",views.my_wishlist,name='customer_wishlist'),
+    
+    
+      path('ckeditor/', include('ckeditor_uploader.urls')),
     
 ]
+
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

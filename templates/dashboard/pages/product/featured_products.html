@@ -55,7 +55,7 @@
               <span class="text-gray-400">No image</span>
             {% endif %}
           </td>
-          <td class="px-4 py-3 font-medium">{{ product.name }}</td>
+          <td class="px-4 py-3 font-medium">{{ product.name | truncatechars:20 }}</td>
           <td class="px-4 py-3">{{ product.category.name }}</td>
           <td class="px-4 py-3">{{ product.vendor.shop_name }}</td>
           <td class="px-4 py-3">{{ product.price }}</td>

@@ -40,6 +40,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
    
     'dashboard',
+    'ckeditor',                # for editor widgets + fields
+    'ckeditor_uploader',  
 ]
 
 MIDDLEWARE = [
@@ -65,6 +67,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'ecommerce.context_processors.global_context'
             ],
         },
     },
@@ -182,3 +185,16 @@ SIMPLE_JWT = {
     'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
 }
 
+
+
+
+# ============== Email =================
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'  # SMTP server host
+EMAIL_PORT = 587  # SMTP server port (587 for TLS, 465 for SSL)
+EMAIL_USE_TLS = True  # True for TLS, False for SSL
+EMAIL_HOST_USER = 'sameerbaiju792@gmail.com'  # SMTP server username
+EMAIL_HOST_PASSWORD = 'dhbd ltho bnmd pvzf'
+
+
+CKEDITOR_UPLOAD_PATH = "uploads/"  

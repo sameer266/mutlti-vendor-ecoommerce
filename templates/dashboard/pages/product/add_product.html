@@ -37,33 +37,24 @@
 
       <div class="md:col-span-2">
         <label class="block text-sm font-medium text-gray-700">Description</label>
-        <textarea name="description" rows="4" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5" required></textarea>
+        <textarea id="description" name="description" rows="4" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5" required></textarea>
+
       </div>
 
-      <div class="md:col-span-2">
-        <label class="block text-sm font-medium text-gray-700">Short Description</label>
-        <textarea name="short_description" rows="2" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5"></textarea>
-      </div>
+      
 
       <div>
         <label class="block text-sm font-medium text-gray-700">Price</label>
         <input type="number" step="0.01" name="price" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5" required>
       </div>
 
-      <div>
-        <label class="block text-sm font-medium text-gray-700">Compare at Price</label>
-        <input type="number" step="0.01" name="compare_price" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5">
-      </div>
+      
 
       <div>
         <label class="block text-sm font-medium text-gray-700">Cost Price</label>
         <input type="number" step="0.01" name="cost_price" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5">
       </div>
 
-      <div>
-        <label class="block text-sm font-medium text-gray-700">SKU</label>
-        <input type="text" name="sku" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5">
-      </div>
 
       <div>
         <label class="block text-sm font-medium text-gray-700">Stock</label>
@@ -85,6 +76,13 @@
         <input type="number" step="0.01" name="weight" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5">
       </div>
 
+      <div class="md:col-span-2 pt-2">
+        <label class="inline-flex items-center text-sm text-gray-700">
+          <input type="checkbox" name="is_featured" class="mr-2">
+          Featured product
+        </label>
+      </div>
+
       <div>
         <label class="block text-sm font-medium text-gray-700">Main Image</label>
         <input type="file" name="main_image" accept="image/*" class="mt-1 block w-full">
@@ -96,15 +94,9 @@
         <p class="text-xs text-gray-500 mt-1">You can select multiple images.</p>
       </div>
 
-      <div>
-        <label class="block text-sm font-medium text-gray-700">Meta Title</label>
-        <input type="text" name="meta_title" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5">
-      </div>
+     
 
-      <div class="md:col-span-2">
-        <label class="block text-sm font-medium text-gray-700">Meta Description</label>
-        <textarea name="meta_description" rows="2" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5"></textarea>
-      </div>
+      
     </div>
 
     <div class="pt-2">
@@ -121,6 +113,37 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="https://cdn.ckeditor.com/4.21.0/standard/ckeditor.js"></script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const textarea = document.querySelector('textarea[name="description"]');
+    if (textarea) {
+      CKEDITOR.replace('description', {
+        height: 300,
+        toolbar: [
+          { name: 'basicstyles', items: ['Bold', 'Italic', 'Underline', 'Strike'] },
+          { name: 'paragraph', items: [
+              'NumberedList', 'BulletedList', '-', 
+              'JustifyLeft', 'JustifyCenter', 'JustifyRight', 'JustifyBlock'
+          ]},
+          { name: 'styles', items: ['Font', 'FontSize'] },
+          { name: 'colors', items: ['TextColor', 'BGColor'] },
+          { name: 'insert', items: ['Link', 'Unlink', 'Image'] },
+          { name: 'tools', items: ['RemoveFormat', 'Source'] } // optional tools
+        ],
+        removePlugins: 'elementspath', // hide element path at bottom
+        resize_enabled: false,
+        font_names: 'Arial;Comic Sans MS;Courier New;Georgia;Tahoma;Times New Roman;Verdana',
+        fontSize_sizes: '12/12px;14/14px;16/16px;18/18px;20/20px;24/24px;28/28px'
+      });
+    }
+  });
+</script>
+
+
+
+
 <script>
   (function(){
     const variantsContainer = document.getElementById('variantsContainer');
@@ -133,9 +156,15 @@
           <label class="block text-sm font-medium text-gray-700">Type</label>
           <select name="variant_type[]" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5">
             <option value="size">Size</option>
-            <option value="color">Color</option>
-            <option value="weight">Weight</option>
-            <option value="other" selected>Other</option>
+    <option value="color">Color</option>
+    <option value="weight">Weight</option>
+    <option value="storage">Storage Capacity</option>
+    <option value="ram">RAM</option>
+    <option value="material">Material</option>
+    <option value="style">Style</option>
+    <option value="pattern">Pattern</option>
+    <option value="flavor">Flavor</option>
+    <option value="other" selected>Other</option>
           </select>
         </div>
         <div>

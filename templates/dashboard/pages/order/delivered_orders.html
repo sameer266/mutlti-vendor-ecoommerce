@@ -48,7 +48,7 @@
           </td>
           <td class="px-4 py-3">{% if order.delivered_at %}{{ order.delivered_at|date:"Y-m-d H:i" }}{% else %}-{% endif %}</td>
           <td class="px-4 py-3 text-center">
-            <a href="{% url 'admin_order_update' order.order_number %}" class="text-blue-600 hover:text-blue-800 font-medium">Edit</a>
+
             |
             <a href="{% url 'admin_order_delete' order.order_number %}" class="text-red-600 hover:text-red-800 font-medium" onclick="return confirm('Delete this order?')">Delete</a>
           </td>

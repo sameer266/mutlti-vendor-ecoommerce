@@ -5,7 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Your modern ecommerce store for quality products">
   <meta name="theme-color" content="#bd5e00ff">
-  <title>{% block title %}Modern Ecommerce{% endblock %}</title>
+  
+  <link rel="icon" type="image/png" href="../../../static/Hello_bajar_Logo_1.png" />
+  <title>{% block title %}Ecommerce{% endblock %}</title>
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="/static/favicon.png">
@@ -56,11 +58,6 @@
   {% block extra_head %}{% endblock %}
 </head>
 <body class="min-h-screen flex flex-col">
-
-  <!-- Loading Overlay -->
-  <div id="loading-overlay" class="fixed inset-0 bg-white z-50 flex items-center justify-center hidden">
-    <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-primary"></div>
-  </div>
 
   <!-- Navbar -->
   {% include 'website/components/navbar.html' %}

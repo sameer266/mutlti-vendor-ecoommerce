@@ -1,260 +1,265 @@
 {% extends 'website/components/base.html' %}
 
-{% block title %}Shopping Cart{% endblock %}
+{% block title %}New Arrivals - Miteri Mart | Latest Products{% endblock %}
+
+{% block extra_head %}
+  <meta name="description" content="Explore the latest products added to Miteri Mart in the past week. Shop new arrivals from trusted vendors today!">
+{% endblock %}
 
 {% block content %}
-<!-- New Arrivals Section -->
-<section class="container mx-auto px-4 py-8">
-  <!-- Heading -->
-    <div class="text-center mb-8 bg-[var(--bg-brown)] p-4 rounded shadow">
-  <h1 class="text-2xl sm:text-3xl font-extrabold text-[var(--text-light)]">
-    New Arrivals
-  </h1>
-  <p class="text-[var(--text-light)] text-sm mt-2">
-    Fresh products just for you — shop the latest additions below
-  </p>
-</div>
+  <!-- Hero Banner -->
+  <section class="py-8">
+    <div class="text-center bg-[var(--bg-brown)] p-4 rounded shadow">
+      <h1 class="text-2xl sm:text-3xl font-extrabold text-[var(--text-light)]">
+        New Arrivals
+      </h1>
+      <p class="text-[var(--text-light)] text-sm mt-2">
+        Fresh products just for you — shop the latest additions below
+      </p>
+    </div>
+  </section>
 
-
-  <!-- Products Grid -->
-      <!-- Grid Container -->
-  <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 lg:gap-4">
-
-    <!-- Product Card -->
-    <div
-      class="product-card relative bg-gray-100 rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 w-full max-w-[250px] mx-auto">
-
-      <!-- Product Image -->
-      <a href="https://miterimart.com.au/singleproduct/samolina-corse-1kg"
-        class="block relative group bg-white rounded-xl m-2">
-        <img src="https://miterimart.com.au/storage/products/featured/R6pMFTe9ooXRQ4eVYMVWfaAivM6Le8GNAyqjBprs.jpg"
-          alt="Samolina Corse 1kg"
-          class="w-full h-48 sm:h-56 md:h-60 object-contain rounded-xl transition-transform duration-300 group-hover:scale-105">
-
-        <!-- Discount Tag Icon Top Left -->
-        <div class="absolute top-2 left-2 flex flex-col items-center z-20">
-          <i class="fa-solid fa-bookmark text-5xl text-yellow-500"></i>
-          <span
-            class="-mt-9 text-xs sm:text-xs font-bold text-[var(--text-primary)] text-center leading-tight">20%<br>OFF</span>
-        </div>
-
-        <!-- Hover Overlay -->
-        <div
-          class="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-2 sm:gap-3 transition-opacity duration-300 rounded-xl">
-          <button
-            class="p-2 sm:p-3 bg-[var(--bg-brown)] text-white rounded-full shadow-md hover:bg-[var(--primary)] transition cursor-pointer">
-            <i class="fa-regular fa-heart text-sm sm:text-base"></i>
-          </button>
-          <button
-            class="p-2 sm:p-3 bg-[var(--bg-brown)] text-white rounded-full shadow-md hover:bg-[var(--primary)] transition cursor-pointer">
-            <i class="fa-regular fa-eye text-sm sm:text-base"></i>
-          </button>
-        </div>
-      </a>
-
-      <!-- Product Info -->
-      <section class="p-2 sm:p-3 text-center space-y-1 sm:space-y-2">
-        <h3 class="font-semibold text-[var(--text-primary)] text-sm sm:text-base">Samolina Corse 1kg</h3>
-
-        <!-- Price + Stock Row -->
-        <div class="flex items-center justify-center mt-1 space-x-2 sm:space-x-3">
-          <!-- Price Group -->
-          <div class="flex items-center gap-1 sm:gap-2">
-            <!-- Original Price -->
-            <p class="text-xs sm:text-sm text-[var(--text-secondary)] line-through">$10.00</p>
-            <!-- Discounted Price -->
-            <p class="font-bold text-green-600 text-sm sm:text-base">$8.00</p>
-          </div>
-
-          <!-- Stock Indicator -->
-          <p class="text-xs sm:text-sm font-medium text-gray-600">In Stock</p>
-        </div>
-
-        <!-- Quantity + Add to Cart Row -->
-        <div class="flex flex-wrap items-center justify-center gap-2 mt-2">
-
-          <!-- Quantity Selector -->
-          <div class="flex items-center border border-gray-300 rounded overflow-hidden">
-            <button class="decreaseQty px-2 py-1 bg-gray-200 hover:bg-gray-300 text-sm">-</button>
-            <input type="number" value="1" min="1"
-              class="qtyInput w-10 text-center text-sm border-l border-r border-gray-300 focus:outline-none">
-            <button class="increaseQty px-2 py-1 bg-gray-200 hover:bg-gray-300 text-sm">+</button>
-          </div>
-
-          <!-- Add to Cart Button -->
-          <button
-            class="btn btn-primary flex items-center justify-center gap-1 text-xs sm:text-sm px-2 py-1   bg-[var(--bg-brown)] text-white rounded hover:bg-[var(--primary)] transition">
-            <i class="fa-solid fa-cart-shopping text-xs sm:text-sm"></i>
-            Add
-          </button>
-
-        </div>
-
-
-
-      </section>
-
+  <!-- New Arrivals Products Section -->
+  <section class="mt-12 container mx-auto px-4">
+    <!-- Section Title -->
+    <div class="mb-6">
+      <h2 class="text-2xl sm:text-3xl font-extrabold text-[var(--text-primary)] inline-block relative pb-2">
+        Latest Products
+        <span class="absolute left-0 bottom-0 w-20 h-1 bg-[var(--bg-brown)] rounded-full"></span>
+      </h2>
     </div>
 
-    <!-- Duplicate product cards as needed with same structure -->
-    <!-- Product Card -->
-    <div
-      class="product-card relative bg-gray-100 rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 w-full max-w-[250px] mx-auto">
-
-      <!-- Product Image -->
-      <a href="https://miterimart.com.au/singleproduct/samolina-corse-1kg"
-        class="block relative group bg-white rounded-xl m-2">
-        <img src="https://miterimart.com.au/storage/products/featured/R6pMFTe9ooXRQ4eVYMVWfaAivM6Le8GNAyqjBprs.jpg"
-          alt="Samolina Corse 1kg"
-          class="w-full h-48 sm:h-56 md:h-60 object-contain rounded-xl transition-transform duration-300 group-hover:scale-105">
-
-        <!-- Discount Tag Icon Top Left -->
-        <div class="absolute top-2 left-2 flex flex-col items-center z-20">
-          <i class="fa-solid fa-bookmark text-5xl text-yellow-500"></i>
-          <span
-            class="-mt-9 text-xs sm:text-xs font-bold text-[var(--text-primary)] text-center leading-tight">20%<br>OFF</span>
-        </div>
-
-        <!-- Hover Overlay -->
-        <div
-          class="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-2 sm:gap-3 transition-opacity duration-300 rounded-xl">
-          <button
-            class="p-2 sm:p-3 bg-[var(--bg-brown)] text-white rounded-full shadow-md hover:bg-[var(--primary)] transition cursor-pointer">
-            <i class="fa-regular fa-heart text-sm sm:text-base"></i>
-          </button>
-          <button
-            class="p-2 sm:p-3 bg-[var(--bg-brown)] text-white rounded-full shadow-md hover:bg-[var(--primary)] transition cursor-pointer">
-            <i class="fa-regular fa-eye text-sm sm:text-base"></i>
-          </button>
-        </div>
-      </a>
-
-      <!-- Product Info -->
-      <section class="p-2 sm:p-3 text-center space-y-1 sm:space-y-2">
-        <h3 class="font-semibold text-[var(--text-primary)] text-sm sm:text-base">Samolina Corse 1kg</h3>
-
-        <!-- Price + Stock Row -->
-        <div class="flex items-center justify-center mt-1 space-x-2 sm:space-x-3">
-          <!-- Price Group -->
-          <div class="flex items-center gap-1 sm:gap-2">
-            <!-- Original Price -->
-            <p class="text-xs sm:text-sm text-[var(--text-secondary)] line-through">$10.00</p>
-            <!-- Discounted Price -->
-            <p class="font-bold text-green-600 text-sm sm:text-base">$8.00</p>
+    <!-- Grid Container -->
+    <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 lg:gap-4">
+      {% for p in new_arrivals %}
+        <div class="product-card relative bg-gray-100 rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 w-full max-w-[250px] mx-auto cursor-pointer" data-product-id="{{ p.id }}">
+          <!-- Product Image -->
+          <div class="block relative group bg-white rounded-xl m-2">
+            {% if p.main_image %}
+              <img src="{{ p.main_image.url }}" alt="{{ p.name }}" class="w-full h-48 sm:h-56 md:h-60 object-contain rounded-xl transition-transform duration-300 group-hover:scale-105" loading="lazy">
+            {% else %}
+              <img src="https://via.placeholder.com/250x250" alt="{{ p.name }}" class="w-full h-48 sm:h-56 md:h-60 object-contain rounded-xl transition-transform duration-300 group-hover:scale-105" loading="lazy">
+            {% endif %}
+            <!-- Discount Badge -->
+            {% if p.discount_percentage %}
+              <div class="absolute top-2 left-2 flex flex-col items-center z-20">
+                <i class="fa-solid fa-bookmark text-5xl text-yellow-500"></i>
+                <span class="-mt-11 text-xs font-bold text-[var(--text-primary)] text-center leading-tight">
+                  {{ p.discount_percentage }}%<br>OFF
+                </span>
+              </div>
+            {% endif %}
+            <!-- Hover Overlay Buttons -->
+            <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-2 sm:gap-3 transition-opacity duration-300 rounded-xl">
+              <button class="wishlist-btn p-2 sm:p-3 bg-[var(--bg-brown)] text-white rounded-full shadow-md hover:bg-[var(--primary)] transition cursor-pointer">
+                <i class="fa-regular fa-heart text-sm sm:text-base"></i>
+              </button>
+              <a href="{% url 'product_details' p.slug %}" class="p-2 sm:p-3 bg-[var(--bg-brown)] text-white rounded-full shadow-md hover:bg-[var(--primary)] transition cursor-pointer">
+                <i class="fa-regular fa-eye text-sm sm:text-base"></i>
+              </a>
+            </div>
           </div>
-
-          <!-- Stock Indicator -->
-          <p class="text-xs sm:text-sm font-medium text-gray-600">In Stock</p>
+          <!-- Product Info -->
+          <section class="p-2 sm:p-3 space-y-1 sm:space-y-2">
+            <div class="flex justify-between items-center">
+              <a href="{% url 'product_details' p.slug %}" class="text-sm text-[var(--text-primary)] line-clamp-2">{{ p.name }}</a>
+              <p class="text-xs font-medium {% if p.in_stock %}text-green-600{% else %}text-red-600{% endif %}">
+                {% if p.in_stock %}In Stock{% else %}Out of Stock{% endif %}
+              </p>
+            </div>
+            <!-- Price Row -->
+            <div class="flex items-center justify-start mt-1 space-x-2 sm:space-x-3">
+              {% if p.cost_price > p.price %}
+                <p class="text-xs sm:text-sm text-[var(--text-secondary)] line-through">Rs. {{ p.cost_price }}</p>
+              {% endif %}
+              <p class="font-bold text-green-600 text-sm sm:text-base">Rs. {{ p.price }}</p>
+            </div>
+            <!-- Quantity + Add to Cart -->
+            <div class="flex flex-wrap items-center justify-start gap-2 mt-2">
+              <div class="flex items-center border border-gray-300 rounded overflow-hidden">
+                <button class="decreaseQty px-2 py-1 bg-gray-200 hover:bg-gray-300 text-sm cursor-pointer">-</button>
+                <input type="number" value="1" min="1" class="qtyInput w-10 text-center text-sm border-l border-r border-gray-300 focus:outline-none">
+                <button class="increaseQty px-2 py-1 bg-gray-200 hover:bg-gray-300 text-sm cursor-pointer">+</button>
+              </div>
+              <button class="btn btn-primary add-to-cart flex items-center justify-center gap-1 text-xs sm:text-sm px-2 py-1 rounded hover:bg-[var(--primary-dark)] transition cursor-pointer">
+                <i class="fa-solid fa-cart-shopping text-xs sm:text-sm"></i>
+                Add
+              </button>
+            </div>
+          </section>
         </div>
-
-        <!-- Quantity + Add to Cart Row -->
-        <div class="flex flex-wrap items-center justify-center gap-2 mt-2">
-
-          <!-- Quantity Selector -->
-          <div class="flex items-center border border-gray-300 rounded overflow-hidden">
-            <button class="decreaseQty px-2 py-1 bg-gray-200 hover:bg-gray-300 text-sm">-</button>
-            <input type="number" value="1" min="1"
-              class="qtyInput w-10 text-center text-sm border-l border-r border-gray-300 focus:outline-none">
-            <button class="increaseQty px-2 py-1 bg-gray-200 hover:bg-gray-300 text-sm">+</button>
-          </div>
-
-          <!-- Add to Cart Button -->
-          <button
-            class="btn btn-primary flex items-center justify-center gap-1 text-xs sm:text-sm px-2 py-1   bg-[var(--bg-brown)] text-white rounded hover:bg-[var(--primary)] transition">
-            <i class="fa-solid fa-cart-shopping text-xs sm:text-sm"></i>
-            Add
-          </button>
-
+      {% empty %}
+        <div class="col-span-full text-center py-12">
+          <i class="fas fa-box-open text-6xl text-gray-300 mb-4"></i>
+          <h3 class="text-2xl font-bold text-[var(--text-primary)] mb-2">No New Arrivals Found</h3>
+          <p class="text-[var(--text-secondary)]">Check back soon for the latest products!</p>
         </div>
-      </section>
-
+      {% endfor %}
     </div>
 
-    <!-- Product Card -->
-    <div
-      class="product-card relative bg-gray-100 rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 w-full max-w-[250px] mx-auto">
+    <!-- Pagination -->
+    {% if new_arrivals.has_other_pages %}
+      <div class="flex justify-center items-center mt-6 space-x-3 text-sm">
+        <!-- Previous -->
+        {% if new_arrivals.has_previous %}
+          <a href="?page={{ new_arrivals.previous_page_number }}" 
+             class="px-4 py-2 rounded-md bg-[var(--bg-brown)] text-white hover:bg-[var(--primary)] transition">
+             Prev
+          </a>
+        {% else %}
+          <span class="px-4 py-2 rounded-md bg-gray-200 text-gray-400 cursor-not-allowed">Prev</span>
+        {% endif %}
 
-      <!-- Product Image -->
-      <a href="https://miterimart.com.au/singleproduct/samolina-corse-1kg"
-        class="block relative group bg-white rounded-xl m-2">
-        <img src="https://miterimart.com.au/storage/products/featured/R6pMFTe9ooXRQ4eVYMVWfaAivM6Le8GNAyqjBprs.jpg"
-          alt="Samolina Corse 1kg"
-          class="w-full h-48 sm:h-56 md:h-60 object-contain rounded-xl transition-transform duration-300 group-hover:scale-105">
+        <!-- Page Info -->
+        <span class="px-4 py-2 text-gray-700">
+          Page <span class="font-semibold">{{ new_arrivals.number }}</span> of {{ new_arrivals.paginator.num_pages }}
+        </span>
 
-        <!-- Discount Tag Icon Top Left -->
-        <div class="absolute top-2 left-2 flex flex-col items-center z-20">
-          <i class="fa-solid fa-bookmark text-5xl text-yellow-500"></i>
-          <span
-            class="-mt-9 text-xs sm:text-xs font-bold text-[var(--text-primary)] text-center leading-tight">20%<br>OFF</span>
-        </div>
+        <!-- Next -->
+        {% if new_arrivals.has_next %}
+          <a href="?page={{ new_arrivals.next_page_number }}" 
+             class="px-4 py-2 rounded-md bg-[var(--bg-brown)] text-white hover:bg-[var(--primary)] transition">
+             Next
+          </a>
+        {% else %}
+          <span class="px-4 py-2 rounded-md bg-gray-200 text-gray-400 cursor-not-allowed">Next</span>
+        {% endif %}
+      </div>
+    {% endif %}
+  </section>
+{% endblock %}
 
-        <!-- Hover Overlay -->
-        <div
-          class="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-2 sm:gap-3 transition-opacity duration-300 rounded-xl">
-          <button
-            class="p-2 sm:p-3 bg-[var(--bg-brown)] text-white rounded-full shadow-md hover:bg-[var(--primary)] transition cursor-pointer">
-            <i class="fa-regular fa-heart text-sm sm:text-base"></i>
-          </button>
-          <button
-            class="p-2 sm:p-3 bg-[var(--bg-brown)] text-white rounded-full shadow-md hover:bg-[var(--primary)] transition cursor-pointer">
-            <i class="fa-regular fa-eye text-sm sm:text-base"></i>
-          </button>
-        </div>
-      </a>
+{% block extra_js %}
+  <script>
+    $(document).ready(function () {
+      // Toastr helper
+      function showToast(message, type = 'info') {
+        toastr.options = {
+          closeButton: true,
+          progressBar: true,
+          positionClass: "toast-top-right",
+          timeOut: "3000"
+        };
+        switch(type) {
+          case 'success': toastr.success(message); break;
+          case 'error': toastr.error(message); break;
+          case 'warning': toastr.warning(message); break;
+          default: toastr.info(message); break;
+        }
+      }
 
-      <!-- Product Info -->
-      <section class="p-2 sm:p-3 text-center space-y-1 sm:space-y-2">
-        <h3 class="font-semibold text-[var(--text-primary)] text-sm sm:text-base">Samolina Corse 1kg</h3>
+      // Wishlist toggle with actual API call
+      $('.wishlist-btn').on('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        const $heart = $(this).find('.fa-heart');
+        const isLiked = $heart.hasClass('fas');
+        const $card = $(this).closest('.product-card');
+        const productId = $card.data('product-id');
 
-        <!-- Price + Stock Row -->
-        <div class="flex items-center justify-center mt-1 space-x-2 sm:space-x-3">
-          <!-- Price Group -->
-          <div class="flex items-center gap-1 sm:gap-2">
-            <!-- Original Price -->
-            <p class="text-xs sm:text-sm text-[var(--text-secondary)] line-through">$10.00</p>
-            <!-- Discounted Price -->
-            <p class="font-bold text-green-600 text-sm sm:text-base">$8.00</p>
-          </div>
+        if (!productId) {
+          showToast('Product ID not found', 'error');
+          return;
+        }
 
-          <!-- Stock Indicator -->
-          <p class="text-xs sm:text-sm font-medium text-gray-600">In Stock</p>
-        </div>
+        // Toggle wishlist state
+        $.ajax({
+          url: '/api/wishlist/toggle/',
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': $('[name=csrfmiddlewaretoken]').val() || $('meta[name=csrf-token]').attr('content')
+          },
+          contentType: 'application/json',
+          data: JSON.stringify({
+            product_id: productId
+          }),
+          success: function(response) {
+            if (response.success) {
+              if (!isLiked) {
+                $heart.removeClass('fa-regular fa-heart').addClass('fa-solid fa-heart').css('color', '#ef4444');
+                $(this).css('transform', 'scale(1.2)').delay(200).queue(function(next) {
+                  $(this).css('transform', 'scale(1)'); next();
+                });
+                showToast('Added to wishlist!', 'success');
+              } else {
+                $heart.removeClass('fa-solid fa-heart').addClass('fa-regular fa-heart').css('color', '#6b7280');
+                showToast('Removed from wishlist', 'info');
+              }
+            } else {
+              showToast(response.message || 'Failed to update wishlist', 'error');
+            }
+          }.bind(this),
+          error: function(xhr) {
+            const response = xhr.responseJSON;
+            if (xhr.status === 401) {
+              showToast('Please login to manage your wishlist', 'warning');
+            } else {
+              showToast(response?.message || 'An error occurred', 'error');
+            }
+          }
+        });
+      });
 
-        <!-- Quantity + Add to Cart Row -->
-        <div class="flex flex-wrap items-center justify-center gap-2 mt-2">
+      // Add to Cart
+      $('.product-card .add-to-cart').on('click', function(e) {
+        e.preventDefault();
+        const $card = $(this).closest('.product-card');
+        const qty = parseInt($card.find('.qtyInput').val()) || 1;
+        const productId = $card.data('product-id');
+        const $btn = $(this);
 
-          <!-- Quantity Selector -->
-          <div class="flex items-center border border-gray-300 rounded overflow-hidden">
-            <button class="decreaseQty px-2 py-1 bg-gray-200 hover:bg-gray-300 text-sm">-</button>
-            <input type="number" value="1" min="1"
-              class="qtyInput w-10 text-center text-sm border-l border-r border-gray-300 focus:outline-none">
-            <button class="increaseQty px-2 py-1 bg-gray-200 hover:bg-gray-300 text-sm">+</button>
-          </div>
+        if (!productId) {
+          showToast('Product ID not found', 'error');
+          return;
+        }
 
-          <!-- Add to Cart Button -->
-          <button
-            class="btn btn-primary flex items-center justify-center gap-1 text-xs sm:text-sm px-2 py-1   bg-[var(--bg-brown)] text-white rounded hover:bg-[var(--primary)] transition">
-            <i class="fa-solid fa-cart-shopping text-xs sm:text-sm"></i>
-            Add
-          </button>
+        // Disable button while processing
+        $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
 
-        </div>
-      </section>
+        $.ajax({
+          url: '/api/cart/add/',
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': $('[name=csrfmiddlewaretoken]').val() || $('meta[name=csrf-token]').attr('content')
+          },
+          contentType: 'application/json',
+          data: JSON.stringify({
+            product_id: productId,
+            quantity: qty
+          }),
+          success: function(response) {
+            if (response.success) {
+              showToast(response.message, 'success');
+              $('#desktopCartBadge, #mobileCartBadge').text(response.cart_count);
+            } else {
+              showToast(response.message, 'error');
+            }
+          },
+          error: function(xhr) {
+            const response = xhr.responseJSON;
+            if (xhr.status === 401) {
+              showToast('Please login to add items to cart', 'warning');
+            } else {
+              showToast(response?.message || 'An error occurred while adding to cart', 'error');
+            }
+          },
+          complete: function() {
+            $btn.prop('disabled', false).html('<i class="fa-solid fa-cart-shopping text-xs sm:text-sm"></i> Add');
+          }
+        });
+      });
 
-    </div>
+      // Quantity increment/decrement
+      $('.product-card .increaseQty').on('click', function() {
+        const $input = $(this).siblings('.qtyInput');
+        $input.val(parseInt($input.val()) + 1);
+      });
 
-  </div>
-
-  <!-- Pagination -->
-  <div class="mt-10 flex justify-center space-x-1 text-sm">
-    <a href="#"
-      class="px-3 py-1 rounded border border-gray-300 hover:bg-[var(--bg-brown)] hover:text-white transition">&laquo; Prev</a>
-    <a href="#"
-      class="px-3 py-1 rounded border border-gray-300 hover:bg-[var(--bg-brown)] hover:text-white transition">1</a>
-    <a href="#"
-      class="px-3 py-1 rounded border border-gray-300 hover:bg-[var(--bg-brown)] hover:text-white transition">2</a>
-    <a href="#"
-      class="px-3 py-1 rounded border border-gray-300 hover:bg-[var(--bg-brown)] hover:text-white transition">Next &raquo;</a>
-  </div>
-</section>
+      $('.product-card .decreaseQty').on('click', function() {
+        const $input = $(this).siblings('.qtyInput');
+        const current = parseInt($input.val());
+        if (current > 1) $input.val(current - 1);
+      });
+    });
+  </script>
 {% endblock %}

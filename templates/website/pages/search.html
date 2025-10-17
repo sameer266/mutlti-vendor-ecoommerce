@@ -1,0 +1,267 @@
+{% extends 'website/components/base.html' %}
+
+{% block title %}Search Results - Hello Bajar{% endblock %}
+
+{% block content %}
+  <!-- Search Results Section -->
+  <section class="mt-8 lg:mt-8 container mx-auto px-4 py-8">
+    <!-- Section Title -->
+    <div class="mb-6">
+      <h2 class="text-2xl sm:text-3xl font-extrabold text-[var(--text-primary)] inline-block relative pb-2">
+        Search Results for "{{ query|escape }}"
+        <span class="absolute left-0 bottom-0 w-20 h-1 bg-[var(--bg-brown)] rounded-full"></span>
+      </h2>
+    </div>
+
+    <!-- Grid Container -->
+    <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-6 lg:gap-8">
+      {% for product in products %}
+        <div class="product-card relative bg-gray-100 rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 w-full cursor-pointer" data-product-id="{{ product.id }}">
+          <!-- Product Image -->
+          <div class="block relative group bg-white rounded-xl m-2 overflow-hidden aspect-square">
+            {% if product.main_image %}
+              <img src="{{ product.main_image.url }}" alt="{{ product.name }}" class="w-full h-full object-cover rounded-xl transition-transform duration-300 group-hover:scale-105" loading="lazy">
+            {% else %}
+              <img src="https://via.placeholder.com/250x250" alt="{{ product.name }}" class="w-full h-full object-cover rounded-xl transition-transform duration-300 group-hover:scale-105" loading="lazy">
+            {% endif %}
+            <!-- Discount Badge -->
+            {% if product.discount_percentage %}
+              <div class="absolute top-2 left-2 flex flex-col items-center z-20">
+                <i class="fa-solid fa-bookmark text-5xl text-yellow-500"></i>
+                <span class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-xs font-bold text-[var(--text-primary)] text-center leading-tight">
+                  {{ product.discount_percentage }}%<br>OFF
+                </span>
+              </div>
+            {% endif %}
+            <!-- Hover Overlay Buttons -->
+            <div class="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-2 sm:gap-3 transition-opacity duration-500 pointer-events-none rounded-xl">
+              <button class="wishlist-btn p-2 sm:p-3 bg-[var(--bg-brown)] text-white rounded-full shadow-md hover:bg-[var(--primary)] transition cursor-pointer pointer-events-auto" aria-label="Add to wishlist">
+                <i class="fa-regular fa-heart text-sm sm:text-base"></i>
+              </button>
+              <a href="{% url 'product_details' product.slug %}" class="p-2 sm:p-3 bg-[var(--bg-brown)] text-white rounded-full shadow-md hover:bg-[var(--primary)] transition cursor-pointer pointer-events-auto" aria-label="View product details">
+                <i class="fa-regular fa-eye text-sm sm:text-base"></i>
+              </a>
+            </div>
+          </div>
+          <!-- Product Info -->
+          <section class="p-2 sm:p-3 space-y-1 sm:space-y-2">
+            <div class="flex justify-between items-center">
+              <a href="{% url 'product_details' product.slug %}" class="text-sm text-[var(--text-primary)] line-clamp-2 hover:underline" aria-label="View {{ product.name }}">{{ product.name }}</a>
+              <p class="text-xs font-medium {% if product.in_stock %}text-green-600{% else %}text-red-600{% endif %}">
+                {% if product.in_stock %}In Stock{% else %}Out of Stock{% endif %}
+              </p>
+            </div>
+            <!-- Price Row -->
+            <div class="flex items-center justify-start mt-1 space-x-2 sm:space-x-3">
+              {% if product.cost_price > product.price %}
+                <p class="text-xs sm:text-sm text-[var(--text-secondary)] line-through">Rs. {{ product.cost_price }}</p>
+              {% endif %}
+              <p class="font-bold text-green-600 text-sm sm:text-base">Rs. {{ product.price }}</p>
+            </div>
+            <!-- Quantity + Add to Cart -->
+            <div class="flex flex-wrap items-center justify-start gap-2 mt-2">
+              <label class="flex items-center border border-gray-300 rounded overflow-hidden">
+                <span class="sr-only">Quantity for {{ product.name }}</span>
+                <button class="decreaseQty px-3 py-2 bg-gray-200 hover:bg-gray-300 text-sm cursor-pointer" aria-label="Decrease quantity">-</button>
+                <input type="number" value="1" min="1" max="{{ product.stock|default:100 }}" class="qtyInput w-12 text-center text-sm border-l border-r border-gray-300 focus:outline-none" aria-label="Quantity">
+                <button class="increaseQty px-3 py-2 bg-gray-200 hover:bg-gray-300 text-sm cursor-pointer" aria-label="Increase quantity">+</button>
+              </label>
+              <button class="btn btn-primary add-to-cart flex items-center justify-center gap-1 text-xs sm:text-sm px-3 py-2 rounded bg-[var(--bg-brown)] text-white hover:bg-[var(--primary)] transition cursor-pointer" aria-label="Add {{ product.name }} to cart">
+                <i class="fa-solid fa-cart-shopping text-xs sm:text-sm"></i>
+                Add
+              </button>
+            </div>
+          </section>
+        </div>
+      {% empty %}
+        <div class="col-span-full text-center py-12 flex flex-col items-center">
+          <i class="fas fa-box-open text-4xl sm:text-5xl text-gray-300 mb-4"></i>
+          <h3 class="text-xl sm:text-2xl font-bold text-[var(--text-primary)] mb-2">No Products Found</h3>
+          <p class="text-sm sm:text-base text-[var(--text-secondary)] max-w-md">Try a different search term or browse our categories.</p>
+        </div>
+      {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if products.has_other_pages %}
+      <div class="flex justify-center items-center mt-8 space-x-3 text-sm">
+        <!-- Previous -->
+        {% if products.has_previous %}
+          <a href="?q={{ query|urlencode }}&page={{ products.previous_page_number }}" 
+             class="px-6 py-3 rounded-md bg-[var(--bg-brown)] text-white hover:bg-[var(--primary)] transition" aria-label="Previous page">
+             Prev
+          </a>
+        {% else %}
+          <span class="px-6 py-3 rounded-md bg-gray-300 text-gray-500 cursor-not-allowed" aria-disabled="true">Prev</span>
+        {% endif %}
+
+        <!-- Page Info -->
+        <span class="px-6 py-3 text-gray-700">
+          Page <span class="font-semibold">{{ products.number }}</span> of {{ products.paginator.num_pages }}
+        </span>
+
+        <!-- Next -->
+        {% if products.has_next %}
+          <a href="?q={{ query|urlencode }}&page={{ products.next_page_number }}" 
+             class="px-6 py-3 rounded-md bg-[var(--bg-brown)] text-white hover:bg-[var(--primary)] transition" aria-label="Next page">
+             Next
+          </a>
+        {% else %}
+          <span class="px-6 py-3 rounded-md bg-gray-300 text-gray-500 cursor-not-allowed" aria-disabled="true">Next</span>
+        {% endif %}
+      </div>
+    {% endif %}
+  </section>
+{% endblock %}
+
+{% block extra_js %}
+  <script>
+    $(document).ready(function () {
+      // Toastr helper
+      function showToast(message, type = 'info') {
+        toastr.options = {
+          closeButton: true,
+          progressBar: true,
+          positionClass: "toast-top-center",
+          timeOut: "3000"
+        };
+        switch(type) {
+          case 'success': toastr.success(message); break;
+          case 'error': toastr.error(message); break;
+          case 'warning': toastr.warning(message); break;
+          default: toastr.info(message); break;
+        }
+      }
+
+      // Wishlist toggle
+      $('.wishlist-btn').on('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const $heart = $(this).find('.fa-heart');
+        const isLiked = $heart.hasClass('fas');
+        const $card = $(this).closest('.product-card');
+        const productId = $card.data('product-id');
+        const csrfToken = $('[name=csrfmiddlewaretoken]').val() || $('meta[name=csrf-token]').attr('content');
+
+        if (!productId) {
+          showToast('Product ID not found', 'error');
+          return;
+        }
+        if (!csrfToken) {
+          showToast('CSRF token missing. Please refresh the page.', 'error');
+          return;
+        }
+
+        $.ajax({
+          url: '/api/wishlist/toggle/',
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': csrfToken
+          },
+          contentType: 'application/json',
+          data: JSON.stringify({
+            product_id: productId
+          }),
+          success: function(response) {
+            if (response.success) {
+              if (!isLiked) {
+                $heart.removeClass('fa-regular fa-heart').addClass('fa-solid fa-heart').css('color', 'var(--primary)');
+                $(this).css('transform', 'scale(1.2)').delay(200).queue(function(next) {
+                  $(this).css('transform', 'scale(1)'); next();
+                });
+                showToast('Added to wishlist!', 'success');
+              } else {
+                $heart.removeClass('fa-solid fa-heart').addClass('fa-regular fa-heart').css('color', 'var(--text-secondary)');
+                showToast('Removed from wishlist', 'info');
+              }
+            } else {
+              showToast(response.message || 'Failed to update wishlist', 'error');
+            }
+          }.bind(this),
+          error: function(xhr) {
+            const response = xhr.responseJSON;
+            if (xhr.status === 401) {
+              showToast('Please login to manage your wishlist', 'warning');
+            } else {
+              showToast(response?.message || 'An error occurred', 'error');
+            }
+          }
+        });
+      });
+
+      // Add to Cart
+      $('.product-card .add-to-cart').on('click', function(e) {
+        e.preventDefault();
+        const $card = $(this).closest('.product-card');
+        const qty = parseInt($card.find('.qtyInput').val()) || 1;
+        const productId = $card.data('product-id');
+        const $btn = $(this);
+   
+        if (!productId) {
+          showToast('Product ID not found', 'error');
+          return;
+        }
+        if (!csrfToken) {
+          showToast('CSRF token missing. Please refresh the page.', 'error');
+          return;
+        }
+
+        // Disable button while processing
+        $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Adding...');
+
+        $.ajax({
+          url: '/api/cart/add/',
+          method: 'POST',
+        headers: {
+        'X-CSRFToken': $('[name=csrfmiddlewaretoken]').val() || $('meta[name=csrf-token]').attr('content')
+      },
+          contentType: 'application/json',
+          data: JSON.stringify({
+            product_id: productId,
+            quantity: qty
+          }),
+          success: function(response) {
+            if (response.success) {
+              showToast(response.message, 'success');
+              $('#desktopCartBadge, #mobileCartBadge').text(response.cart_count);
+            } else {
+              showToast(response.message, 'error');
+            }
+          },
+          error: function(xhr) {
+            const response = xhr.responseJSON;
+            if (xhr.status === 401) {
+              showToast('Please login to add items to cart', 'warning');
+            } else {
+              showToast(response?.message || 'An error occurred while adding to cart', 'error');
+            }
+          },
+          complete: function() {
+            $btn.prop('disabled', false).html('<i class="fa-solid fa-cart-shopping text-xs sm:text-sm"></i> Add');
+          }
+        });
+      });
+
+      // Quantity increment/decrement
+      $('.product-card .increaseQty').on('click', function() {
+        const $input = $(this).siblings('.qtyInput');
+        const max = parseInt($input.attr('max')) || 100;
+        const current = parseInt($input.val()) || 1;
+        if (current < max) {
+          $input.val(current + 1);
+        } else {
+          showToast('Maximum quantity reached', 'warning');
+        }
+      });
+
+      $('.product-card .decreaseQty').on('click', function() {
+        const $input = $(this).siblings('.qtyInput');
+        const current = parseInt($input.val()) || 1;
+        if (current > 1) {
+          $input.val(current - 1);
+        }
+      });
+    });
+  </script>
+{% endblock %}

@@ -1,0 +1,85 @@
+<!-- Mobile Sidebar Toggle Button -->
+<div class="md:hidden flex justify-between items-center mb-4 px-4">
+  <h2 class="text-lg font-semibold text-[var(--text-primary)]">Dashboard</h2>
+  <button id="sidebarToggle" class="text-[var(--text-primary)] focus:outline-none">
+    <i class="fa fa-bars text-2xl"></i>
+  </button>
+</div>
+
+<!-- Sidebar -->
+<aside id="accountSidebar" class="fixed md:mt-9 inset-y-0 left-0 z-50 w-60 bg-white shadow-xl border border-gray-100 transition overflow-y-auto">
+  <!-- Header -->
+  <div class="p-6 border-b border-gray-100 flex items-center gap-3">
+    <div class="w-10 h-10 rounded-xl bg-[var(--primary)] text-white flex items-center justify-center text-lg font-bold">
+      <i class="fa fa-user-circle"></i>
+    </div>
+    <div>
+      <h3 class="text-base font-semibold text-[var(--text-primary)]">{{ user.first_name }}</h3>
+    </div>
+  </div>
+
+  <!-- Navigation -->
+ <!-- Navigation -->
+<nav class="flex flex-col py-3 text-sm font-medium text-[var(--text-primary)]">
+  <a href="{% url 'customer_profile' %}" 
+     class="group flex items-center gap-3 px-6 py-3 border-l-4 
+            {% if request.path == '/dashboard/profile/' %}border-[var(--primary)] bg-[var(--bg-light)]{% else %}border-transparent{% endif %} 
+            transition-all">
+    <div class="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center 
+                group-hover:bg-[var(--primary)] group-hover:text-white transition-all">
+      <i class="fa fa-user"></i>
+    </div>
+    <span class="{% if request.path == '/dashboard/profile/' %}text-[var(--primary)]{% endif %}">Profile Overview</span>
+  </a>
+
+  <a href="{% url 'customer_orders' %}" 
+     class="group flex items-center gap-3 px-6 py-3 border-l-4 
+            {% if request.path == '/dashboard/orders/' %}border-[var(--primary)] bg-[var(--bg-light)]{% else %}border-transparent{% endif %} 
+            transition-all">
+    <div class="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center 
+                group-hover:bg-[var(--primary)] group-hover:text-white transition-all">
+      <i class="fa fa-box"></i>
+    </div>
+    <span class="{% if request.path == '/dashboard/orders/' %}text-[var(--primary)]{% endif %}">My Orders</span>
+  </a>
+
+  <a href="{% url 'customer_wishlist' %}" 
+     class="group flex items-center gap-3 px-6 py-3 border-l-4 
+            {% if request.path == '/dashboard/wishlist/' %}border-[var(--primary)] bg-[var(--bg-light)]{% else %}border-transparent{% endif %} 
+            transition-all">
+    <div class="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center 
+                group-hover:bg-[var(--primary)] group-hover:text-white transition-all">
+      <i class="fa fa-heart"></i>
+    </div>
+    <span class="{% if request.path == '/dashboard/wishlist/' %}text-[var(--primary)]{% endif %}">Wishlist</span>
+  </a>
+
+  <div class="border-t border-gray-100 my-2"></div>
+
+  <a href="{% url 'logout' %}" 
+     class="group flex items-center gap-3 px-6 py-3 text-red-600 hover:bg-red-50 hover:border-l-4 hover:border-red-500 transition-all">
+    <div class="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center group-hover:bg-red-500 group-hover:text-white transition-all">
+      <i class="fa fa-sign-out-alt"></i>
+    </div>
+    <span>Logout</span>
+  </a>
+</nav>
+
+</aside>
+
+<!-- Overlay -->
+<div id="sidebarOverlay" class="fixed inset-0 bg-black bg-opacity-30 z-40 hidden md:hidden"></div>
+
+<!-- Sidebar Toggle Script -->
+<script>
+  const sidebar = document.getElementById('accountSidebar');
+  const overlay = document.getElementById('sidebarOverlay');
+  const toggleBtn = document.getElementById('sidebarToggle');
+
+  toggleBtn.addEventListener('click', () => {
+    sidebar.classList.toggle('-translate-x-full');
+    overlay.classList.toggle('hidden');
+  });
+
+ 
+</script>

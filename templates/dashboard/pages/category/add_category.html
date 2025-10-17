@@ -17,15 +17,6 @@
         <input type="text" name="name" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5" required>
       </div>
 
-      <div>
-        <label class="block text-sm font-medium text-gray-700">Parent</label>
-        <select name="parent" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5">
-          <option value="">None</option>
-          {% for p in parent_categories %}
-            <option value="{{ p.id }}">{{ p.name }}</option>
-          {% endfor %}
-        </select>
-      </div>
 
       <div>
         <label class="block text-sm font-medium text-gray-700">Order</label>
@@ -36,6 +27,14 @@
         <label class="block text-sm font-medium text-gray-700">Image</label>
         <input type="file" name="image" accept="image/*" class="mt-1 block w-full">
       </div>
+
+         <div class="md:col-span-2 pt-2">
+        <label class="inline-flex items-center text-sm text-gray-700">
+          <input type="checkbox" name="is_featured" class="mr-2">
+          Featured category
+        </label>
+      </div>
+
     </div>
 
     <div class="pt-4">

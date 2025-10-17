@@ -1,0 +1,79 @@
+{% extends 'website/components/base.html' %}
+{% load static %}
+
+{% block title %}Edit Profile{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-10 max-w-4xl">
+
+  <h1 class="text-3xl font-bold text-[var(--text-primary)] mb-4">Edit Profile</h1>
+  <p class="text-gray-500 text-sm mb-6">Update your account information</p>
+
+  <form method="POST" enctype="multipart/form-data" class="bg-white p-6 rounded-2xl shadow-lg border border-gray-200 space-y-6">
+    {% csrf_token %}
+
+    <!-- Name -->
+    <div>
+      <label class="block text-sm font-medium text-gray-600">First Name</label>
+      <input type="text" name="first_name" value="{{ user.first_name }}" class="mt-1 w-full border rounded-lg p-2 focus:ring focus:ring-[var(--primary)]">
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-gray-600">Last Name</label>
+      <input type="text" name="last_name" value="{{ user.last_name }}" class="mt-1 w-full border rounded-lg p-2 focus:ring focus:ring-[var(--primary)]">
+    </div>
+
+    <!-- Email -->
+    <div>
+      <label class="block text-sm font-medium text-gray-600">Email</label>
+      <input type="email" name="email" value="{{ user.email }}" class="mt-1 w-full border rounded-lg p-2 focus:ring focus:ring-[var(--primary)]">
+    </div>
+
+    <!-- Phone -->
+    <div>
+      <label class="block text-sm font-medium text-gray-600">Phone</label>
+      <input type="text" name="phone" value="{{ profile.phone }}" class="mt-1 w-full border rounded-lg p-2 focus:ring focus:ring-[var(--primary)]">
+    </div>
+
+    <!-- Avatar -->
+    <div>
+      <label class="block text-sm font-medium text-gray-600">Avatar</label>
+      <input type="file" name="avatar" class="mt-1 w-full border rounded-lg p-2 focus:ring focus:ring-[var(--primary)]">
+      {% if profile.avatar %}
+        <img src="{{ profile.avatar.url }}" alt="Avatar" class="mt-2 w-24 h-24 rounded-full object-cover border">
+      {% endif %}
+    </div>
+
+    <!-- Address -->
+    <div>
+      <label class="block text-sm font-medium text-gray-600">Address</label>
+      <textarea name="address" rows="2" class="mt-1 w-full border rounded-lg p-2 focus:ring focus:ring-[var(--primary)]">{{ profile.address }}</textarea>
+    </div>
+
+    <!-- City -->
+    <div>
+      <label class="block text-sm font-medium text-gray-600">City</label>
+      <input type="text" name="city" value="{{ profile.city }}" class="mt-1 w-full border rounded-lg p-2 focus:ring focus:ring-[var(--primary)]">
+    </div>
+
+    <!-- Province -->
+    <div>
+      <label class="block text-sm font-medium text-gray-600">Province</label>
+      <select name="province" class="mt-1 w-full border rounded-lg p-2 focus:ring focus:ring-[var(--primary)]">
+        <option value="">Select Province</option>
+        {% for code, name in profile.PROVINCE_CHOICES %}
+          <option value="{{ code }}" {% if profile.province == code %}selected{% endif %}>{{ name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <!-- Submit -->
+    <div class="flex justify-end">
+      <button type="submit" class="bg-[var(--primary)] text-white px-6 py-2 rounded-lg hover:bg-[var(--primary-dark)] transition">
+        Save Changes
+      </button>
+    </div>
+  </form>
+
+</div>
+{% endblock %}

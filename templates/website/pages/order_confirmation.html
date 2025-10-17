@@ -1,0 +1,177 @@
+{% extends 'website/components/base.html' %}
+
+{% block title %}Order Confirmation - {{ order.order_number }} {% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6 lg:py-8 max-w-7xl">
+  
+  <!-- Breadcrumb -->
+  <nav class="flex mb-6" aria-label="Breadcrumb">
+    <ol class="inline-flex items-center space-x-1 md:space-x-3">
+      <li class="inline-flex items-center">
+        <a href="{% url 'home' %}" class="inline-flex items-center text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--primary)]">
+          <i class="fas fa-home mr-2"></i>
+          Home
+        </a>
+      </li>
+      <li>
+        <div class="flex items-center">
+          <i class="fas fa-chevron-right text-[var(--text-secondary)] mx-1"></i>
+          <a href="{% url 'carts' %}" class="ml-1 text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--primary)] md:ml-2">Cart</a>
+        </div>
+      </li>
+      <li>
+        <div class="flex items-center">
+          <i class="fas fa-chevron-right text-[var(--text-secondary)] mx-1"></i>
+          <a href="{% url 'checkout_page' %}" class="ml-1 text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--primary)] md:ml-2">Checkout</a>
+        </div>
+      </li>
+      <li aria-current="page">
+        <div class="flex items-center">
+          <i class="fas fa-chevron-right text-[var(--text-secondary)] mx-1"></i>
+          <span class="ml-1 text-sm font-medium text-[var(--text-secondary)] md:ml-2">Order Confirmation</span>
+        </div>
+      </li>
+    </ol>
+  </nav>
+
+  <!-- Success Header -->
+  <div class="text-center mb-8">
+    <div class="inline-flex items-center justify-center w-20 h-20 bg-[var(--success)]/10 rounded-full border-4 border-[var(--success)] mb-4">
+      <i class="fas fa-check text-3xl text-[var(--success)]"></i>
+    </div>
+    <h1 class="text-3xl lg:text-4xl font-bold text-[var(--text-primary)] mb-2">Thank You for Your Order!</h1>
+    <p class="text-[var(--text-secondary)]">Your order has been confirmed successfully.</p>
+    <p class="text-lg font-semibold text-[var(--success)] mt-2">Order #{{ order.order_number }}</p>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    
+    <!-- Order Details -->
+    <div class="bg-[var(--bg-light)] border rounded-lg p-6 shadow-[var(--shadow-sm)]">
+      <h2 class="text-xl font-bold text-[var(--text-primary)] mb-4">Order Details</h2>
+      
+      <!-- Payment Info -->
+      <div class="space-y-3 mb-6">
+        <div class="flex justify-between">
+          <span class="text-[var(--text-secondary)]">Payment Method:</span>
+          <span class="font-semibold text-[var(--primary)]">{{ order.get_payment_method_display }}</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-[var(--text-secondary)]">Payment Status:</span>
+          <span class="font-semibold {% if order.payment_status == 'paid' %}text-[var(--success)]{% else %}text-yellow-600{% endif %}">{{ order.get_payment_status_display }}</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-[var(--text-secondary)]">Order Status:</span>
+          <span class="font-semibold text-[var(--success)]">{{ order.get_status_display }}</span>
+        </div>
+        {% if order.coupon %}
+        <div class="flex justify-between">
+          <span class="text-[var(--text-secondary)]">Coupon:</span>
+          <span class="font-semibold text-[var(--primary)]">{{ order.coupon.code }}</span>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Billing Address -->
+      <div class="space-y-2 mb-6">
+        <h3 class="text-lg font-semibold text-[var(--text-primary)]">Billing Address</h3>
+        <p class="text-[var(--text-primary)]">{{ order.full_name }}</p>
+        <p class="text-[var(--text-secondary)]">{{ order.address }}</p>
+        <p class="text-[var(--text-secondary)]">{{ order.city }}, {{ order.get_province_display }}, {{ order.postal_code }}</p>
+        <p class="text-[var(--text-secondary)]">{{ order.phone }} | {{ order.email }}</p>
+      </div>
+
+      <!-- Order Notes -->
+      {% if order.notes %}
+      <div class="space-y-2">
+        <h3 class="text-lg font-semibold text-[var(--text-primary)]">Order Notes</h3>
+        <p class="text-[var(--text-secondary)]">{{ order.notes }}</p>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Order Summary -->
+    <div class="bg-[var(--bg-light)] border rounded-lg p-6 shadow-[var(--shadow-sm)]">
+      <h2 class="text-xl font-bold text-[var(--text-primary)] mb-4">Order Summary</h2>
+      
+      <div class="space-y-3 mb-6">
+        <div class="flex justify-between">
+          <span class="text-[var(--text-secondary)]">Subtotal</span>
+          <span class="font-semibold text-[var(--text-primary)]">Rs {{ order.subtotal|floatformat:2 }}</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-[var(--text-secondary)]">Shipping</span>
+          <span class="font-semibold text-[var(--text-primary)]">Rs {{ order.shipping_cost|floatformat:2 }}</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-[var(--text-secondary)]">Tax</span>
+          <span class="font-semibold text-[var(--text-primary)]">Rs {{ order.tax|floatformat:2 }}</span>
+        </div>
+        {% if order.discount > 0 %}
+        <div class="flex justify-between">
+          <span class="text-[var(--text-secondary)]">Discount</span>
+          <span class="font-semibold text-[var(--success)]">-Rs {{ order.discount|floatformat:2 }}</span>
+        </div>
+        {% endif %}
+        <hr class="my-3 border-[var(--text-secondary)]">
+        <div class="flex justify-between text-lg font-bold">
+          <span class="text-[var(--text-primary)]">Total</span>
+          <span class="text-[var(--success)]">Rs {{ order.total|floatformat:2 }}</span>
+        </div>
+      </div>
+
+      <!-- Order Items -->
+      <div class="space-y-4">
+        <h3 class="text-lg font-semibold text-[var(--text-primary)] mb-3">Order Items</h3>
+        {% for item in order.items.all %}
+        <div class="flex items-center gap-3 p-3 bg-white rounded">
+          <img src="{{ item.product_image.url }}" alt="{{ item.product_name }}" class="w-16 h-16 object-cover rounded">
+          <div class="flex-1">
+            <h4 class="font-medium text-[var(--text-primary)]">{{ item.product_name }}</h4>
+            {% if item.variant_name %}
+            <p class="text-sm text-[var(--text-secondary)]">{{ item.variant_name }}</p>
+            {% endif %}
+            <p class="text-sm font-semibold text-[var(--success)]">Rs {{ item.price|floatformat:2 }} x {{ item.quantity }}</p>
+            <p class="text-xs text-[var(--text-secondary)]">Fulfillment: {{ item.get_fulfillment_status_display }}</p>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Next Steps -->
+  <div class="mt-8 text-center">
+    <p class="text-[var(--text-secondary)] mb-4">You will receive an email confirmation shortly. We will notify you when your order ships.</p>
+    <div class="flex flex-col sm:flex-row gap-4 justify-center">
+      <a href="{% url 'all_collections' %}" class="inline-block bg-[var(--primary)] hover:bg-[var(--primary-dark)] text-[var(--text-light)] px-8 py-3 rounded-lg font-semibold transition-colors btn btn-primary">
+        Continue Shopping
+      </a>
+      <button onclick="window.print()" class="bg-gray-100 hover:bg-gray-200 text-[var(--text-primary)] px-8 py-3 rounded-lg font-semibold transition-colors">
+        <i class="fas fa-print mr-2"></i>Print Order
+      </button>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+  // Auto-print option
+  if (window.matchMedia('print').matches) {
+    window.print();
+  }
+  
+  // Email sharing
+  $('.share-email').on('click', function() {
+    const orderNumber = '{{ order.order_number }}';
+    const emailSubject = `Order Confirmation #${orderNumber} - Fresh Mart Store`;
+    const emailBody = `Thank you for your order! Order #${orderNumber} has been confirmed.`;
+    window.location.href = `mailto:?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
+  });
+});
+</script>
+{% endblock %}

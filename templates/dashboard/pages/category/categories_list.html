@@ -15,7 +15,8 @@
           <th class="px-4 py-3 text-left">ID</th>
           <th class="px-4 py-3 text-left">Image</th>
           <th class="px-4 py-3 text-left">Name</th>
-          <th class="px-4 py-3 text-left">Parent</th>
+          <th class="px-4 py-3 text-left">Featured</th>
+
           <th class="px-4 py-3 text-left">Order</th>
           <th class="px-4 py-3 text-center">Actions</th>
         </tr>
@@ -32,7 +33,14 @@
             {% endif %}
           </td>
           <td class="px-4 py-3 font-medium">{{ category.name }}</td>
-          <td class="px-4 py-3">{% if category.parent %}{{ category.parent.name }}{% else %}-{% endif %}</td>
+          <td class="px-4 py-3">
+            {% if category.is_featured %}
+              <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">Yes</span>
+            {% else %}
+              <span class="text-gray-400 text-xs">No</span>
+            {% endif %}
+          </td>
+
           <td class="px-4 py-3">{{ category.order }}</td>
           <td class="px-4 py-3 text-center">
             <a href="{% url 'admin_category_update' category.id %}" class="text-blue-600 hover:text-blue-800 font-medium">Edit</a>

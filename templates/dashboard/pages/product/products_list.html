@@ -38,6 +38,7 @@
           <th class="px-4 py-3 text-left">Vendor</th>
           <th class="px-4 py-3 text-left">Price</th>
           <th class="px-4 py-3 text-left">Stock</th>
+          <th class="px-4 py-3 text-left">Featured</th>
           <th class="px-4 py-3 text-left">Gallery</th>
           <th class="px-4 py-3 text-left">Variants</th>
           <th class="px-4 py-3 text-center">Actions</th>
@@ -54,11 +55,18 @@
               <span class="text-gray-400">No image</span>
             {% endif %}
           </td>
-          <td class="px-4 py-3 font-medium">{{ product.name }}</td>
+          <td class="px-4 py-3 font-medium">{{ product.name | truncatechars:20  }}</td>
           <td class="px-4 py-3">{{ product.category.name }}</td>
           <td class="px-4 py-3">{{ product.vendor.shop_name }}</td>
           <td class="px-4 py-3">{{ product.price }}</td>
           <td class="px-4 py-3">{{ product.stock }}</td>
+          <td class="px-4 py-3">
+            {% if product.is_featured %}
+              <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">Yes</span>
+            {% else %}
+              <span class="text-gray-400 text-xs">No</span>
+            {% endif %}
+          </td>
           <td class="px-4 py-3">
             <div class="flex items-center space-x-1">
               {% for img in product.images.all %}
@@ -74,7 +82,6 @@
                 {% for v in product.variants.all %}
                   <div class="text-xs text-gray-700">
                     <span class="font-medium">{{ v.get_variant_type_display|default:v.variant_type }}:</span> {{ v.name }}
-                    {% if v.sku %} <span class="text-gray-400">[{{ v.sku }}]</span>{% endif %}
                     {% if v.price_adjustment and v.price_adjustment|floatformat != '0' %}
                       <span class="text-gray-500">(+{{ v.price_adjustment }})</span>
                     {% endif %}

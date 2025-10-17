@@ -1,319 +1,421 @@
+```html
 {% extends 'website/components/base.html' %}
 
-{% block title %}Vendor - Fresh Mart Store{% endblock %}
+{% block title %}{{ vendor.shop_name }} - Vendor Details{% endblock %}
+
+
 
 {% block content %}
-<div class="container mx-auto px-4 py-8">
+  <div class="container mx-auto px-4 py-8">
 
-<!-- Vendor Header -->
-<div class="flex flex-col lg:flex-row items-center lg:items-start gap-8 mb-10 bg-white rounded-3xl shadow-md p-6 lg:p-10 transition-transform duration-300 ">
-
-  <!-- Vendor Banner -->
-  <div class="w-full lg:w-2/5 h-56 lg:h-64 overflow-hidden  shadow-inner hover:shadow-lg transition-all duration-500">
-    <img src="https://previews.123rf.com/images/paulprescott72/paulprescott721803/paulprescott72180300013/97597858-goa-india-january-27-2015-street-fruit-vendor-sitting-at-fruit-stand-with-a-big-smile.jpg" 
-         alt="Vendor Banner" 
-         class="w-full h-full object-cover rounded-md transition-transform duration-500 hover:scale-105">
-  </div>
-
-  <!-- Vendor Info -->
-  <div class="w-full lg:w-3/5 text-center lg:text-left flex flex-col justify-center gap-3 lg:gap-4">
-    
-    <!-- Vendor Name & Category -->
-    <h1 class="text-4xl font-extrabold text-[var(--text-primary)] mb-1 lg:mb-2">Fresh Mart Store</h1>
-    <span class="inline-block px-5 py-1.5 bg-[var(--bg-light)] text-[var(--primary)] rounded-full text-sm font-medium mb-3">Food & Beverages</span>
-
-    <!-- Rating -->
-    <div class="flex items-center gap-1 text-yellow-400 mb-3 justify-center lg:justify-start">
-      <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star-half-alt"></i>
-      <span class="text-[var(--text-secondary)] ml-3 font-medium">(4.5)</span>
-    </div>
-
-    <!-- Description -->
-    <p class="text-[var(--text-secondary)] text-sm lg:text-base mb-3">
-      Fresh groceries, organic products, and daily essentials delivered right to your door. Quality and freshness guaranteed.
-    </p>
-
-    <!-- Stats -->
-    <div class="flex flex-col sm:flex-row items-center sm:items-start gap-4 lg:gap-6 justify-center lg:justify-start text-[var(--text-secondary)] text-sm">
-      <div class="flex items-center gap-2">
-        <i class="fas fa-box text-[var(--primary)]"></i>
-        <span class="font-medium">254 Products</span>
+    <!-- Vendor Header -->
+    <div class="vendor-header bg-white rounded-3xl shadow-[var(--shadow-sm)] mb-12 overflow-hidden">
+      <!-- Banner with Gradient Overlay -->
+      <div class="relative w-full h-64 lg:h-80">
+        <img src="{% if vendor.shop_banner %}{{ vendor.shop_banner.url }}{% else %}https://via.placeholder.com/1200x400?text={{ vendor.shop_name|urlencode }}{% endif %}" 
+             alt="{{ vendor.shop_name }} Banner" 
+             class="w-full h-full object-cover transition-transform duration-500">
+        <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+        <!-- Logo and Follow Button -->
+        <div class="absolute bottom-4 left-4 flex items-end gap-4">
+          <img src="{% if vendor.shop_logo %}{{ vendor.shop_logo.url }}{% else %}https://via.placeholder.com/100?text=Logo{% endif %}" 
+               alt="{{ vendor.shop_name }} Logo" 
+               class="w-24 h-24 rounded-full border-4 border-white shadow-md object-cover">
+      
+        </div>
       </div>
-      <div class="flex items-center gap-2">
-        <i class="fas fa-users text-[var(--primary)]"></i>
-        <span class="font-medium">1.2k Followers</span>
+      <!-- Vendor Info -->
+      <div class="p-6 lg:p-8">
+        <h1 class="text-3xl lg:text-4xl font-bold text-[var(--text-primary)] mb-2">{{ vendor.shop_name }}</h1>
+
+        <!-- Rating -->
+        <div class="flex items-center gap-2 mb-3">
+          {% with avg_rating=vendor.average_rating|floatformat:1 %}
+            {% for i in '12345'|make_list %}
+              <i class="fas fa-star {% if forloop.counter0 >= avg_rating|floatformat:0 %}text-gray-300{% else %}text-yellow-400{% endif %}"></i>
+            {% endfor %}
+            <span class="text-[var(--text-secondary)] text-sm">{{ avg_rating }}</span>
+          {% endwith %}
+        </div>
+        <p class="text-[var(--text-secondary)] text-base mb-4">{{ vendor.description|default:"Explore quality products from this trusted vendor." }}</p>
+        <!-- Stats -->
+        <div class="flex flex-wrap gap-6 text-[var(--text-secondary)] text-sm">
+          <div class="flex items-center gap-2">
+            <i class="fas fa-box text-[var(--primary)]"></i>
+            <span>{{ vendor.products.count }} Products</span>
+          </div>
+          {% if vendor.verification_status == 'verified' %}
+            <div class="flex items-center gap-2">
+              <i class="fas fa-check-circle text-[var(--success)]"></i>
+              <span>Verified Vendor</span>
+            </div>
+          {% endif %}
+          
+        </div>
       </div>
     </div>
 
-  
+    <!-- Vendor Products Section -->
+    <section>
+      <div class="flex flex-col lg:flex-row justify-between items-start gap-4 mb-6">
+        <h2 class="text-2xl lg:text-3xl font-bold text-[var(--text-primary)]">Products</h2>
+        <div class="flex flex-col lg:flex-row gap-4 w-full lg:w-auto">
+          <input type="text" id="productSearch" placeholder="Search products..." class="px-4 py-2 border rounded-lg focus:outline-none focus:border-[var(--primary)] transition">
+          <select id="categoryFilter" class="px-4 py-2 border rounded-lg focus:outline-none focus:border-[var(--primary)] transition">
+            <option value="">All Categories</option>
+            {% for category in vendor_categories %}
+              <option value="{{ category.id }}">{{ category.name }}</option>
+            {% endfor %}
+          </select>
+          <select id="sortProducts" class="px-4 py-2 border rounded-lg focus:outline-none focus:border-[var(--primary)] transition">
+            <option value="">Sort by</option>
+            <option value="price-asc">Price: Low to High</option>
+            <option value="price-desc">Price: High to Low</option>
+            <option value="name-asc">Name: A-Z</option>
+            <option value="name-desc">Name: Z-A</option>
+            <option value="rating-desc">Highest Rated</option>
+          </select>
+        </div>
+      </div>
+      <!-- Category Chips -->
+      <div class="flex flex-wrap gap-2 mb-6">
+        <button class="category-chip px-4 py-2 bg-[var(--bg-light)] text-[var(--text-primary)] rounded-full text-sm font-medium hover:bg-[var(--primary)] hover:text-white transition active" data-category="">All</button>
+        {% for category in vendor_categories %}
+          <button class="category-chip px-4 py-2 bg-[var(--bg-light)] text-[var(--text-primary)] rounded-full text-sm font-medium hover:bg-[var(--primary)] hover:text-white transition" data-category="{{ category.id }}">{{ category.name }}</button>
+        {% endfor %}
+      </div>
+      
+ <!-- Products Grid -->
+      <div class="products-grid grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 lg:gap-4">
+        {% for product in products %}
+        <div class="product-card relative bg-gray-100 rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 w-full max-w-[250px] mx-auto cursor-pointer"
+             data-product-id="{{ product.id }}"
+             data-price="{{ product.price }}"
+             data-category="{{ product.category.id|default:'' }}"
+             data-brand="{{ product.brand|default:'' }}"
+             data-tags="{% for tag in product.tags.all %}{{ tag.name|lower }}{% if not forloop.last %},{% endif %}{% endfor %}"
+             data-in-stock="{{ product.in_stock|yesno:'true,false' }}">
+          
+          <a href="{% url 'product_details' product.slug %}" class="block relative group bg-white rounded-xl m-2">
+            <img src="{{ product.main_image.url|default:'https://via.placeholder.com/200' }}"
+                 alt="{{ product.name }}"
+                 class="w-full h-48 sm:h-56 md:h-60 object-contain rounded-xl transition-transform duration-300 group-hover:scale-105">
+            
+            {% if product.discount_percentage > 0 %}
+            <div class="absolute top-2 left-2 flex flex-col items-center z-20">
+              <i class="fa-solid fa-bookmark text-5xl text-yellow-500"></i>
+              <span class="-mt-11 text-xs font-bold text-gray-900 text-center leading-tight">
+                {{ product.discount_percentage }}%<br>OFF
+              </span>
+            </div>
+            {% endif %}
+            
+            {% if not product.in_stock %}
+            <div class="absolute inset-0 bg-black/50 flex items-center justify-center rounded-xl">
+              <span class="bg-red-600 text-white px-4 py-2 rounded-lg font-semibold text-sm">
+                Out of Stock
+              </span>
+            </div>
+            {% endif %}
+        
+            <!-- Hover Overlay -->
+            <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-2 sm:gap-3 transition-opacity duration-300 rounded-xl">
+              <button class="wishlist-btn p-2 sm:p-3 bg-orange-500 text-white rounded-full shadow-md hover:bg-orange-600 transition transform hover:scale-110 cusror-pointer"
+                       onclick="window.location.href='{% url 'product_details' product.slug %}'">  
+                <i class="fa-regular fa-heart text-sm sm:text-base"></i>
+              </button>
+              <button class=" p-2 sm:p-3 bg-orange-500 text-white rounded-full shadow-md hover:bg-orange-600 transition transform hover:scale-110"
+                    >
+                <i class="fa-regular fa-eye text-sm sm:text-base"></i>
+              </button>
+            </div>
+          </a>
 
+          <section class="p-2 sm:p-3 space-y-1 sm:space-y-2">
+            <div class="flex justify-between items-start gap-2">
+              <h3 class="font-semibold text-gray-900 text-sm sm:text-base line-clamp-2 flex-1">
+                {{ product.name }}
+              </h3>
+              {% if product.in_stock %}
+              <span class="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full font-medium whitespace-nowrap">
+                In Stock
+              </span>
+              {% else %}
+              <span class="text-xs px-2 py-1 bg-red-100 text-red-700 rounded-full font-medium whitespace-nowrap">
+                Out of Stock
+              </span>
+              {% endif %}
+            </div>
+
+            <div class="flex items-center justify-start mt-1 gap-2">
+              {% if product.cost_price > product.price %}
+              <p class="text-xs sm:text-sm text-gray-400 line-through">Rs {{ product.cost_price|floatformat:0 }}</p>
+              {% endif %}
+              <p class="font-bold text-orange-600 text-sm sm:text-base">Rs {{ product.price|floatformat:0 }}</p>
+            </div>
+
+            <div class="flex flex-wrap items-center justify-between gap-2 mt-2">
+              <div class="flex items-center border-2  border-gray-300 rounded-lg overflow-hidden">
+                <button class="decreaseQty px-2 py-1 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-700 text-sm transition"
+                        {% if not product.in_stock %}disabled{% endif %}>
+                  <i class="fas fa-minus text-xs"></i>
+                </button>
+                <input type="number" value="1" min="1" max="{% if product.in_stock %}{{ product.stock|default:10 }}{% else %}0{% endif %}"
+                       class="qtyInput  w-12 text-center text-sm border-x-2 border-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-inset font-medium text-gray-900"
+                       {% if not product.in_stock %}disabled{% endif %}>
+                <button class="increaseQty px-2 py-1 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-700 text-sm transition"
+                        {% if not product.in_stock %}disabled{% endif %}>
+                  <i class="fas fa-plus text-xs"></i>
+                </button>
+              </div>
+
+              <button class="add-to-cart flex-1 flex items-center justify-center gap-1 text-xs sm:text-sm px-3 py-2 bg-orange-500 cursor-pointer text-white rounded-lg hover:bg-orange-600 active:bg-orange-700 transition shadow-sm hover:shadow-md font-medium"
+                      data-product-id="{{ product.id }}"
+                      data-product-name="{{ product.name }}"
+                      {% if not product.in_stock %}disabled{% endif %}>
+                <i class="fa-solid fa-cart-shopping text-xs sm:text-sm"></i>
+                <span>Add</span>
+              </button>
+            </div>
+          </section>
+        </div>
+        {% empty %}
+        <div class="col-span-full text-center py-12">
+          <i class="fas fa-box-open text-6xl text-gray-300 mb-4"></i>
+          <p class="text-gray-500 text-lg font-medium">No products available.</p>
+        </div>
+        {% endfor %}
+      </div>
+
+      <!-- No Results Message -->
+      <div id="noResultsMessage" class="hidden col-span-full text-center py-12 bg-white rounded-lg shadow-sm">
+        <i class="fas fa-search text-6xl text-gray-300 mb-4"></i>
+        <p class="text-gray-600 text-lg font-medium mb-2">No products match your filters</p>
+       
+      </div>
+
+      <!-- Load More Button -->
+      {% if products.has_next %}
+      <div class="text-center mt-8">
+        <button id="loadMoreBtn" class="px-8 py-3 bg-orange-500 text-white rounded-full shadow-md hover:bg-orange-600 hover:shadow-lg transition transform hover:-translate-y-0.5 font-medium"
+                data-next-page="{{ products.next_page_number|default:2 }}">
+          <i class="fas fa-arrow-down mr-2"></i>
+          Load More Products
+        </button>
+      </div>
+      {% endif %}
+
+    </section>
   </div>
-</div>
-
-
-  <!-- Vendor Products Section -->
-  <section>
-    <h2 class="text-2xl sm:text-3xl font-extrabold text-[var(--text-primary)] mb-6">
-      Products from this Vendor
-    </h2>
-
-     <!-- Grid Container -->
-  <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 lg:gap-4">
-
-    <!-- Product Card -->
-    <div
-      class="product-card relative bg-gray-100 rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 w-full max-w-[250px] mx-auto">
-
-      <!-- Product Image -->
-      <a href="https://miterimart.com.au/singleproduct/samolina-corse-1kg"
-        class="block relative group bg-white rounded-xl m-2">
-        <img src="https://miterimart.com.au/storage/products/featured/R6pMFTe9ooXRQ4eVYMVWfaAivM6Le8GNAyqjBprs.jpg"
-          alt="Samolina Corse 1kg"
-          class="w-full h-48 sm:h-56 md:h-60 object-contain rounded-xl transition-transform duration-300 group-hover:scale-105">
-
-        <!-- Discount Tag Icon Top Left -->
-        <div class="absolute top-2 left-2 flex flex-col items-center z-20">
-          <i class="fa-solid fa-bookmark text-5xl text-yellow-500"></i>
-          <span
-            class="-mt-9 text-xs sm:text-xs font-bold text-[var(--text-primary)] text-center leading-tight">20%<br>OFF</span>
-        </div>
-
-        <!-- Hover Overlay -->
-        <div
-          class="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-2 sm:gap-3 transition-opacity duration-300 rounded-xl">
-          <button
-            class="p-2 sm:p-3 bg-[var(--bg-brown)] text-white rounded-full shadow-md hover:bg-[var(--primary)] transition cursor-pointer">
-            <i class="fa-regular fa-heart text-sm sm:text-base"></i>
-          </button>
-          <button
-            class="p-2 sm:p-3 bg-[var(--bg-brown)] text-white rounded-full shadow-md hover:bg-[var(--primary)] transition cursor-pointer">
-            <i class="fa-regular fa-eye text-sm sm:text-base"></i>
-          </button>
-        </div>
-      </a>
-
-      <!-- Product Info -->
-      <section class="p-2 sm:p-3 text-center space-y-1 sm:space-y-2">
-        <h3 class="font-semibold text-[var(--text-primary)] text-sm sm:text-base">Samolina Corse 1kg</h3>
-
-        <!-- Price + Stock Row -->
-        <div class="flex items-center justify-center mt-1 space-x-2 sm:space-x-3">
-          <!-- Price Group -->
-          <div class="flex items-center gap-1 sm:gap-2">
-            <!-- Original Price -->
-            <p class="text-xs sm:text-sm text-[var(--text-secondary)] line-through">$10.00</p>
-            <!-- Discounted Price -->
-            <p class="font-bold text-green-600 text-sm sm:text-base">$8.00</p>
-          </div>
-
-          <!-- Stock Indicator -->
-          <p class="text-xs sm:text-sm font-medium text-gray-600">In Stock</p>
-        </div>
-
-        <!-- Quantity + Add to Cart Row -->
-        <div class="flex flex-wrap items-center justify-center gap-2 mt-2">
-
-          <!-- Quantity Selector -->
-          <div class="flex items-center border border-gray-300 rounded overflow-hidden">
-            <button class="decreaseQty px-2 py-1 bg-gray-200 hover:bg-gray-300 text-sm">-</button>
-            <input type="number" value="1" min="1"
-              class="qtyInput w-10 text-center text-sm border-l border-r border-gray-300 focus:outline-none">
-            <button class="increaseQty px-2 py-1 bg-gray-200 hover:bg-gray-300 text-sm">+</button>
-          </div>
-
-          <!-- Add to Cart Button -->
-          <button
-            class="btn btn-primary flex items-center justify-center gap-1 text-xs sm:text-sm px-2 py-1   bg-[var(--bg-brown)] text-white rounded hover:bg-[var(--primary)] transition">
-            <i class="fa-solid fa-cart-shopping text-xs sm:text-sm"></i>
-            Add
-          </button>
-
-        </div>
-
-
-
-      </section>
-
-    </div>
-
-    <!-- Duplicate product cards as needed with same structure -->
-    <!-- Product Card -->
-    <div
-      class="product-card relative bg-gray-100 rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 w-full max-w-[250px] mx-auto">
-
-      <!-- Product Image -->
-      <a href="https://miterimart.com.au/singleproduct/samolina-corse-1kg"
-        class="block relative group bg-white rounded-xl m-2">
-        <img src="https://miterimart.com.au/storage/products/featured/R6pMFTe9ooXRQ4eVYMVWfaAivM6Le8GNAyqjBprs.jpg"
-          alt="Samolina Corse 1kg"
-          class="w-full h-48 sm:h-56 md:h-60 object-contain rounded-xl transition-transform duration-300 group-hover:scale-105">
-
-        <!-- Discount Tag Icon Top Left -->
-        <div class="absolute top-2 left-2 flex flex-col items-center z-20">
-          <i class="fa-solid fa-bookmark text-5xl text-yellow-500"></i>
-          <span
-            class="-mt-9 text-xs sm:text-xs font-bold text-[var(--text-primary)] text-center leading-tight">20%<br>OFF</span>
-        </div>
-
-        <!-- Hover Overlay -->
-        <div
-          class="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-2 sm:gap-3 transition-opacity duration-300 rounded-xl">
-          <button
-            class="p-2 sm:p-3 bg-[var(--bg-brown)] text-white rounded-full shadow-md hover:bg-[var(--primary)] transition cursor-pointer">
-            <i class="fa-regular fa-heart text-sm sm:text-base"></i>
-          </button>
-          <button
-            class="p-2 sm:p-3 bg-[var(--bg-brown)] text-white rounded-full shadow-md hover:bg-[var(--primary)] transition cursor-pointer">
-            <i class="fa-regular fa-eye text-sm sm:text-base"></i>
-          </button>
-        </div>
-      </a>
-
-      <!-- Product Info -->
-      <section class="p-2 sm:p-3 text-center space-y-1 sm:space-y-2">
-        <h3 class="font-semibold text-[var(--text-primary)] text-sm sm:text-base">Samolina Corse 1kg</h3>
-
-        <!-- Price + Stock Row -->
-        <div class="flex items-center justify-center mt-1 space-x-2 sm:space-x-3">
-          <!-- Price Group -->
-          <div class="flex items-center gap-1 sm:gap-2">
-            <!-- Original Price -->
-            <p class="text-xs sm:text-sm text-[var(--text-secondary)] line-through">$10.00</p>
-            <!-- Discounted Price -->
-            <p class="font-bold text-green-600 text-sm sm:text-base">$8.00</p>
-          </div>
-
-          <!-- Stock Indicator -->
-          <p class="text-xs sm:text-sm font-medium text-gray-600">In Stock</p>
-        </div>
-
-        <!-- Quantity + Add to Cart Row -->
-        <div class="flex flex-wrap items-center justify-center gap-2 mt-2">
-
-          <!-- Quantity Selector -->
-          <div class="flex items-center border border-gray-300 rounded overflow-hidden">
-            <button class="decreaseQty px-2 py-1 bg-gray-200 hover:bg-gray-300 text-sm">-</button>
-            <input type="number" value="1" min="1"
-              class="qtyInput w-10 text-center text-sm border-l border-r border-gray-300 focus:outline-none">
-            <button class="increaseQty px-2 py-1 bg-gray-200 hover:bg-gray-300 text-sm">+</button>
-          </div>
-
-          <!-- Add to Cart Button -->
-          <button
-            class="btn btn-primary flex items-center justify-center gap-1 text-xs sm:text-sm px-2 py-1   bg-[var(--bg-brown)] text-white rounded hover:bg-[var(--primary)] transition">
-            <i class="fa-solid fa-cart-shopping text-xs sm:text-sm"></i>
-            Add
-          </button>
-
-        </div>
-      </section>
-
-    </div>
-
-    <!-- Product Card -->
-    <div
-      class="product-card relative bg-gray-100 rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 w-full max-w-[250px] mx-auto">
-
-      <!-- Product Image -->
-      <a href="https://miterimart.com.au/singleproduct/samolina-corse-1kg"
-        class="block relative group bg-white rounded-xl m-2">
-        <img src="https://miterimart.com.au/storage/products/featured/R6pMFTe9ooXRQ4eVYMVWfaAivM6Le8GNAyqjBprs.jpg"
-          alt="Samolina Corse 1kg"
-          class="w-full h-48 sm:h-56 md:h-60 object-contain rounded-xl transition-transform duration-300 group-hover:scale-105">
-
-        <!-- Discount Tag Icon Top Left -->
-        <div class="absolute top-2 left-2 flex flex-col items-center z-20">
-          <i class="fa-solid fa-bookmark text-5xl text-yellow-500"></i>
-          <span
-            class="-mt-9 text-xs sm:text-xs font-bold text-[var(--text-primary)] text-center leading-tight">20%<br>OFF</span>
-        </div>
-
-        <!-- Hover Overlay -->
-        <div
-          class="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-2 sm:gap-3 transition-opacity duration-300 rounded-xl">
-          <button
-            class="p-2 sm:p-3 bg-[var(--bg-brown)] text-white rounded-full shadow-md hover:bg-[var(--primary)] transition cursor-pointer">
-            <i class="fa-regular fa-heart text-sm sm:text-base"></i>
-          </button>
-          <button
-            class="p-2 sm:p-3 bg-[var(--bg-brown)] text-white rounded-full shadow-md hover:bg-[var(--primary)] transition cursor-pointer">
-            <i class="fa-regular fa-eye text-sm sm:text-base"></i>
-          </button>
-        </div>
-      </a>
-
-      <!-- Product Info -->
-      <section class="p-2 sm:p-3 text-center space-y-1 sm:space-y-2">
-        <h3 class="font-semibold text-[var(--text-primary)] text-sm sm:text-base">Samolina Corse 1kg</h3>
-
-        <!-- Price + Stock Row -->
-        <div class="flex items-center justify-center mt-1 space-x-2 sm:space-x-3">
-          <!-- Price Group -->
-          <div class="flex items-center gap-1 sm:gap-2">
-            <!-- Original Price -->
-            <p class="text-xs sm:text-sm text-[var(--text-secondary)] line-through">$10.00</p>
-            <!-- Discounted Price -->
-            <p class="font-bold text-green-600 text-sm sm:text-base">$8.00</p>
-          </div>
-
-          <!-- Stock Indicator -->
-          <p class="text-xs sm:text-sm font-medium text-gray-600">In Stock</p>
-        </div>
-
-        <!-- Quantity + Add to Cart Row -->
-        <div class="flex flex-wrap items-center justify-center gap-2 mt-2">
-
-          <!-- Quantity Selector -->
-          <div class="flex items-center border border-gray-300 rounded overflow-hidden">
-            <button class="decreaseQty px-2 py-1 bg-gray-200 hover:bg-gray-300 text-sm">-</button>
-            <input type="number" value="1" min="1"
-              class="qtyInput w-10 text-center text-sm border-l border-r border-gray-300 focus:outline-none">
-            <button class="increaseQty px-2 py-1 bg-gray-200 hover:bg-gray-300 text-sm">+</button>
-          </div>
-
-          <!-- Add to Cart Button -->
-          <button
-            class="btn btn-primary flex items-center justify-center gap-1 text-xs sm:text-sm px-2 py-1   bg-[var(--bg-brown)] text-white rounded hover:bg-[var(--primary)] transition">
-            <i class="fa-solid fa-cart-shopping text-xs sm:text-sm"></i>
-            Add
-          </button>
-
-        </div>
-      </section>
-
-    </div>
-
-  </div>
-
-    <!-- Load More -->
-    <div class="text-center mt-6">
-      <button id="loadMoreBtn" class="px-6 py-2 bg-[var(--bg-brown)] text-white rounded-full shadow-md hover:bg-[var(--primary)] cursor-pointer transition">
-        Load More
-      </button>
-    </div>
-  </section>
-
-</div>
 {% endblock %}
+
+
+
 
 {% block extra_js %}
 <script>
-  $(document).ready(function() {
-    // Wishlist toggle
-    $('.product-card .fa-heart').on('click', function(e){
-      e.preventDefault();
-      const $heart = $(this);
-      $heart.toggleClass('fas far').css('color', $heart.hasClass('fas') ? '#ef4444' : '#6b7280');
-    });
+$(document).ready(function() {
+  
+  // ===================================
+  // TOASTR HELPER
+  // ===================================
+  function showToast(message, type = 'info') {
+    toastr.options = {
+      closeButton: true,
+      progressBar: true,
+      positionClass: "toast-top-right",
+      timeOut: 3000,
+      preventDuplicates: true
+    };
+    
+    switch (type) {
+      case 'success': toastr.success(message); break;
+      case 'error': toastr.error(message); break;
+      case 'warning': toastr.warning(message); break;
+      default: toastr.info(message); break;
+    }
+  }
 
-    // Add to cart
-    $('.product-card .btn-primary').on('click', function(e){
-      e.preventDefault();
-      const $card = $(this).closest('.product-card');
-      const qty = parseInt($card.find('.qtyInput').val()) || 1;
-      const name = $card.find('h3').text();
-      toastr.success(`${qty} × ${name} added to cart!`);
+ 
+ 
+
+  // ===================================
+  // QUANTITY CONTROLS
+  // ===================================
+  $(document).on('click', '.increaseQty', function() {
+    const $input = $(this).siblings('.qtyInput');
+    const max = parseInt($input.attr('max')) || 10;
+    const current = parseInt($input.val()) || 1;
+    
+    if (current < max) {
+      $input.val(current + 1);
+    } else {
+      showToast('Maximum quantity reached', 'warning');
+    }
+  });
+
+  $(document).on('click', '.decreaseQty', function() {
+    const $input = $(this).siblings('.qtyInput');
+    const current = parseInt($input.val()) || 1;
+    
+    if (current > 1) {
+      $input.val(current - 1);
+    }
+  });
+
+  $(document).on('input', '.qtyInput', function() {
+    const $input = $(this);
+    const max = parseInt($input.attr('max')) || 10;
+    const min = parseInt($input.attr('min')) || 1;
+    let value = parseInt($input.val());
+    
+    if (isNaN(value) || value < min) {
+      value = min;
+    } else if (value > max) {
+      value = max;
+      showToast('Maximum quantity reached', 'warning');
+    }
+    
+    $input.val(value);
+  });
+
+  // ===================================
+  // WISHLIST TOGGLE
+  // ===================================
+  $(document).on('click', '.wishlist-btn', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const $btn = $(this);
+    const $heart = $btn.find('i');
+    const isLiked = $heart.hasClass('fas');
+    
+    if (!isLiked) {
+      $heart.removeClass('far').addClass('fas').css('color', '#ef4444');
+      $btn.css('transform', 'scale(1.2)');
+      setTimeout(() => $btn.css('transform', 'scale(1)'), 200);
+      showToast('Added to wishlist!', 'success');
+    } else {
+      $heart.removeClass('fas').addClass('far').css('color', '');
+      showToast('Removed from wishlist', 'info');
+    }
+  });
+
+
+  // ===================================
+  // ADD TO CART
+  // ===================================
+  $(document).on('click', '.add-to-cart', function(e) {
+    e.preventDefault();
+    
+    const $btn = $(this);
+    const $card = $btn.closest('.product-card');
+    const qty = parseInt($card.find('.qtyInput').val()) || 1;
+    const productId = $btn.data('product-id');
+    const productName = $btn.data('product-name');
+    const inStock = $card.data('in-stock') === true;
+
+    if (!inStock) {
+      showToast(`${productName} is out of stock`, 'error');
+      return;
+    }
+
+    if (qty <= 0) {
+      showToast('Please select a valid quantity', 'error');
+      return;
+    }
+
+    const originalHtml = $btn.html();
+    $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
+
+    $.ajax({
+      url: '{% url "add_to_cart" %}',
+      method: 'POST',
+      headers: { 
+        'X-CSRFToken': '{{ csrf_token }}' 
+      },
+      contentType: 'application/json',
+      data: JSON.stringify({
+        product_id: productId,
+        quantity: qty,
+        variant_id: null
+      }),
+      success: function(response) {
+        if (response.success) {
+          showToast(`${qty} × ${productName} added to cart!`, 'success');
+          
+          // Update cart badge
+          const cartCount = response.cart_count || 0;
+          $('#desktopCartBadge, #mobileCartBadge').text(cartCount);
+          
+          if (cartCount > 0) {
+            $('#desktopCartBadge, #mobileCartBadge').show();
+          }
+          
+          // Reset quantity
+          $card.find('.qtyInput').val(1);
+        } else {
+          showToast(response.message || 'Failed to add to cart', 'error');
+        }
+      },
+      error: function(xhr) {
+        const response = xhr.responseJSON;
+        
+        if (xhr.status === 401 || xhr.status === 403) {
+          showToast('Please login to add items to cart', 'warning');
+          setTimeout(() => {
+            window.location.href = '{% url "login_page" %}?next={{ request.path }}';
+          }, 1500);
+        } else {
+          showToast(response?.message || 'An error occurred while adding to cart', 'error');
+        }
+      },
+      complete: function() {
+        $btn.prop('disabled', false).html(originalHtml);
+      }
     });
   });
+
+  // ===================================
+  // LOAD MORE FUNCTIONALITY
+  // ===================================
+  $('#loadMoreBtn').on('click', function() {
+    const $btn = $(this);
+    const nextPage = $btn.data('next-page');
+    const urlParams = new URLSearchParams(window.location.search);
+    urlParams.set('page', nextPage);
+
+    const originalHtml = $btn.html();
+    $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-2"></i>Loading...');
+
+    $.ajax({
+      url: `?${urlParams.toString()}`,
+      method: 'GET',
+      success: function(response) {
+        const $newProducts = $(response).find('.product-card');
+        $('.products-grid').append($newProducts);
+        
+        const newNextPage = $(response).find('#loadMoreBtn').data('next-page');
+        
+        if (newNextPage) {
+          $btn.data('next-page', newNextPage);
+          $btn.prop('disabled', false).html(originalHtml);
+        } else {
+          $btn.remove();
+          showToast('All products loaded', 'info');
+        }
+        
+        filterProducts();
+      },
+      error: function() {
+        showToast('Failed to load more products', 'error');
+        $btn.prop('disabled', false).html(originalHtml);
+      }
+    });
+  });
+
+
+});
 </script>
 {% endblock %}
+

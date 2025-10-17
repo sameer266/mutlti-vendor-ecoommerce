@@ -2,51 +2,62 @@
 {% load static %}
 
 {% block content %}
-<div class="bg-white rounded-xl shadow p-6 max-w-3xl">
+<div class="bg-white rounded-xl shadow p-6 max-w-3xl mx-auto mt-8">
+  <!-- Header -->
   <div class="flex justify-between items-center mb-6">
     <h1 class="text-2xl font-semibold text-gray-800">Edit Slider</h1>
     <a href="{% url 'admin_sliders_list' %}" class="text-blue-600 hover:text-blue-800">Back to Sliders</a>
   </div>
 
+  <!-- Form -->
   <form method="post" enctype="multipart/form-data" class="space-y-5">
     {% csrf_token %}
 
+    <!-- Title -->
     <div>
       <label class="block text-sm font-medium text-gray-700 mb-1">Title</label>
-      <input type="text" name="title" value="{{ slider.title }}" class="w-full border-gray-300 rounded-lg" />
+      <input type="text" name="title" value="{{ slider.title }}" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
     </div>
 
+    <!-- Subtitle -->
     <div>
       <label class="block text-sm font-medium text-gray-700 mb-1">Subtitle</label>
-      <input type="text" name="subtitle" value="{{ slider.subtitle }}" class="w-full border-gray-300 rounded-lg" />
+      <input type="text" name="subtitle" value="{{ slider.subtitle }}" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
     </div>
 
+    <!-- Link -->
     <div>
       <label class="block text-sm font-medium text-gray-700 mb-1">Link</label>
-      <input type="url" name="link" value="{{ slider.link }}" class="w-full border-gray-300 rounded-lg" />
+      <input type="url" name="link" value="{{ slider.link }}" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
     </div>
 
+    <!-- Existing Image -->
     <div>
       <label class="block text-sm font-medium text-gray-700 mb-1">Existing Image</label>
       {% if slider.image %}
-        <img src="{{ slider.image.url }}" class="h-16 w-32 object-cover rounded mb-2" />
+        <img src="{{ slider.image.url }}" class="h-20 w-40 object-cover rounded mb-2 border" />
+      {% else %}
+        <p class="text-gray-500 text-sm">No image uploaded yet.</p>
       {% endif %}
     </div>
 
+    <!-- Upload New Image -->
     <div>
-      <label class="block text-sm font-medium text-gray-700 mb-1">Add New Images (Optional)</label>
-      <input type="file" name="images" accept="image/*" multiple class="w-full mb-2" />
-      <p class="text-gray-500 text-xs">Select multiple images to add. Each new image will create a new slider entry.</p>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Upload New Image (Optional)</label>
+      <input type="file" name="image" accept="image/*" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+      <p class="text-gray-500 text-xs mt-1">Uploading a new image will replace the existing one.</p>
     </div>
 
+    <!-- Description -->
     <div>
-      <label class="block text-sm font-medium text-gray-700 mb-1">Description for New Images</label>
-      <textarea name="description" class="w-full border-gray-300 rounded-lg h-20" placeholder="Optional description for new images"></textarea>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+      <textarea name="description" class="w-full border border-gray-300 rounded-lg px-3 py-2 h-24 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Optional description for the slider">{{ slider.description }}</textarea>
     </div>
 
+    <!-- Buttons -->
     <div class="flex justify-end gap-3">
-      <a href="{% url 'admin_sliders_list' %}" class="px-4 py-2 rounded-lg border">Cancel</a>
-      <button type="submit" class="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700">Update</button>
+      <a href="{% url 'admin_sliders_list' %}" class="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-100">Cancel</a>
+      <button type="submit" class="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 transition">Update</button>
     </div>
   </form>
 </div>

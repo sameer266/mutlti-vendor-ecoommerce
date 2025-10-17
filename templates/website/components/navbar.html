@@ -1,8 +1,12 @@
 <!-- Top Bar (Desktop Only) -->
 <div id="top-bar" class="hidden lg:flex fixed top-0 left-0 right-0 bg-[var(--bg-brown)] text-[var(--text-light)] text-sm z-50 shadow-md">
   <div class="container mx-auto flex justify-between items-center px-4 py-2">
-    <p>Welcome to Miteri Mart</p>
-    <p>Need help? Call Us: <a href="tel:+61430967789" class="hover:text-[var(--primary)] font-medium">+61 430 967 789</a></p>
+    <p>Welcome to Hello Bajar</p>
+    <p>Need help? Call Us: 
+      <a href="tel:+61430967789" class="hover:text-[var(--primary)] font-medium">
+        +61 430 967 789
+      </a>
+    </p>
     <ul class="hidden md:flex space-x-4">
       <li><a href="#" class="hover:text-[var(--primary)] transition">FAQS</a></li>
       <li><a href="#" class="hover:text-[var(--primary)] transition">Blog</a></li>
@@ -14,10 +18,10 @@
 <!-- Main Header -->
 <header id="main-header" class="bg-white shadow-lg fixed top-9 lg:top-9 left-0 right-0 z-50 transition-all duration-300">
   <div class="hidden mx-auto lg:flex lg:flex-col lg:flex-row items-center justify-between px-4 py-3 lg:py-4 space-y-4 lg:space-y-0">
-    
+
     <!-- Logo -->
-    <a href="#" class="flex-shrink-0">
-      <img src="https://miterimart.com.au/storage/logos/SsuLCBRVmQBygoKXIQUHenxnUDwT0lC6pwYPCF5v.png" alt="Miteri" class="h-12">
+    <a href="{% url 'home' %}" class="flex-shrink-0">
+      <img src="../../../static/Hello_bajar_Logo_1.png" alt="Hello Bajar" class="h-12">
     </a>
 
     <!-- Categories Dropdown -->
@@ -25,37 +29,34 @@
       <button class="flex items-center justify-between w-full lg:w-auto px-4 py-2 bg-gray-100 text-gray-900 rounded shadow-sm hover:bg-[var(--bg-brown)] hover:text-white transition-colors">
         <div class="flex items-center space-x-2">
           <i class="fa-solid fa-bars h-5 w-5"></i>
-          <span>Shop by Departments</span>
+          <span>Shop by Category</span>
         </div>
         <i class="fa-solid fa-chevron-down text-sm"></i>
       </button>
-      <ul class="absolute top-full left-0 bg-white shadow-xl rounded w-full lg:w-64 mt-1 hidden group-hover:block z-50">
-        <li class="flex items-center px-4 py-2 hover:bg-gray-50 space-x-2 transition">
-          <i class="fa-solid fa-seedling text-[var(--primary)]"></i>
-          <span>Lentils & Beans</span>
-        </li>
-        <li class="flex items-center px-4 py-2 hover:bg-gray-50 space-x-2 transition">
-          <i class="fa-solid fa-leaf text-[var(--primary)]"></i>
-          <span>Spices & Herbs</span>
-        </li>
-        <li class="flex items-center px-4 py-2 hover:bg-gray-50 space-x-2 transition">
-          <i class="fa-solid fa-bottle-droplet text-[var(--primary)]"></i>
-          <span>Pickles / Sauce</span>
-        </li>
-        <li class="flex items-center px-4 py-2 hover:bg-gray-50 space-x-2 transition">
-          <i class="fa-solid fa-oil-can text-[var(--primary)]"></i>
-          <span>Oil & Ghee</span>
-        </li>
-        <li class="flex items-center px-4 py-2 hover:bg-gray-50 space-x-2 transition">
-          <i class="fa-solid fa-cookie text-[var(--primary)]"></i>
-          <span>Snacks & Biscuits</span>
-        </li>
+
+      <!-- Dynamic Categories List -->
+      <ul class="absolute top-full left-0 bg-white shadow-xl rounded w-full lg:w-64 mt-1 hidden group-hover:block z-50 max-h-96 overflow-y-auto">
+        {% for category in categories %}
+          <li class="flex items-center px-4 py-2 hover:bg-gray-50 space-x-3 transition cursor-pointer ">
+            {% if category.image %}
+              <img src="{{ category.image.url }}" alt="{{ category.name }}" class="w-6 h-6 rounded-full object-cover">
+            {% else %}
+              <i class="fa-solid fa-seedling text-[var(--primary)] w-6 h-6"></i>
+            {% endif %}
+           <a href="{% url 'category_details' category.slug %}" class="truncate text-sm font-medium hover:text-[var(--primary)]">
+    {{ category.name }}
+</a>
+
+          </li>
+        {% empty %}
+          <li class="px-4 py-2 text-gray-500">No categories available</li>
+        {% endfor %}
       </ul>
     </div>
 
     <!-- Desktop Search -->
-    <form class="hidden lg:flex flex-1 max-w-xl w-full shadow-sm rounded overflow-hidden">
-      <input type="text" placeholder="Search for products" class="flex-1 px-4 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] rounded-l">
+    <form action="{% url 'search'%}" method="get" class="hidden lg:flex flex-1 max-w-xl w-full shadow-sm rounded overflow-hidden">
+      <input name="q" type="text" placeholder="Search for products" class="flex-1 px-4 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] rounded-l">
       <button type="submit" class="px-4 bg-[var(--bg-brown)] text-white rounded-r hover:bg-[var(--bg-dark)] transition-colors flex items-center justify-center">
         <i class="fa-solid fa-magnifying-glass"></i>
       </button>
@@ -63,57 +64,95 @@
 
     <!-- Desktop Account & Cart -->
     <div class="hidden lg:flex items-center space-x-3">
-      <a href="{% url 'login_page'%}" class="border-1 border-gray-300 shadow-lg rounded-lg p-2 flex items-center space-x-1 bg-white text-gray-900 hover:bg-[var(--bg-brown)] hover:text-white transition shadow-sm">
-        <i class="fa-regular fa-user"></i>
-        <span>Account</span>
-      </a>
-      
-      <!-- Cart Container  -->
+
+      <!-- User/Account -->
+     <!-- User/Account -->
+{% if user.is_authenticated %}
+  <div class="border border-gray-300 cursor-pointer  rounded-lg p-2 flex items-center space-x-2 bg-white text-gray-900 hover:bg-[var(--bg-brown)] hover:text-white transition">
+    
+    {% if user.profile.avatar %}
+      <img src="{{ user.profile.avatar.url }}" alt="{{ user.first_name }}" class="w-6 h-6 rounded-full object-cover">
+    {% else %}
+      <i class="fa-regular fa-user text-lg"></i>
+    {% endif %}
+    
+    <a href="{% url 'customer_profile' %}">
+      <span>{{ user.first_name|default:"User" }}</span>
+    </a>
+  </div>
+{% else %}
+  <a href="{% url 'login_page' %}" class="border border-gray-300 shadow-sm rounded-lg p-2 flex items-center space-x-1 bg-white text-gray-900 hover:bg-[var(--bg-brown)] hover:text-white transition">
+    <i class="fa-regular fa-user text-lg"></i>
+    <span>Account</span>
+  </a>
+{% endif %}
+
+      <!-- Cart Container -->
       <div class="relative">
-        <a href="{% url 'carts'%}" id="desktopCartLink" class="relative border-1 shadow-lg border-gray-300 rounded-lg p-2 flex items-center space-x-1 bg-white text-gray-900 hover:bg-[var(--bg-brown)] hover:text-white transition shadow-sm">
+        <a href="{% url 'carts' %}" id="desktopCartLink" class="relative border-1 shadow-lg border-gray-300 rounded-lg p-2 flex items-center space-x-1 bg-white text-gray-900 hover:bg-[var(--bg-brown)] hover:text-white transition shadow-sm">
           <i class="fa-solid fa-cart-shopping"></i>
           <span>Cart</span>
-          <span id="desktopCartBadge" class="absolute -top-2 -right-2 w-5 h-5 bg-[var(--bg-brown)] text-white text-xs rounded-full flex items-center justify-center">0</span>
+          <span id="desktopCartBadge" class="absolute -top-2 -right-2 w-5 h-5 bg-[var(--bg-brown)] text-white text-xs rounded-full flex items-center justify-center">
+            {{ cart_count }}
+          </span>
         </a>
-  
       </div>
     </div>
   </div>
 
   <!-- Desktop Nav Menu -->
   <nav class="hidden lg:flex justify-center container mx-auto px-4 py-2 space-x-6 bg-[var(--bg-light)] shadow-inner">
-    <a href="{% url 'home'%}" class="{% if request.path == '/' %}text-[var(--primary)] font-bold{% else %}text-[var(--text-secondary)]{% endif %} hover:text-[var(--primary)] transition">Home</a>
-    <a href="{% url 'all_collections'%}" class="{% if request.path == '/all-collections/' %}text-[var(--primary)] font-bold{% else %}text-[var(--text-secondary)]{% endif %} hover:text-[var(--primary)] transition">All Collections</a>
-    <a href="{% url 'vendors'%}" class="{% if request.path == '/vendors/' %}text-[var(--primary)] font-bold{% else %}text-[var(--text-secondary)]{% endif %} hover:text-[var(--primary)] transition">Our Vendors</a>
-    <a href="{% url 'new_arrivals'%}" class="{% if request.path == '/new-arrivals/' %}text-[var(--primary)] font-bold{% else %}text-[var(--text-secondary)]{% endif %} hover:text-[var(--primary)] transition">New Arrivals</a>
+    <a href="{% url 'home' %}" class="{% if request.path == '/' %}text-[var(--primary)] font-bold{% else %}text-[var(--text-secondary)]{% endif %} hover:text-[var(--primary)] transition">Home</a>
+    <a href="{% url 'all_collections' %}" class="{% if request.path == '/all-collections/' %}text-[var(--primary)] font-bold{% else %}text-[var(--text-secondary)]{% endif %} hover:text-[var(--primary)] transition">All Collections</a>
+    <a href="{% url 'vendors' %}" class="{% if request.path == '/vendors/' %}text-[var(--primary)] font-bold{% else %}text-[var(--text-secondary)]{% endif %} hover:text-[var(--primary)] transition">Our Vendors</a>
+    <a href="{% url 'new_arrivals' %}" class="{% if request.path == '/new-arrivals/' %}text-[var(--primary)] font-bold{% else %}text-[var(--text-secondary)]{% endif %} hover:text-[var(--primary)] transition">New Arrivals</a>
   </nav>
 </header>
 
 <!-- Mobile Header -->
 <div class="lg:hidden fixed top-0 left-0 right-0 bg-white shadow-lg z-50">
   <div class="container mx-auto px-4 py-2 flex items-center justify-between">
+
     <!-- Logo -->
-    <a href="#" class="flex-none">
-      <img src="https://miterimart.com.au/storage/logos/SsuLCBRVmQBygoKXIQUHenxnUDwT0lC6pwYPCF5v.png" alt="Miteri" class="h-10">
+    <a href="{% url 'home' %}" class="flex-none">
+      <img src="../../../static/Hello_bajar_Logo_1.png" class="h-10">
     </a>
 
     <!-- Search Bar -->
-    <form class="flex-1 mx-2">
-      <input type="text" placeholder="Search..." class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[var(--primary)] text-sm shadow-sm">
+    <form action="{% url 'search'%}" method="get" class="flex-1 mx-2">
+      <input name="q" type="text" placeholder="Search..." class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[var(--primary)] text-sm shadow-sm">
     </form>
 
-    <!-- Account & Cart Icons -->
+    <!-- Mobile Account & Cart Icons -->
     <div class="flex items-center space-x-2 flex-none">
-      <a href="{% url 'login_page'%}" class="p-2 text-gray-900 hover:bg-[var(--bg-brown)] hover:text-white rounded transition-colors shadow-sm">
-        <i class="fa-regular fa-user text-xl"></i>
-      </a>
-      <a href="{% url 'carts'%}" class="relative p-2 text-gray-900 hover:bg-[var(--bg-brown)] hover:text-white rounded transition-colors shadow-sm">
+   <!-- User/Account -->
+{% if user.is_authenticated %}
+  <div class="border border-gray-300  cursor-pointer  rounded-lg p-2 flex items-center space-x-2 bg-white text-gray-900 hover:bg-[var(--bg-brown)] hover:text-white transition">
+    
+    {% if user.profile.avatar %}
+      <img src="{{ user.profile.avatar.url }}" alt="{{ user.first_name }}" class="w-6 h-6 rounded-full object-cover">
+    {% else %}
+      <i class="fa-regular fa-user text-lg"></i>
+    {% endif %}
+    
+    <a href="{% url 'customer_profile' %}">
+      <span>{{ user.first_name|default:"User" }}</span>
+    </a>
+  </div>
+{% else %}
+  <a href="{% url 'login_page' %}" class="border border-gray-300 shadow-sm rounded-lg p-2 flex items-center space-x-1 bg-white text-gray-900 hover:bg-[var(--bg-brown)] hover:text-white transition">
+    <i class="fa-regular fa-user text-lg"></i>
+    <span>Account</span>
+  </a>
+{% endif %}
+
+
+      <a href="{% url 'carts' %}" class="relative p-2 text-gray-900 hover:bg-[var(--bg-brown)] hover:text-white rounded transition-colors shadow-sm">
         <i class="fa-solid fa-cart-shopping text-xl"></i>
-        <span id="mobileCartBadge" class="absolute -top-1 -right-1 w-4 h-4 bg-[var(--bg-brown)] text-white text-xs rounded-full flex items-center justify-center">0</span>
+        <span id="mobileCartBadge" class="absolute -top-1 -right-1 w-4 h-4 bg-[var(--bg-brown)] text-white text-xs rounded-full flex items-center justify-center">
+          {{ cart_count }}
+        </span>
       </a>
     </div>
   </div>
 </div>
-
-
-

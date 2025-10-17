@@ -3,325 +3,322 @@
 {% block title %}Shopping Cart{% endblock %}
 
 {% block content %}
+{% if request.user.is_authenticated %}
 <div class="container mx-auto px-4 py-6 lg:py-8 max-w-7xl">
   
   <h1 class="text-2xl lg:text-3xl font-bold mb-6 text-[var(--text-primary)]">Shopping Cart</h1>
 
+  {% if cart_items %}
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
 
     <!-- Cart Items Section -->
     <div class="lg:col-span-2">
-      <div class="bg-white border rounded-lg overflow-hidden shadow-sm">
+      <div class="bg-[var(--bg-light)] border rounded-lg overflow-hidden shadow-[var(--shadow-sm)]">
         
         <!-- Mobile Card View -->
         <div class="block lg:hidden divide-y">
-          <!-- Cart Item 1 Mobile -->
-          <div class="cart-item p-4">
+          {% for item in cart_items %}
+          <div class="cart-item p-4" data-cart-item-id="{{ item.id }}">
             <div class="flex gap-3 mb-3">
-              <img src="https://miterimart.com.au/storage/products/featured/DQb1htwCqaaLSmCSLHBhjnvpVkN7WrRYscFERpij.jpg" 
-                   alt="Product" 
+              <img src="{{ item.product.main_image.url }}" 
+                   alt="{{ item.product.name }}" 
                    class="w-20 h-20 object-cover rounded flex-shrink-0">
               <div class="flex-1 min-w-0">
-                <h3 class="font-semibold text-[var(--text-primary)] mb-1">Miller's Vegetable Oil 4L</h3>
-                <p class="text-xs text-[var(--text-secondary)] mb-2">SKU: MVO45767</p>
-                <p class="item-price font-bold text-[var(--primary)] text-lg">Rs 1450</p>
+                <h3 class="font-semibold text-[var(--text-primary)] mb-1">{{ item.product.name }}</h3>
+                {% if item.variant %}
+                <p class="text-xs text-[var(--text-secondary)] mb-1">{{ item.variant.get_variant_type_display }}: {{ item.variant.name }} {% if item.variant.price_adjustment != 0 %}({% if item.variant.price_adjustment > 0 %}+{% endif %}Rs {{ item.variant.price_adjustment }}){% endif %}</p>
+                {% endif %}
+                <p class="text-xs text-[var(--text-secondary)] mb-2">SKU: {{ item.product.sku }}</p>
+                <p class="item-price font-bold text-[var(--success)] text-lg">Rs {{ item.get_item_price }}</p>
               </div>
-              <button class="removeItem text-red-500 hover:text-red-700 h-8 w-8 flex items-center justify-center">
+              <button class="removeItem text-red-500 hover:text-red-700 h-8 w-8 flex items-center justify-center" 
+                      data-cart-item-id="{{ item.id }}">
                 <i class="fa fa-trash"></i>
               </button>
             </div>
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-2">
-                <button class="decreaseQty w-9 h-9 border border-gray-300 rounded hover:bg-gray-100 flex items-center justify-center">-</button>
-                <input type="number" value="1" min="1" class="qtyInput w-16 text-center border border-gray-300 rounded py-2 text-sm">
-                <button class="increaseQty w-9 h-9 border border-gray-300 rounded hover:bg-gray-100 flex items-center justify-center">+</button>
+                <button class="decreaseQty w-9 h-9 border border-[var(--text-secondary)] rounded hover:bg-gray-100 flex items-center justify-center" 
+                        data-cart-item-id="{{ item.id }}">-</button>
+                <input type="number" value="{{ item.quantity }}" min="1" max="{{ item.product.stock }}" 
+                       class="qtyInput w-16 text-center border border-[var(--text-secondary)] rounded py-2 text-sm focus:ring-2 focus:ring-[var(--primary)]"
+                       data-cart-item-id="{{ item.id }}">
+                <button class="increaseQty w-9 h-9 border border-[var(--text-secondary)] rounded hover:bg-gray-100 flex items-center justify-center"
+                        data-cart-item-id="{{ item.id }}">+</button>
               </div>
               <div class="text-right">
                 <p class="text-xs text-[var(--text-secondary)]">Subtotal</p>
-                <p class="item-subtotal font-bold text-[var(--text-primary)] text-lg">Rs 1450</p>
+                <p class="item-subtotal font-bold text-[var(--text-primary)] text-lg">Rs {{ item.get_total_price }}</p>
               </div>
             </div>
           </div>
-
-          <!-- Cart Item 2 Mobile -->
-          <div class="cart-item p-4">
-            <div class="flex gap-3 mb-3">
-              <img src="https://miterimart.com.au/storage/products/featured/DQb1htwCqaaLSmCSLHBhjnvpVkN7WrRYscFERpij.jpg" 
-                   alt="Product" 
-                   class="w-20 h-20 object-cover rounded flex-shrink-0">
-              <div class="flex-1 min-w-0">
-                <h3 class="font-semibold text-[var(--text-primary)] mb-1">Fortune Everyday Basmati 5kg</h3>
-                <p class="text-xs text-[var(--text-secondary)] mb-2">SKU: FEB4758</p>
-                <p class="item-price font-bold text-[var(--primary)] text-lg">Rs 1399</p>
-              </div>
-              <button class="removeItem text-red-500 hover:text-red-700 h-8 w-8 flex items-center justify-center">
-                <i class="fa fa-trash"></i>
-              </button>
-            </div>
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-2">
-                <button class="decreaseQty w-9 h-9 border border-gray-300 rounded hover:bg-gray-100 flex items-center justify-center">-</button>
-                <input type="number" value="1" min="1" class="qtyInput w-16 text-center border border-gray-300 rounded py-2 text-sm">
-                <button class="increaseQty w-9 h-9 border border-gray-300 rounded hover:bg-gray-100 flex items-center justify-center">+</button>
-              </div>
-              <div class="text-right">
-                <p class="text-xs text-[var(--text-secondary)]">Subtotal</p>
-                <p class="item-subtotal font-bold text-[var(--text-primary)] text-lg">Rs 1399</p>
-              </div>
-            </div>
-          </div>
+          {% endfor %}
         </div>
 
         <!-- Desktop Table View -->
         <div class="hidden lg:block overflow-x-auto">
           <table class="w-full">
-            <thead class="bg-[var(--bg-light)] border-b">
+            <thead class="bg-gray-50 border-b">
               <tr>
-                <th class="text-left px-6 py-3 text-sm font-semibold text-[var(--text-primary)]">Product</th>
-                <th class="text-center px-6 py-3 text-sm font-semibold text-[var(--text-primary)]">Price</th>
-                <th class="text-center px-6 py-3 text-sm font-semibold text-[var(--text-primary)]">Quantity</th>
-                <th class="text-right px-6 py-3 text-sm font-semibold text-[var(--text-primary)]">Subtotal</th>
-                <th class="w-16"></th>
+                <th class="text-left py-4 px-6 font-semibold text-[var(--text-primary)]">Product</th>
+                <th class="text-center py-4 px-6 font-semibold text-[var(--text-primary)]">Price</th>
+                <th class="text-center py-4 px-6 font-semibold text-[var(--text-primary)]">Quantity</th>
+                <th class="text-center py-4 px-6 font-semibold text-[var(--text-primary)]">Subtotal</th>
+                <th class="text-center py-4 px-6 font-semibold text-[var(--text-primary)]">Action</th>
               </tr>
             </thead>
             <tbody class="divide-y">
-              
-              <!-- Cart Item 1 Desktop -->
-              <tr class="cart-item hover:bg-gray-50 transition">
-                <td class="px-6 py-4">
+              {% for item in cart_items %}
+              <tr class="cart-item" data-cart-item-id="{{ item.id }}">
+                <td class="py-4 px-6">
                   <div class="flex items-center gap-4">
-                    <img src="https://miterimart.com.au/storage/products/featured/DQb1htwCqaaLSmCSLHBhjnvpVkN7WrRYscFERpij.jpg" 
-                         alt="Product" 
-                         class="w-16 h-16 object-cover rounded flex-shrink-0">
+                    <img src="{{ item.product.main_image.url }}" 
+                         alt="{{ item.product.name }}" 
+                         class="w-16 h-16 object-cover rounded">
                     <div>
-                      <p class="font-semibold text-[var(--text-primary)]">Miller's Vegetable Oil 4L</p>
-                      <p class="text-sm text-[var(--text-secondary)]">SKU: MVO45767</p>
+                      <h3 class="font-semibold text-[var(--text-primary)]">{{ item.product.name }}</h3>
+                      {% if item.variant %}
+                      <p class="text-sm text-[var(--text-secondary)]">{{ item.variant.get_variant_type_display }}: {{ item.variant.name }} {% if item.variant.price_adjustment != 0 %}({% if item.variant.price_adjustment > 0 %}+{% endif %}Rs {{ item.variant.price_adjustment }}){% endif %}</p>
+                      {% endif %}
+                      <p class="text-xs text-[var(--text-secondary)]">SKU: {{ item.product.sku }}</p>
                     </div>
                   </div>
                 </td>
-                <td class="px-6 py-4 text-center">
-                  <span class="item-price font-semibold text-[var(--primary)]">Rs 1450</span>
+                <td class="text-center py-4 px-6">
+                  <span class="font-semibold text-[var(--success)]">Rs {{ item.get_item_price }}</span>
                 </td>
-                <td class="px-6 py-4">
+                <td class="text-center py-4 px-6">
                   <div class="flex items-center justify-center gap-2">
-                    <button class="decreaseQty w-8 h-8 border border-gray-300 rounded hover:bg-gray-100 flex items-center justify-center">-</button>
-                    <input type="number" value="1" min="1" class="qtyInput w-16 text-center border border-gray-300 rounded py-1">
-                    <button class="increaseQty w-8 h-8 border border-gray-300 rounded hover:bg-gray-100 flex items-center justify-center">+</button>
+                    <button class="decreaseQty w-8 h-8 border border-[var(--text-secondary)] rounded hover:bg-gray-100 flex items-center justify-center"
+                            data-cart-item-id="{{ item.id }}">-</button>
+                    <input type="number" value="{{ item.quantity }}" min="1" max="{{ item.product.stock }}" 
+                           class="qtyInput w-16 text-center border border-[var(--text-secondary)] rounded py-1 text-sm focus:ring-2 focus:ring-[var(--primary)]"
+                           data-cart-item-id="{{ item.id }}">
+                    <button class="increaseQty w-8 h-8 border border-[var(--text-secondary)] rounded hover:bg-gray-100 flex items-center justify-center"
+                            data-cart-item-id="{{ item.id }}">+</button>
                   </div>
                 </td>
-                <td class="px-6 py-4 text-right">
-                  <span class="item-subtotal font-bold text-[var(--text-primary)]">Rs 1450</span>
+                <td class="text-center py-4 px-6">
+                  <span class="font-bold text-[var(--text-primary)] item-subtotal">Rs {{ item.get_total_price }}</span>
                 </td>
-                <td class="px-6 py-4 text-center">
-                  <button class="removeItem text-red-500 hover:text-red-700">
+                <td class="text-center py-4 px-6">
+                  <button class="removeItem text-red-500 hover:text-red-700 p-2" 
+                          data-cart-item-id="{{ item.id }}">
                     <i class="fa fa-trash"></i>
                   </button>
                 </td>
               </tr>
-
-              <!-- Cart Item 2 Desktop -->
-              <tr class="cart-item hover:bg-gray-50 transition">
-                <td class="px-6 py-4">
-                  <div class="flex items-center gap-4">
-                    <img src="https://miterimart.com.au/storage/products/featured/DQb1htwCqaaLSmCSLHBhjnvpVkN7WrRYscFERpij.jpg" 
-                         alt="Product" 
-                         class="w-16 h-16 object-cover rounded flex-shrink-0">
-                    <div>
-                      <p class="font-semibold text-[var(--text-primary)]">Fortune Everyday Basmati 5kg</p>
-                      <p class="text-sm text-[var(--text-secondary)]">SKU: FEB4758</p>
-                    </div>
-                  </div>
-                </td>
-                <td class="px-6 py-4 text-center">
-                  <span class="item-price font-semibold text-[var(--primary)]">Rs 1399</span>
-                </td>
-                <td class="px-6 py-4">
-                  <div class="flex items-center justify-center gap-2">
-                    <button class="decreaseQty w-8 h-8 border border-gray-300 rounded hover:bg-gray-100 flex items-center justify-center">-</button>
-                    <input type="number" value="1" min="1" class="qtyInput w-16 text-center border border-gray-300 rounded py-1">
-                    <button class="increaseQty w-8 h-8 border border-gray-300 rounded hover:bg-gray-100 flex items-center justify-center">+</button>
-                  </div>
-                </td>
-                <td class="px-6 py-4 text-right">
-                  <span class="item-subtotal font-bold text-[var(--text-primary)]">Rs 1399</span>
-                </td>
-                <td class="px-6 py-4 text-center">
-                  <button class="removeItem text-red-500 hover:text-red-700">
-                    <i class="fa fa-trash"></i>
-                  </button>
-                </td>
-              </tr>
-
+              {% endfor %}
             </tbody>
           </table>
         </div>
-
-        <!-- Cart Subtotal -->
-        <div class="bg-[var(--bg-light)] px-4 lg:px-6 py-4 border-t">
-          <div class="flex justify-between items-center">
-            <span class="text-base lg:text-lg font-semibold text-[var(--text-primary)]">Subtotal:</span>
-            <span id="cartSubtotal" class="text-xl lg:text-2xl font-bold text-[var(--primary)]">Rs 2849</span>
-          </div>
-        </div>
-
       </div>
     </div>
 
     <!-- Order Summary Section -->
     <div class="lg:col-span-1">
-      <div class="bg-white border rounded-lg p-4 lg:p-6 shadow-sm sticky top-4">
+      <div class="bg-[var(--bg-light)] border rounded-lg p-6 shadow-[var(--shadow-sm)] sticky top-4">
+        <h2 class="text-xl font-bold text-[var(--text-primary)] mb-4">Order Summary</h2>
         
-        <h2 class="text-lg lg:text-xl font-bold mb-4 text-[var(--text-primary)]">Order Summary</h2>
-
-        <!-- Payment Methods -->
-        <div class="mb-6">
-          <label class="block text-sm font-semibold text-[var(--text-primary)] mb-3">Payment Method</label>
-          
-          <div class="space-y-2">
-            <label class="flex items-center p-3 border rounded cursor-pointer hover:bg-[var(--bg-light)] transition">
-              <input type="radio" name="payment" value="cod" class="mr-3 accent-[var(--primary)]" checked>
-              <span class="text-sm lg:text-base">Cash on Delivery</span>
-            </label>
-
-            <label class="flex items-center p-3 border rounded cursor-pointer hover:bg-[var(--bg-light)] transition">
-              <input type="radio" name="payment" value="khalti" class="mr-3 accent-[var(--primary)]">
-              <span class="text-sm lg:text-base">Khalti</span>
-            </label>
-
-            <label class="flex items-center p-3 border rounded cursor-pointer hover:bg-[var(--bg-light)] transition">
-              <input type="radio" name="payment" value="esewa" class="mr-3 accent-[var(--primary)]">
-              <span class="text-sm lg:text-base">eSewa</span>
-            </label>
+        <div class="space-y-3 mb-6">
+          <div class="flex justify-between">
+            <span class="text-[var(--text-secondary)]">Items ({{ total_items }})</span>
+            <span class="font-semibold text-[var(--text-primary)]">Rs {{ total_price }}</span>
           </div>
-        </div>
-
-        <!-- Total -->
-        <div class="border-t pt-4 mb-6 space-y-2">
-          <div class="flex justify-between items-center">
-            <span class="text-[var(--text-secondary)] text-sm">Subtotal</span>
-            <span id="summarySubtotal" class="font-semibold text-[var(--text-primary)]">Rs 2849</span>
-          </div>
-          <div class="flex justify-between items-center">
-            <span class="text-[var(--text-secondary)] text-sm">Delivery</span>
+          <div class="flex justify-between">
+            <span class="text-[var(--text-secondary)]">Shipping</span>
             <span class="font-semibold text-[var(--success)]">Free</span>
           </div>
-          <div class="flex justify-between items-center text-base lg:text-lg font-bold border-t pt-3 mt-3">
+          <div class="flex justify-between">
+            <span class="text-[var(--text-secondary)]">Tax</span>
+            <span class="font-semibold text-[var(--text-primary)]">Rs 0.00</span>
+          </div>
+          <hr class="my-3 border-[var(--text-secondary)]">
+          <div class="flex justify-between text-lg font-bold">
             <span class="text-[var(--text-primary)]">Total</span>
-            <span id="summaryTotal" class="text-[var(--primary)]">Rs 2849</span>
+            <span class="text-[var(--success)] total-price">Rs {{ total_price }}</span>
           </div>
         </div>
 
-        <!-- Place Order Button -->
-        <button class="w-full bg-[var(--primary)] text-white py-3 lg:py-4 rounded-lg hover:bg-[var(--primary-dark)] transition font-bold text-base lg:text-lg shadow-md hover:shadow-lg flex items-center justify-center gap-2">
-          <span>Place Order</span>
-          <i class="fas fa-arrow-right"></i>
-        </button>
+        <div class="space-y-3">
+          <a href="{% url 'checkout_page' %}" class="block w-full text-center bg-[var(--primary)] hover:bg-[var(--primary-dark)] text-[var(--text-light)] py-3 px-4 rounded-lg font-semibold transition-colors btn btn-primary">
+            Proceed to Checkout
+          </a>
+          <a href="{% url 'all_collections' %}" class="block w-full text-center bg-gray-100 hover:bg-gray-200 text-[var(--text-primary)] py-3 px-4 rounded-lg font-semibold transition-colors">
+            Continue Shopping
+          </a>
+        </div>
 
-        <!-- Continue Shopping Link -->
-        <a href="/" class="block text-center mt-4 text-[var(--primary)] hover:text-[var(--primary-dark)] font-semibold text-sm">
-          <i class="fas fa-arrow-left mr-1"></i> Continue Shopping
-        </a>
-
+        <!-- Security Badge -->
+        <div class="mt-6 pt-4 border-t border-[var(--text-secondary)] text-center">
+          <div class="flex items-center justify-center gap-2 text-sm text-[var(--text-secondary)]">
+            <i class="fas fa-shield-alt text-[var(--success)]"></i>
+            <span>Secure Checkout</span>
+          </div>
+        </div>
       </div>
     </div>
 
   </div>
-
-  <!-- Empty Cart Message (Hidden by default) -->
-  <div id="emptyCartMessage" class="hidden text-center py-12">
-    <i class="fas fa-shopping-cart text-6xl text-gray-300 mb-4"></i>
-    <h3 class="text-2xl font-bold text-[var(--text-primary)] mb-2">Your cart is empty</h3>
-    <p class="text-[var(--text-secondary)] mb-6">Add some products to get started!</p>
-    <a href="/" class="btn btn-primary inline-block">
-      <i class="fas fa-shopping-bag mr-2"></i> Start Shopping
-    </a>
+  {% else %}
+  <!-- Empty Cart -->
+  <div class="text-center py-12">
+    <div class="max-w-md mx-auto">
+      <i class="fas fa-shopping-cart text-6xl text-gray-300 mb-6"></i>
+      <h2 class="text-2xl font-bold text-[var(--text-primary)] mb-4">Your Cart is Empty</h2>
+      <p class="text-[var(--text-secondary)] mb-6">Looks like you haven't added any items to your cart yet.</p>
+      <a href="{% url 'all_collections' %}" class="inline-block bg-[var(--primary)] hover:bg-[var(--primary-dark)] text-[var(--text-light)] px-8 py-3 rounded-lg font-semibold transition-colors btn btn-primary">
+        Start Shopping
+      </a>
+    </div>
   </div>
-</div>
+  {% endif %}
 
+</div>
+{% else %}
+<!-- Redirect to Login for Unauthenticated Users -->
+<div class="container mx-auto px-4 py-6 lg:py-8 max-w-7xl text-center">
+  <h2 class="text-2xl font-bold text-[var(--text-primary)] mb-4">Please Log In</h2>
+  <p class="text-[var(--text-secondary)] mb-6">You need to be logged in to view your shopping cart.</p>
+  <a href="{% url 'login_page' %}" class="inline-block bg-[var(--primary)] hover:bg-[var(--primary-dark)] text-[var(--text-light)] px-8 py-3 rounded-lg font-semibold transition-colors btn btn-primary">
+    Log In
+  </a>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+{% if request.user.is_authenticated %}
 <script>
 $(document).ready(function() {
-  toastr.options = {
-    "closeButton": true,
-    "progressBar": true,
-    "positionClass": "toast-top-right",
-    "timeOut": "2000"
-  };
-
-  function updateCartTotals() {
-    let subtotal = 0;
-    const itemCount = $('.cart-item').length;
+  // Update cart item quantity
+  $('.qtyInput').on('change', function() {
+    const cartItemId = $(this).data('cart-item-id');
+    const quantity = parseInt($(this).val());
     
-    if (itemCount === 0) {
-      // Show empty cart message
-      $('.grid').hide();
-      $('#emptyCartMessage').removeClass('hidden');
+    if (quantity < 1) {
+      removeCartItem(cartItemId);
       return;
     }
     
-    $('.cart-item').each(function() {
-      const priceText = $(this).find('.item-price').text().replace('Rs ', '').replace(',', '').trim();
-      const price = parseFloat(priceText);
-      const qty = parseInt($(this).find('.qtyInput').val());
-      const itemSubtotal = price * qty;
-      
-      $(this).find('.item-subtotal').text(`Rs ${itemSubtotal.toLocaleString()}`);
-      subtotal += itemSubtotal;
-    });
-
-    $('#cartSubtotal').text(`Rs ${subtotal.toLocaleString()}`);
-    $('#summarySubtotal').text(`Rs ${subtotal.toLocaleString()}`);
-    $('#summaryTotal').text(`Rs ${subtotal.toLocaleString()}`);
-  }
-
-  $('.increaseQty').click(function() {
-    const $input = $(this).siblings('.qtyInput');
-    const newVal = parseInt($input.val()) + 1;
-    $input.val(newVal);
-    updateCartTotals();
+    updateCartItem(cartItemId, quantity);
   });
-
-  $('.decreaseQty').click(function() {
-    const $input = $(this).siblings('.qtyInput');
-    const currentVal = parseInt($input.val());
-    if (currentVal > 1) {
-      $input.val(currentVal - 1);
-      updateCartTotals();
-    }
-  });
-
-  $('.qtyInput').on('change', function() {
-    const val = parseInt($(this).val());
-    if (val < 1 || isNaN(val)) {
-      $(this).val(1);
-    }
-    updateCartTotals();
-  });
-
-  $('.removeItem').click(function() {
-    const $item = $(this).closest('.cart-item');
+  
+  // Increase quantity
+  $('.increaseQty').on('click', function() {
+    const cartItemId = $(this).data('cart-item-id');
+    const input = $(`.qtyInput[data-cart-item-id="${cartItemId}"]`);
+    const currentQty = parseInt(input.val());
+    const maxQty = parseInt(input.attr('max'));
     
-    Swal.fire({
-      title: 'Remove Item?',
-      text: "Are you sure you want to remove this item from your cart?",
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#FF7F00',
-      cancelButtonColor: '#6c757d',
-      confirmButtonText: 'Yes, remove it!',
-      cancelButtonText: 'Cancel'
-    }).then((result) => {
-      if (result.isConfirmed) {
-        $item.fadeOut(300, function() {
-          $(this).remove();
-          updateCartTotals();
-          toastr.success("Item removed from cart");
-        });
+    if (currentQty < maxQty) {
+      input.val(currentQty + 1);
+      updateCartItem(cartItemId, currentQty + 1);
+    }
+  });
+  
+  // Decrease quantity
+  $('.decreaseQty').on('click', function() {
+    const cartItemId = $(this).data('cart-item-id');
+    const input = $(`.qtyInput[data-cart-item-id="${cartItemId}"]`);
+    const currentQty = parseInt(input.val());
+    
+    if (currentQty > 1) {
+      input.val(currentQty - 1);
+      updateCartItem(cartItemId, currentQty - 1);
+    } else {
+      removeCartItem(cartItemId);
+    }
+  });
+  
+  // Remove item
+  $('.removeItem').on('click', function() {
+    const cartItemId = $(this).data('cart-item-id');
+    removeCartItem(cartItemId);
+  });
+  
+  // Update cart item function
+  function updateCartItem(cartItemId, quantity) {
+    $.ajax({
+      url: '{% url "update_cart_item" %}',
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': $('[name=csrfmiddlewaretoken]').val() || $('meta[name=csrf-token]').attr('content')
+      },
+      contentType: 'application/json',
+      data: JSON.stringify({
+        cart_item_id: cartItemId,
+        quantity: quantity
+      }),
+      success: function(response) {
+        if (response.success) {
+          // Update item subtotal
+          $(`.cart-item[data-cart-item-id="${cartItemId}"] .item-subtotal`).text('Rs ' + response.item_total.toFixed(2));
+          
+          // Update total price
+          $('.total-price').text('Rs ' + response.total_price.toFixed(2));
+          
+          // Update cart count in header if exists
+          if (typeof updateCartCount === 'function') {
+            updateCartCount(response.cart_count);
+          }
+          
+          toastr.success(response.message);
+        } else {
+          toastr.error(response.message);
+        }
+      },
+      error: function(xhr) {
+        const response = xhr.responseJSON;
+        toastr.error(response?.message || 'An error occurred while updating cart');
       }
     });
-  });
-
-  updateCartTotals();
+  }
+  
+  // Remove cart item function
+  function removeCartItem(cartItemId) {
+    $.ajax({
+      url: '{% url "remove_from_cart" %}',
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': $('[name=csrfmiddlewaretoken]').val() || $('meta[name=csrf-token]').attr('content')
+      },
+      contentType: 'application/json',
+      data: JSON.stringify({
+        cart_item_id: cartItemId
+      }),
+      success: function(response) {
+        if (response.success) {
+          // Remove item from DOM
+          $(`.cart-item[data-cart-item-id="${cartItemId}"]`).fadeOut(300, function() {
+            $(this).remove();
+            
+            // Check if cart is empty
+            if ($('.cart-item').length === 0) {
+              location.reload(); // Reload to show empty cart message
+            }
+          });
+          
+          // Update total price
+          $('.total-price').text('Rs ' + response.total_price.toFixed(2));
+          
+          // Update cart count in header if exists
+          if (typeof updateCartCount === 'function') {
+            updateCartCount(response.cart_count);
+          }
+          
+          toastr.success(response.message);
+        } else {
+          toastr.error(response.message);
+        }
+      },
+      error: function(xhr) {
+        const response = xhr.responseJSON;
+        toastr.error(response?.message || 'An error occurred while removing item');
+      }
+    });
+  }
 });
 </script>
+{% endif %}
 {% endblock %}
-

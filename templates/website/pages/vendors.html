@@ -1,187 +1,295 @@
 {% extends 'website/components/base.html' %}
 
-{% block title %}Our Vendors{% endblock %}
+{% block title %}Our Vendors - Ecommerce{% endblock %}
+
+{% block extra_head %}
+  <meta name="description" content="Discover trusted vendors offering quality products on our ecommerce platform.">
+{% endblock %}
 
 {% block content %}
-<section class="container  mx-auto px-4 py-8  ">
+  <!-- Hero Banner -->
+  <section class="py-8">
+    <div class="text-center bg-[var(--bg-brown)] p-4 rounded shadow">
+      <h1 class="text-2xl sm:text-3xl font-extrabold text-[var(--text-light)]">
+        Our Trusted Vendors
+      </h1>
+      <p class="text-[var(--text-light)] text-sm mt-2">
+        Discover quality products from verified sellers across our marketplace
+      </p>
+    </div>
+  </section>
 
-  <!-- Page Header -->
-  <div class="text-center mb-8 bg-[var(--bg-brown)] p-4 rounded shadow">
-    <h1 class="text-2xl sm:text-3xl font-extrabold text-[var(--text-light)]">
-      Our Trusted Vendors
-    </h1>
-    <p class="text-[var(--text-light)] text-sm mt-2">
-      Discover quality products from verified sellers across our marketplace
-    </p>
-  </div>
+  <!-- Featured Vendors -->
+  {% if featured_vendors %}
+    <section class="container mx-auto px-4 py-8">
+      <h2 class="text-2xl md:text-3xl font-semibold text-[var(--text-primary)] mb-6">Featured Vendors</h2>
+      <div class="swiper vendor-swiper">
+        <div class="swiper-wrapper">
+          {% for vendor in featured_vendors %}
+            <div class="swiper-slide">
+              <a href="{% url 'vendor_details' vendor.slug %}" class="vendor-card bg-white rounded-xl shadow-[var(--shadow-sm)] border-2 border-[var(--bg-brown)] overflow-hidden block">
+                <div class="h-40 w-full overflow-hidden">
+                  <img 
+                    src="{% if vendor.shop_banner %}{{ vendor.shop_banner.url }}{% else %}https://via.placeholder.com/400x160{% endif %}" 
+                    alt="{{ vendor.shop_name }} Banner" 
+                    class="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
+                    loading="lazy"
+                  >
+                </div>
+                <div class="p-6 text-center">
+                  <div class="w-16 h-16 mx-auto mb-4 rounded-full overflow-hidden border-2 border-[var(--primary)]">
+                    <img 
+                      src="{% if vendor.shop_logo %}{{ vendor.shop_logo.url }}{% else %}https://via.placeholder.com/64{% endif %}" 
+                      alt="{{ vendor.shop_name }} Logo" 
+                      class="w-full h-full object-cover"
+                    >
+                  </div>
+                  <h3 class="text-xl font-semibold text-[var(--text-primary)] mb-2">{{ vendor.shop_name }}</h3>
+                  <div class="flex items-center justify-center gap-1 mb-3 text-yellow-400 text-sm">
+                    {% with avg_rating=vendor.average_rating|default:0 %}
+                      {% for i in '12345'|make_list %}
+                        <i class="fas fa-star{% if forloop.counter0 >= avg_rating|floatformat:0 %} text-gray-300{% endif %}"></i>
+                      {% endfor %}
+                      <span class="text-[var(--text-secondary)] ml-1">({{ avg_rating|floatformat:1 }})</span>
+                    {% endwith %}
+                  </div>
+                  <div class="text-[var(--text-secondary)] text-sm mb-4">
+                    <i class="fas fa-box text-[var(--primary)] mr-1"></i>
+                    {{ vendor.products.count }} Products
+                  </div>
+                  <div class="btn btn-primary w-full py-2 text-sm">Visit Store</div>
+                </div>
+              </a>
+            </div>
+          {% endfor %}
+        </div>
+        <div class="swiper-pagination"></div>
+      </div>
+    </section>
+  {% endif %}
 
-  <!-- Search & Filter Section -->
-  <div class="bg-white rounded-lg shadow-sm p-4 lg:p-6 mb-8">
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <!-- Search -->
-      <div class="md:col-span-2">
+  <!-- Search & Sort Section -->
+  <section class="container mx-auto px-4 py-8 sticky top-0 z-10 bg-[var(--bg-light)] shadow-sm filter Stony Brook University (SUNY)bar">
+    <div class="bg-white rounded-lg p-4 lg:p-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Search -->
         <div class="relative">
           <input 
             type="text" 
             id="vendorSearch" 
-            placeholder="Search vendors by name or category..."
-            class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-[var(--primary)] transition"
+            placeholder="Search vendors by name..."
+            class="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-[var(--primary)] transition"
+            value="{{ request.GET.search }}"
           >
-          <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-[var(--text-secondary)]"></i>
+          <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-[var(--text-secondary)]"></i>
+        </div>
+        
+        <!-- Sort By -->
+        <div>
+          <select id="sortFilter" class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-[var(--primary)] transition">
+            <option value="">Sort By</option>
+            <option value="name-asc" {% if request.GET.sort == 'name-asc' %}selected{% endif %}>Name (A-Z)</option>
+            <option value="name-desc" {% if request.GET.sort == 'name-desc' %}selected{% endif %}>Name (Z-A)</–
+
+            <option value="rating-desc" {% if request.GET.sort == 'rating-desc' %}selected{% endif %}>Highest Rated</option>
+            <option value="products-desc" {% if request.GET.sort == 'products-desc' %}selected{% endif %}>Most Products</option>
+          </select>
         </div>
       </div>
-      
-      <!-- Category Filter -->
-      <div>
-        <select id="categoryFilter" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-[var(--primary)] transition">
-          <option value="">All Categories</option>
-          <option value="electronics">Electronics</option>
-          <option value="fashion">Fashion & Apparel</option>
-          <option value="food">Food & Beverages</option>
-          <option value="home">Home & Living</option>
-          <option value="beauty">Beauty & Health</option>
-        </select>
-      </div>
     </div>
-  </div>
+  </section>
 
   <!-- Vendors Grid -->
-  <div id="vendorsGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-
-    <!-- Vendor Card 1 -->
-    <div class="vendor-card bg-white rounded-xl shadow-md hover:shadow-lg transition transform hover:-translate-y-1 overflow-hidden" data-category="food">
-      <div class="h-28 w-full overflow-hidden rounded-t-xl">
-        <img 
-          src="https://previews.123rf.com/images/paulprescott72/paulprescott721803/paulprescott72180300013/97597858-goa-india-january-27-2015-street-fruit-vendor-sitting-at-fruit-stand-with-a-big-smile.jpg" 
-          alt="Fresh Mart Vendor Banner" 
-          class="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
-          loading="lazy"
-        >
+  <section class="container mx-auto px-4 py-8">
+    <div id="vendorsGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 relative">
+      <!-- Loading Spinner -->
+      <div id="loadingSpinner" class="hidden absolute inset-0 flex items-center justify-center bg-white bg-opacity-75 z-20">
+        <i class="fas fa-spinner fa-spin text-4xl text-[var(--primary)]"></i>
       </div>
-      <div class="p-4 text-center">
-        <h3 class="text-lg font-semibold text-[var(--text-primary)] mb-1">Fresh Mart Store</h3>
-        <span class="inline-block px-3 py-0.5 bg-[var(--bg-light)] text-[var(--primary)] text-xs font-medium rounded-full mb-2">
-          Food & Beverages
-        </span>
-        <div class="flex items-center justify-center gap-1 mb-2 text-yellow-400 text-sm">
-          <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star-half-alt"></i>
-          <span class="text-[var(--text-secondary)] ml-1">(4.5)</span>
-        </div>
-        <div class="flex items-center justify-between text-[var(--text-secondary)] text-xs mb-3 border-t pt-2">
-          <div class="flex items-center gap-1">
-            <i class="fas fa-box text-[var(--primary)]"></i>
-            <span>254 Products</span>
+      {% for vendor in vendors %}
+        <a href="{% url 'vendor_details' vendor.slug %}" class="vendor-card bg-white rounded-xl shadow-[var(--shadow-sm)] overflow-hidden block"
+           data-vendor-name="{{ vendor.shop_name|lower }}"
+           data-rating="{{ vendor.average_rating|default:0 }}"
+           data-products="{{ vendor.products.count }}">
+          <div class="h-40 w-full overflow-hidden">
+            <img 
+              src="{% if vendor.shop_banner %}{{ vendor.shop_banner.url }}{% else %}https://via.placeholder.com/400x160{% endif %}" 
+              alt="{{ vendor.shop_name }} Banner" 
+              class="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
+              loading="lazy"
+            >
           </div>
-          <div class="flex items-center gap-1">
-            <i class="fas fa-users text-[var(--primary)]"></i>
-            <span>1.2k Followers</span>
+          <div class="p-6 text-center">
+            <h3 class="text-xl font-semibold text-[var(--text-primary)] mb-2">{{ vendor.shop_name }}</h3>
+            <div class="flex items-center justify-center gap-1 mb-3 text-yellow-400 text-sm">
+              {% with avg_rating=vendor.average_rating|default:0 %}
+                {% for i in '12345'|make_list %}
+                  <i class="fas fa-star{% if forloop.counter0 >= avg_rating|floatformat:0 %} text-gray-300{% endif %}"></i>
+                {% endfor %}
+                <span class="text-[var(--text-secondary)] ml-1">({{ avg_rating|floatformat:1 }})</span>
+              {% endwith %}
+            </div>
+            <div class="text-[var(--text-secondary)] text-sm mb-4">
+              <i class="fas fa-box text-[var(--primary)] mr-1"></i>
+              {{ vendor.products.count }} Products
+            </div>
+            <div class="btn btn-primary w-full py-2 text-sm">Visit Store</div>
           </div>
-        </div>
-        <a href="{% url 'vendor_details'%}" class="btn btn-primary w-full py-2 text-sm rounded-lg">
-          Visit Store
         </a>
-      </div>
+      {% empty %}
+        <div id="noResults" class="col-span-full text-center py-12">
+          <i class="fas fa-store-slash text-6xl text-gray-300 mb-4"></i>
+          <h3 class="text-2xl font-bold text-[var(--text-primary)] mb-2">No Vendors Found</h3>
+          <p class="text-[var(--text-secondary)]">Try adjusting your search or sort criteria.</p>
+        </div>
+      {% endfor %}
     </div>
 
-    <!-- Vendor Card 2 -->
-    <div class="vendor-card bg-white rounded-xl shadow-md hover:shadow-lg transition transform hover:-translate-y-1 overflow-hidden" data-category="electronics">
-      <div class="h-28 w-full overflow-hidden rounded-t-xl">
-        <img 
-          src="https://www.shutterstock.com/image-photo/fruit-shop-indian-male-street-260nw-2334340005.jpg" 
-          alt="Tech Hub Vendor Banner" 
-          class="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
-          loading="lazy"
-        >
+    <!-- Pagination -->
+    {% if vendors.has_other_pages %}
+      <div class="mt-8 flex justify-center space-x-2">
+        {% if vendors.has_previous %}
+          <a href="?page={{ vendors.previous_page_number }}&search={{ request.GET.search }}&sort={{ request.GET.sort }}"
+             class="px-4 py-2 rounded-lg bg-[var(--bg-light)] text-[var(--text-primary)] hover:bg-[var(--primary)] hover:text-white transition">
+            <i class="fas fa-chevron-left mr-2"></i> Previous
+          </a>
+        {% endif %}
+        {% for num in vendors.paginator.page_range %}
+          <a href="?page={{ num }}&search={{ request.GET.search }}&sort={{ request.GET.sort }}"
+             class="px-4 py-2 rounded-lg {% if vendors.number == num %}bg-[var(--primary)] text-white{% else %}bg-[var(--bg-light)] text-[var(--text-primary)] hover:bg-[var(--primary)] hover:text-white{% endif %} transition">
+            {{ num }}
+          </a>
+        {% endfor %}
+        {% if vendors.has_next %}
+          <a href="?page={{ vendors.next_page_number }}&search={{ request.GET.search }}&sort={{ request.GET.sort }}"
+             class="px-4 py-2 rounded-lg bg-[var(--bg-light)] text-[var(--text-primary)] hover:bg-[var(--primary)] hover:text-white transition">
+            Next <i class="fas fa-chevron-right ml-2"></i>
+          </a>
+        {% endif %}
       </div>
-      <div class="p-4 text-center">
-        <h3 class="text-lg font-semibold text-[var(--text-primary)] mb-1">Tech Hub Electronics</h3>
-        <span class="inline-block px-3 py-0.5 bg-blue-50 text-blue-600 text-xs font-medium rounded-full mb-2">
-          Electronics
-        </span>
-        <div class="flex items-center justify-center gap-1 mb-2 text-yellow-400 text-sm">
-          <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
-          <span class="text-[var(--text-secondary)] ml-1">(5.0)</span>
-        </div>
-        <div class="flex items-center justify-between text-[var(--text-secondary)] text-xs mb-3 border-t pt-2">
-          <div class="flex items-center gap-1">
-            <i class="fas fa-box text-[var(--primary)]"></i>
-            <span>580 Products</span>
-          </div>
-          <div class="flex items-center gap-1">
-            <i class="fas fa-users text-[var(--primary)]"></i>
-            <span>3.5k Followers</span>
-          </div>
-        </div>
-        <a href="{% url 'vendor_details'%}" class="btn btn-primary w-full py-2 text-sm rounded-lg">
-          Visit Store
-        </a>
-      </div>
-    </div>
-
-  </div>
-
-  <!-- No Results Message -->
-  <section id="noResults" class="hidden text-center py-12">
-    <i class="fas fa-store-slash text-6xl text-gray-300 mb-4"></i>
-    <h3 class="text-2xl font-bold text-[var(--text-primary)] mb-2">No vendors found</h3>
-    <p class="text-[var(--text-secondary)]">Try adjusting your search or filter criteria</p>
+    {% endif %}
   </section>
 
   <!-- Become a Vendor CTA -->
-  <div class="mt-12 bg-gradient-to-r from-[var(--primary)] to-[var(--primary-dark)] rounded-lg p-8 lg:p-12 text-center text-white">
-    <h2 class="text-2xl lg:text-3xl font-bold mb-4">Want to Sell on Our Platform?</h2>
-    <p class="text-lg mb-6 opacity-90">Join thousands of successful vendors and grow your business with us</p>
-    <a href="/become-vendor" class="inline-flex items-center gap-2 bg-white text-[var(--primary)] px-8 py-3 rounded-lg font-bold hover:bg-gray-100 transition">
-      <i class="fas fa-handshake"></i> Become a Vendor
-    </a>
-  </div>
+  <section class="container mx-auto px-4 py-12">
+    <div class="bg-gradient-to-r from-[var(--primary)] to-[var(--primary-dark)] rounded-xl p-8 lg:p-12 text-center text-white">
+      <h2 class="text-2xl lg:text-3xl font-bold mb-4">Join Our Vendor Community</h2>
+      <p class="text-lg mb-6 opacity-90">Grow your business by selling your products on our platform to thousands of customers.</p>
+      <a href="" class="btn btn-primary bg-white text-[var(--primary)] px-8 py-3 text-lg font-semibold hover:bg-gray-100 transition">
+        <i class="fas fa-handshake mr-2"></i> Become a Vendor
+      </a>
+    </div>
+  </section>
+{% endblock %}
 
-</section>
-
-<script>
-$(document).ready(function() {
-  // Search & Filter
-  $('#vendorSearch, #categoryFilter').on('input change', function() {
-    const searchTerm = $('#vendorSearch').val().toLowerCase();
-    const selectedCategory = $('#categoryFilter').val().toLowerCase();
-    let visibleCount = 0;
-
-    $('.vendor-card').each(function() {
-      const $card = $(this);
-      const vendorName = $card.find('h3').text().toLowerCase();
-      const vendorCategory = $card.data('category');
-
-      const matchesSearch = vendorName.includes(searchTerm);
-      const matchesCategory = !selectedCategory || vendorCategory === selectedCategory;
-
-      if(matchesSearch && matchesCategory) {
-        $card.show();
-        visibleCount++;
-      } else {
-        $card.hide();
+{% block extra_js %}
+  <script>
+    $(document).ready(function() {
+      // Debounce function to limit rapid input events
+      function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+          const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+          };
+          clearTimeout(timeout);
+          timeout = setTimeout(later, wait);
+        };
       }
+
+      // Filter and sort vendors
+      const filterVendors = debounce(function() {
+        const searchTerm = $('#vendorSearch').val().toLowerCase();
+        const sortOption = $('#sortFilter').val();
+        let visibleCount = 0;
+
+        $('#loadingSpinner').removeClass('hidden');
+
+        const $vendors = $('.vendor-card').get();
+        if (sortOption) {
+          $vendors.sort(function(a, b) {
+            if (sortOption === 'name-asc') {
+              return $(a).data('vendor-name').localeCompare($(b).data('vendor-name'));
+            } else if (sortOption === 'name-desc') {
+              return $(b).data('vendor-name').localeCompare($(a).data('vendor-name'));
+            } else if (sortOption === 'rating-desc') {
+              return $(b).data('rating') - $(a).data('rating');
+            } else if (sortOption === 'products-desc') {
+              return $(b).data('products') - $(a).data('products');
+            }
+          });
+          $('#vendorsGrid').html($vendors);
+        }
+
+        $('.vendor-card').each(function() {
+          const $card = $(this);
+          const vendorName = $card.data('vendor-name');
+
+          const matchesSearch = !searchTerm || vendorName.includes(searchTerm);
+
+          if (matchesSearch) {
+            $card.show();
+            visibleCount++;
+          } else {
+            $card.hide();
+          }
+        });
+
+        $('#noResults').toggle(visibleCount === 0);
+        setTimeout(() => $('#loadingSpinner').addClass('hidden'), 300);
+      }, 300);
+
+      // Event listeners for search and sort
+      $('#vendorSearch').on('input', filterVendors);
+      $('#sortFilter').on('change', filterVendors);
+
+      // GSAP animation for vendor cards
+      gsap.utils.toArray('.vendor-card').forEach(card => {
+        gsap.from(card, {
+          opacity: 0,
+          y: 30,
+          duration: 0.6,
+          scrollTrigger: {
+            trigger: card,
+            start: 'top 80%',
+            toggleActions: 'play none none none'
+          }
+        });
+      });
+
+      // Swiper for featured vendors
+      const swiper = new Swiper('.vendor-swiper', {
+        slidesPerView: 1,
+        spaceBetween: 20,
+        pagination: {
+          el: '.swiper-pagination',
+          clickable: true,
+        },
+        breakpoints: {
+          640: { slidesPerView: 2 },
+          768: { slidesPerView: 3 },
+          1024: { slidesPerView: 4 },
+        },
+        autoplay: {
+          delay: 5000,
+          disableOnInteraction: false,
+        },
+      });
+
+      // Sticky filter bar
+      const $filterBar = $('.filter-bar');
+      const filterBarOffset = $filterBar.offset().top;
+      $(window).on('scroll', function() {
+        if ($(window).scrollTop() > filterBarOffset) {
+          $filterBar.addClass('bg-white shadow-md');
+        } else {
+          $filterBar.removeClass('bg-white shadow-md');
+        }
+      });
+
+      // Trigger initial filter to apply URL parameters
+      filterVendors();
     });
-
-    $('#noResults').toggle(visibleCount === 0);
-  });
-
-  // Intersection Observer for scroll animation
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach((entry, index) => {
-      if(entry.isIntersecting) {
-        entry.target.style.opacity = '1';
-        entry.target.style.transform = 'translateY(0)';
-        observer.unobserve(entry.target);
-      }
-    });
-  }, { threshold: 0.1 });
-
-  document.querySelectorAll('.vendor-card').forEach(card => {
-    card.style.opacity = '0';
-    card.style.transform = 'translateY(20px)';
-    card.style.transition = 'all 0.5s ease';
-    observer.observe(card);
-  });
-});
-</script>
+  </script>
 {% endblock %}

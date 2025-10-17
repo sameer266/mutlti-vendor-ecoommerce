@@ -366,17 +366,13 @@ def admin_product_add(request):
             category=category,
             name=request.POST.get('name'),
             description=request.POST.get('description'),
-            short_description=request.POST.get('short_description', ''),
             price=Decimal(request.POST.get('price')),
-            compare_price=Decimal(request.POST.get('compare_price')) if request.POST.get('compare_price') else None,
             cost_price=Decimal(request.POST.get('cost_price')) if request.POST.get('cost_price') else None,
-            sku=request.POST.get('sku', ''),
             stock=int(request.POST.get('stock', 0)),
             low_stock_alert=int(request.POST.get('low_stock_alert', 5)),
             brand=request.POST.get('brand', ''),
             weight=Decimal(request.POST.get('weight')) if request.POST.get('weight') else None,
-            meta_title=request.POST.get('meta_title', ''),
-            meta_description=request.POST.get('meta_description', '')
+            is_featured=True if request.POST.get('is_featured') == 'on' else False,
         )
         if request.FILES.get('main_image'):
             product.main_image = request.FILES['main_image']
@@ -392,8 +388,7 @@ def admin_product_add(request):
         variant_types = request.POST.getlist('variant_type[]')
         variant_names = request.POST.getlist('variant_name[]')
         variant_price_adjustments = request.POST.getlist('variant_price_adjustment[]')
-        variant_stocks = request.POST.getlist('variant_stock[]')
-        variant_skus = request.POST.getlist('variant_sku[]')
+        
 
         for i in range(len(variant_names)):
             name = variant_names[i].strip()
@@ -404,8 +399,6 @@ def admin_product_add(request):
                 variant_type=variant_types[i] if i < len(variant_types) and variant_types[i] else 'other',
                 name=name,
                 price_adjustment=Decimal(variant_price_adjustments[i]) if i < len(variant_price_adjustments) and variant_price_adjustments[i] else 0,
-                stock=int(variant_stocks[i]) if i < len(variant_stocks) and variant_stocks[i] else 0,
-                sku=variant_skus[i] if i < len(variant_skus) else ''
             )
 
         return redirect('admin_products_list')
@@ -423,17 +416,14 @@ def admin_product_update(request, pk):
         product.category = get_object_or_404(Category, pk=category_id)
         product.name = request.POST.get('name')
         product.description = request.POST.get('description')
-        product.short_description = request.POST.get('short_description', '')
         product.price = Decimal(request.POST.get('price'))
-        product.compare_price = Decimal(request.POST.get('compare_price')) if request.POST.get('compare_price') else None
         product.cost_price = Decimal(request.POST.get('cost_price')) if request.POST.get('cost_price') else None
-        product.sku = request.POST.get('sku', '')
         product.stock = int(request.POST.get('stock', 0))
         product.low_stock_alert = int(request.POST.get('low_stock_alert', 5))
         product.brand = request.POST.get('brand', '')
         product.weight = Decimal(request.POST.get('weight')) if request.POST.get('weight') else None
-        product.meta_title = request.POST.get('meta_title', '')
-        product.meta_description = request.POST.get('meta_description', '')
+        product.is_featured = True if request.POST.get('is_featured') == 'on' else False
+
         if request.FILES.get('main_image'):
             product.main_image = request.FILES['main_image']
         product.save()
@@ -442,25 +432,58 @@ def admin_product_update(request, pk):
         for img in request.FILES.getlist('gallery_images'):
             ProductImage.objects.create(product=product, image=img)
 
-        # Append new variants from form (does not delete existing)
+        # Update existing variants and optionally delete
+        existing_ids = request.POST.getlist('existing_variant_id[]')
+        existing_types = request.POST.getlist('existing_variant_type[]')
+        existing_names = request.POST.getlist('existing_variant_name[]')
+        existing_price_adjustments = request.POST.getlist('existing_variant_price_adjustment[]')
+        
+        delete_ids = set(request.POST.getlist('existing_variant_delete[]'))
+
+        for idx in range(len(existing_ids)):
+            variant_id = existing_ids[idx]
+            try:
+                variant = ProductVariant.objects.get(id=variant_id, product=product)
+            except ProductVariant.DoesNotExist:
+                continue
+
+            if variant_id in delete_ids:
+                variant.delete()
+                continue
+
+            name_val = existing_names[idx].strip() if idx < len(existing_names) else variant.name
+            if not name_val:
+                # skip empty names to avoid unique_together issues
+                continue
+            variant.variant_type = existing_types[idx] if idx < len(existing_types) and existing_types[idx] else variant.variant_type
+            variant.name = name_val
+            variant.price_adjustment = Decimal(existing_price_adjustments[idx]) if idx < len(existing_price_adjustments) and existing_price_adjustments[idx] else Decimal('0')
+            try:
+                variant.save()
+            except Exception:
+                # Silently ignore unique constraint conflicts for now
+                pass
+
+        # Append new variants from form
         variant_types = request.POST.getlist('variant_type[]')
         variant_names = request.POST.getlist('variant_name[]')
         variant_price_adjustments = request.POST.getlist('variant_price_adjustment[]')
-        variant_stocks = request.POST.getlist('variant_stock[]')
-        variant_skus = request.POST.getlist('variant_sku[]')
+        
 
         for i in range(len(variant_names)):
             name = variant_names[i].strip()
             if not name:
                 continue
-            ProductVariant.objects.create(
-                product=product,
-                variant_type=variant_types[i] if i < len(variant_types) and variant_types[i] else 'other',
-                name=name,
-                price_adjustment=Decimal(variant_price_adjustments[i]) if i < len(variant_price_adjustments) and variant_price_adjustments[i] else 0,
-                stock=int(variant_stocks[i]) if i < len(variant_stocks) and variant_stocks[i] else 0,
-                sku=variant_skus[i] if i < len(variant_skus) else ''
-            )
+            try:
+                ProductVariant.objects.create(
+                    product=product,
+                    variant_type=variant_types[i] if i < len(variant_types) and variant_types[i] else 'other',
+                    name=name,
+                    price_adjustment=Decimal(variant_price_adjustments[i]) if i < len(variant_price_adjustments) and variant_price_adjustments[i] else 0,
+                )
+            except Exception:
+                # Ignore duplicates violating unique_together
+                pass
         return redirect('admin_products_list')
     categories = Category.objects.filter(is_active=True)
     vendors = Vendor.objects.filter(is_active=True)
@@ -485,32 +508,31 @@ def admin_categories_list(request):
 @admin_required
 def admin_category_add(request):
     if request.method == 'POST':
-        parent_id = request.POST.get('parent') or None
+
         category = Category.objects.create(
             name=request.POST.get('name'),
-            parent_id=parent_id,
-            order=int(request.POST.get('order', 0))
+        
+            order=int(request.POST.get('order', 0)),
+            is_featured=True if request.POST.get('is_featured') == 'on' else False
         )
         if request.FILES.get('image'):
             category.image = request.FILES['image']
         category.save()
         return redirect('admin_categories_list')
-    parent_categories = Category.objects.filter(parent=None)
-    return render(request, 'dashboard/pages/category/add_category.html', {'parent_categories': parent_categories})
+    return render(request, 'dashboard/pages/category/add_category.html')
 
 @admin_required
 def admin_category_update(request, pk):
     category = get_object_or_404(Category, pk=pk)
     if request.method == 'POST':
         category.name = request.POST.get('name')
-        category.parent_id = request.POST.get('parent') or None
         category.order = int(request.POST.get('order', 0))
+        category.is_featured = True if request.POST.get('is_featured') == 'on' else False
         if request.FILES.get('image'):
             category.image = request.FILES['image']
         category.save()
         return redirect('admin_categories_list')
-    parent_categories = Category.objects.filter(parent=None).exclude(pk=pk)
-    return render(request, 'dashboard/pages/category/edit_category.html', {'category': category, 'parent_categories': parent_categories})
+    return render(request, 'dashboard/pages/category/edit_category.html', {'category': category})
 
 @admin_required
 def admin_category_delete(request, pk):
@@ -919,17 +941,17 @@ def admin_slider_add(request):
         title = request.POST.get('title', '')
         subtitle = request.POST.get('subtitle', '')
         link = request.POST.get('link', '')
-        images = request.FILES.getlist('images')  # Get multiple images
+        image = request.FILES.get('image')  
 
-        for image in images:
-            slider = Slider.objects.create(
-                title=title,
-                subtitle=subtitle,
-                link=link,
-                image=image
-            )
+        # Create the slider
+        slider = Slider.objects.create(
+            title=title,
+            subtitle=subtitle,
+            link=link,
+            image=image
+        )
 
-        messages.success(request, 'Slider(s) created successfully.')
+        messages.success(request, 'Slider created successfully.')
         return redirect('admin_sliders_list')
 
     return render(request, 'dashboard/pages/content/slider_add.html')
@@ -943,26 +965,13 @@ def admin_slider_update(request, pk):
         title = request.POST.get('title', '')
         subtitle = request.POST.get('subtitle', '')
         link = request.POST.get('link', '')
-        images = request.FILES.getlist('images')  # Get multiple files
-        if images:
-            for image in images:
-                Slider.objects.create(
-                    title=title,
-                    subtitle=subtitle,
-                    link=link,
-                    image=image
-                )
-            messages.success(request, f'{len(images)} new sliders added successfully.')
-        else:
-            # If no multiple images, just update current slider
-            slider.title = title
-            slider.subtitle = subtitle
-            slider.link = link
-            if request.FILES.get('image'):
-                slider.image = request.FILES['image']
-            slider.save()
-            messages.success(request, 'Slider updated successfully.')
-
+        slider.title = title
+        slider.subtitle = subtitle
+        slider.link = link
+        if request.FILES.get('image'):
+            slider.image = request.FILES['image']
+        slider.save()
+        messages.success(request, 'Slider updated successfully.')
         return redirect('admin_sliders_list')
 
     return render(request, 'dashboard/pages/content/slider_update.html', {'slider': slider})
@@ -978,7 +987,7 @@ def admin_slider_delete(request, pk):
 # Banner Management
 @admin_required
 def admin_banners_list(request):
-    banners = Banner.objects.all().order_by('position', '-created_at')
+    banners = Banner.objects.all().order_by('-created_at')
     return render(request, 'dashboard/pages/content/banners_list.html', {'banners': banners})
 
 @admin_required
@@ -987,14 +996,15 @@ def admin_banner_add(request):
         banner = Banner.objects.create(
             title=request.POST.get('title', ''),
             link=request.POST.get('link', ''),
-            position=int(request.POST.get('position', 0))
+            page=request.POST.get('page','')
+
         )
         if request.FILES.get('image'):
             banner.image = request.FILES['image']
         banner.save()
         messages.success(request, 'Banner created successfully.')
         return redirect('admin_banners_list')
-    return render(request, 'dashboard/pages/content/banner_add.html')
+    return render(request, 'dashboard/pages/content/banner_add.html',{'page_choices':Banner.PAGE_CHOICES})
 
 @admin_required
 def admin_banner_update(request, pk):
@@ -1002,13 +1012,13 @@ def admin_banner_update(request, pk):
     if request.method == 'POST':
         banner.title = request.POST.get('title', '')
         banner.link = request.POST.get('link', '')
-        banner.position = int(request.POST.get('position', 0))
+        banner.page=request.POST.get('page','')
         if request.FILES.get('image'):
             banner.image = request.FILES['image']
         banner.save()
         messages.success(request, 'Banner updated successfully.')
         return redirect('admin_banners_list')
-    return render(request, 'dashboard/pages/content/banner_update.html', {'banner': banner})
+    return render(request, 'dashboard/pages/content/banner_update.html', {'banner': banner,'page_choices':Banner.PAGE_CHOICES})
 
 @admin_required
 def admin_banner_delete(request, pk):

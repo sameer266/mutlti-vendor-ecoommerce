@@ -5,7 +5,7 @@
 {% block content %}
 <div class="min-h-screen flex items-center justify-center bg-[var(--bg-light)] py-12 px-4">
   <div class="max-w-md w-full bg-white rounded-lg shadow-md p-8 space-y-6">
-    
+
     <!-- Title -->
     <div class="text-center">
       <h2 class="text-2xl font-bold text-[var(--text-primary)]">Create Account</h2>
@@ -13,14 +13,15 @@
     </div>
 
     <!-- Signup Form -->
-    <form method="POST" action="" class="space-y-4">
+    <form id="signupForm" method="POST" action="" class="space-y-4">
       {% csrf_token %}
-      
+
       <!-- Full Name -->
       <div>
         <label for="full_name" class="block text-sm font-semibold text-gray-700">Full Name</label>
         <input type="text" name="full_name" id="full_name" required
                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:ring-[var(--primary)] focus:border-[var(--primary)] sm:text-sm">
+        <span class="text-red-500 text-xs mt-1 hidden" id="errorFullName">Full Name is required</span>
       </div>
 
       <!-- Email -->
@@ -28,20 +29,29 @@
         <label for="email" class="block text-sm font-semibold text-gray-700">Email</label>
         <input type="email" name="email" id="email" required
                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:ring-[var(--primary)] focus:border-[var(--primary)] sm:text-sm">
+        <span class="text-red-500 text-xs mt-1 hidden" id="errorEmail">Enter a valid email</span>
       </div>
 
       <!-- Password -->
-      <div>
+      <div class="relative">
         <label for="password1" class="block text-sm font-semibold text-gray-700">Password</label>
         <input type="password" name="password1" id="password1" required
-               class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:ring-[var(--primary)] focus:border-[var(--primary)] sm:text-sm">
+               class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:ring-[var(--primary)] focus:border-[var(--primary)] sm:text-sm pr-10">
+        <span class="absolute right-3 top-9 cursor-pointer text-gray-500" id="togglePassword1">
+          <i class="fa fa-eye"></i>
+        </span>
+        <span class="text-red-500 text-xs mt-1 hidden" id="errorPassword1">Password must be at least 6 characters</span>
       </div>
 
       <!-- Confirm Password -->
-      <div>
+      <div class="relative">
         <label for="password2" class="block text-sm font-semibold text-gray-700">Confirm Password</label>
         <input type="password" name="password2" id="password2" required
-               class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:ring-[var(--primary)] focus:border-[var(--primary)] sm:text-sm">
+               class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:ring-[var(--primary)] focus:border-[var(--primary)] sm:text-sm pr-10">
+        <span class="absolute right-3 top-9 cursor-pointer text-gray-500" id="togglePassword2">
+          <i class="fa fa-eye"></i>
+        </span>
+        <span class="text-red-500 text-xs mt-1 hidden" id="errorPassword2">Passwords do not match</span>
       </div>
 
       <!-- Submit Button -->
@@ -67,4 +77,59 @@
 
   </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- jQuery -->
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<!-- Font Awesome -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+
+<script>
+$(document).ready(function() {
+  // Form validation
+  $('#signupForm').on('submit', function(e) {
+    let valid = true;
+
+    // Reset error messages
+    $('#errorFullName, #errorEmail, #errorPassword1, #errorPassword2').hide();
+
+    // Full Name
+    const fullName = $('#full_name').val().trim();
+    if (!fullName) { $('#errorFullName').show(); valid = false; }
+
+    // Email
+    const email = $('#email').val().trim();
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email || !emailPattern.test(email)) { $('#errorEmail').show(); valid = false; }
+
+    // Password
+    const password1 = $('#password1').val();
+    if (!password1 || password1.length < 6) { $('#errorPassword1').show(); valid = false; }
+
+    // Confirm Password
+    const password2 = $('#password2').val();
+    if (password1 !== password2) { $('#errorPassword2').show(); valid = false; }
+
+    if (!valid) e.preventDefault();
+  });
+
+  // Toggle password visibility using Font Awesome
+  $('#togglePassword1').on('click', function() {
+    const input = $('#password1');
+    const icon = $(this).find('i');
+    const type = input.attr('type') === 'password' ? 'text' : 'password';
+    input.attr('type', type);
+    icon.toggleClass('fa-eye fa-eye-slash');
+  });
+
+  $('#togglePassword2').on('click', function() {
+    const input = $('#password2');
+    const icon = $(this).find('i');
+    const type = input.attr('type') === 'password' ? 'text' : 'password';
+    input.attr('type', type);
+    icon.toggleClass('fa-eye fa-eye-slash');
+  });
+});
+</script>
 {% endblock %}
