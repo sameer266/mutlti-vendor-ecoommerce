@@ -812,20 +812,3 @@ def my_orders(request):
     })
 
 
-
-@login_required
-def my_wishlist(request):
-    wishlist_items = Wishlist.objects.filter(user=request.user).select_related('product').order_by('-added_at')
-    return render(request, 'website/pages/wishlist.html', {
-        'wishlist_items': wishlist_items
-    })
-
-
-@login_required
-def remove_wishlist_item(request, item_id):
-    try:
-        item = Wishlist.objects.get(id=item_id, user=request.user)
-        item.delete()
-    except Wishlist.DoesNotExist:
-        pass
-    return redirect('customer_wishlist')

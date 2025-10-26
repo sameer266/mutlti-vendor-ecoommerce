@@ -1,26 +1,46 @@
-{% extends 'website/components/base.html' %}
-
-{% block title %}Home - Hamro Bajar{% endblock %}
-
-{% block content %}
+{% extends 'website/components/base.html' %} {% block title %}Home - Hello
+Bajar{% endblock %} {% block content %}
 <!-- Hero Banner Slider -->
-<section class="w-full relative overflow-hidden px-4 lg:px-8 mt-4" role="banner">
-  <div class="swiper heroSwiper relative w-full max-h-[500px] rounded-2xl shadow-2xl overflow-hidden"
-    aria-label="Featured products slider">
+<section
+  class="w-full relative overflow-hidden px-4 lg:px-8 mt-4"
+  role="banner"
+>
+  <div
+    class="swiper heroSwiper relative w-full max-h-[500px] rounded-2xl shadow-2xl overflow-hidden"
+    aria-label="Featured products slider"
+  >
     <div class="swiper-wrapper">
       {% for s in sliders %}
       <div class="swiper-slide relative">
-        <img src="{{ s.image.url }}" alt="{{ s.title|default:'Slide' }}"
+        <img
+          src="{{ s.image.url }}"
+          alt="{{ s.title|default:'Slide' }}"
           class="w-full h-[300px] sm:h-[400px] md:h-[450px] lg:h-[500px] xl:h-[600px] object-cover rounded-2xl"
-          loading="{% if forloop.first %}eager{% else %}lazy{% endif %}">
+          loading="{% if forloop.first %}eager{% else %}lazy{% endif %}"
+        />
         <div class="absolute inset-0 bg-black/40"></div>
-        <div class="absolute inset-0 flex flex-col justify-center items-center text-center px-4">
-          {% if s.title %}<h2 class="text-3xl md:text-5xl font-bold text-white mb-4 animate-fadeIn">{{ s.title }}</h2>{% endif %}
-          {% if s.subtitle %}<p class="text-sm md:text-lg text-white mb-6 animate-fadeIn delay-200">{{ s.subtitle }}</p>{% endif %}
-          {% if s.link %}
-          <a href="{{ s.link }}"
-            class="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg shadow-lg font-semibold text-base md:text-lg animate-fadeIn delay-300">Shop
-            Now</a>
+        <div
+          class="absolute inset-0 flex flex-col justify-center items-center text-center px-4"
+        >
+          {% if s.title %}
+          <h2
+            class="text-3xl md:text-5xl font-bold text-white mb-4 animate-fadeIn"
+          >
+            {{ s.title }}
+          </h2>
+          {% endif %} {% if s.subtitle %}
+          <p
+            class="text-sm md:text-lg text-white mb-6 animate-fadeIn delay-200"
+          >
+            {{ s.subtitle }}
+          </p>
+          {% endif %} {% if s.link %}
+          <a
+            href="{{ s.link }}"
+            class="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg shadow-lg font-semibold text-base md:text-lg animate-fadeIn delay-300"
+          >
+            Shop Now
+          </a>
           {% endif %}
         </div>
       </div>
@@ -37,18 +57,32 @@
 <!-- Category Section -->
 <section class="category-area py-6 bg-gray-100 px-4">
   <div class="container mx-auto px-4">
-    <!-- Responsive grid layout -->
-    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+    <div
+      class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4"
+    >
       {% for c in categories %}
-      <a href="{% url 'category_details' c.slug %}" class="flex flex-col items-center bg-white p-4 rounded-xl shadow hover:shadow-lg transition duration-300">
+      <a
+        href="{% url 'category_details' c.slug %}"
+        class="flex flex-col items-center bg-white p-4 rounded-xl shadow hover:shadow-lg transition duration-300"
+      >
         <div class="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 mb-3 relative">
           {% if c.image %}
-          <img src="{{ c.image.url }}" alt="{{ c.name }}" class="w-full h-full object-contain">
+          <img
+            src="{{ c.image.url }}"
+            alt="{{ c.name }}"
+            class="w-full h-full object-contain"
+          />
           {% else %}
-          <img src="https://via.placeholder.com/112x112" alt="{{ c.name }}" class="w-full h-full object-contain">
+          <img
+            src="https://via.placeholder.com/112x112"
+            alt="{{ c.name }}"
+            class="w-full h-full object-contain"
+          />
           {% endif %}
         </div>
-        <p class="text-sm font-medium text-gray-700 text-center">{{ c.name }}</p>
+        <p class="text-sm font-medium text-gray-700 text-center">
+          {{ c.name }}
+        </p>
       </a>
       {% endfor %}
     </div>
@@ -57,329 +91,448 @@
 
 <!-- Featured Products Section -->
 <section class="mt-12 container mx-auto px-4">
-  <!-- Section Title -->
   <div class="mb-6">
-    <h2 class="text-2xl sm:text-3xl font-extrabold text-[var(--text-primary)] inline-block relative pb-2">
+    <h2
+      class="text-xl sm:text-2xl md:text-3xl font-extrabold text-[var(--text-primary)] inline-block relative pb-2"
+    >
       Featured Products
-      <span class="absolute left-0 bottom-0 w-20 h-1 bg-[var(--bg-brown)] rounded-full"></span>
+      <span
+        class="absolute left-0 bottom-0 w-16 sm:w-20 h-1 bg-[var(--bg-brown)] rounded-full"
+      ></span>
     </h2>
   </div>
 
-  <!-- Grid Container -->
-  <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 lg:gap-4">
-    {% for p in featured_products %}
-    <div class="product-card relative bg-gray-100 rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 w-full max-w-[250px] mx-auto cursor-pointer" data-product-id="{{ p.id }}">
-      <!-- Product Image -->
-      <div class="block relative group bg-white rounded-xl m-2">
-        {% if p.main_image %}
+  <div
+    class="products-grid grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3 lg:gap-4"
+  >
+    {% for product in featured_products %}
+    <div
+      class="product-card relative bg-gray-100 rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 w-full max-w-[250px] mx-auto cursor-pointer"
+      data-product-id="{{ product.id }}"
+      data-in-stock="{{ product.in_stock|yesno:'true,false' }}"
+    >
+      <!-- Product Image & Discount -->
+      <a
+        href="{% url 'product_details' product.slug %}"
+        class="block relative group bg-white rounded-xl m-2"
+      >
+        <img
+          src="{{ product.main_image.url|default:'https://via.placeholder.com/250' }}"
+          alt="{{ product.name }}"
+          class="w-full h-48 sm:h-56 md:h-60 object-contain rounded-xl transition-transform duration-300 group-hover:scale-105"
+        />
 
-        
-        <img src="{{ p.main_image.url }}" alt="{{ p.name }}" class="w-full h-48 sm:h-56 md:h-60 object-contain rounded-xl transition-transform duration-300 group-hover:scale-105"/>
-        {% endif %}
-        <!-- Discount Badge -->
-        {% if p.discount_percentage %}
+        {% if product.discount_percentage > 0 %}
         <div class="absolute top-2 left-2 flex flex-col items-center z-20">
           <i class="fa-solid fa-bookmark text-5xl text-yellow-500"></i>
-          <span class="-mt-11 text-xs sm:text-xs font-bold text-[var(--text-primary)] text-center leading-tight">
-            {{ p.discount_percentage }}%<br>OFF
+          <span
+            class="-mt-11 text-xs font-bold text-gray-900 text-center leading-tight"
+          >
+            {{ product.discount_percentage }}%<br />OFF
+          </span>
+        </div>
+        {% endif %} {% if not product.in_stock %}
+        <div
+          class="absolute inset-0 bg-black/50 flex items-center justify-center rounded-xl"
+        >
+          <span
+            class="bg-red-600 text-white px-4 py-2 rounded-lg font-semibold text-sm"
+          >
+            Out of Stock
           </span>
         </div>
         {% endif %}
-        <!-- Hover Overlay Buttons -->
-        <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-2 sm:gap-3 transition-opacity duration-300 rounded-xl">
-          <button class="p-2 sm:p-3 bg-[var(--bg-brown)] text-white rounded-full shadow-md hover:bg-[var(--primary)] transition cursor-pointer">
-            <i class="fa-regular fa-heart text-sm sm:text-base"></i>
-          </button>
-          <a href="{% url 'product_details' p.slug %}" class="p-2 sm:p-3 bg-[var(--bg-brown)] text-white rounded-full shadow-md hover:bg-[var(--primary)] transition cursor-pointer">
-            <i class="fa-regular fa-eye text-sm sm:text-base"></i>
-          </a>
-        </div>
-      </div>
+      </a>
+
       <!-- Product Info -->
       <section class="p-2 sm:p-3 space-y-1 sm:space-y-2">
-        <div class="flex justify-between items-center">
-          <a class="text-sm text-[var(--text-primary)] line-clamp-2">{{ p.name }}</a>
-          <p class="text-xs font-medium {% if p.in_stock %}text-green-600{% else %}text-red-600{% endif %}">
-            {% if p.in_stock %}In Stock{% else %}Out of Stock{% endif %}
+        <div class="flex justify-between items-start gap-2">
+          <a
+            href="{% url 'product_details' product.slug %}"
+            class="text-sm text-[var(--text-primary)] line-clamp-2 hover:underline"
+          >
+            {{ product.name }}
+          </a>
+          {% if product.in_stock %}
+          <span
+            class="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full font-medium whitespace-nowrap"
+          >
+            In Stock
+          </span>
+          {% else %}
+          <span
+            class="text-xs px-2 py-1 bg-red-100 text-red-700 rounded-full font-medium whitespace-nowrap"
+          >
+            Out of Stock
+          </span>
+          {% endif %}
+        </div>
+
+        <div class="flex items-center justify-start mt-1 gap-2">
+          {% if product.cost_price > product.price %}
+          <p class="text-xs sm:text-sm text-gray-400 line-through">
+            Rs {{ product.cost_price|floatformat:0 }}
+          </p>
+          {% endif %}
+          <p class="font-bold text-orange-600 text-sm sm:text-base">
+            Rs {{ product.price|floatformat:0 }}
           </p>
         </div>
-        <!-- Price Row -->
-        <div class="flex items-center justify-start mt-1 space-x-2 sm:space-x-3">
-          {% if p.cost_price > p.price %}
-          <p class="text-xs sm:text-sm text-[var(--text-secondary)] line-through">Rs. {{ p.cost_price }}</p>
-          {% endif %}
-          <p class="font-bold text-green-600 text-sm sm:text-base">Rs. {{ p.price }}</p>
-        </div>
-        <!-- Quantity + Add to Cart -->
-        <div class="flex flex-wrap items-center justify-start gap-2 mt-2">
-          <div class="flex items-center border border-gray-300 rounded overflow-hidden">
-            <button class="decreaseQty px-2 py-1 bg-gray-200 hover:bg-gray-300 text-sm cursor-pointer">-</button>
-            <input type="number" value="1" min="1" class="qtyInput w-10 text-center text-sm border-l border-r border-gray-300 focus:outline-none">
-            <button class="increaseQty px-2 py-1 bg-gray-200 hover:bg-gray-300 text-sm cursor-pointer">+</button>
+
+        <!-- Quantity & Add to Cart -->
+        <div class="flex flex-wrap items-center justify-between gap-2 mt-2">
+          <div
+            class="flex items-center border-2 border-gray-300 rounded-lg overflow-hidden"
+          >
+            <button
+              class="decreaseQty px-2 py-1 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-700 text-sm transition"
+              {%
+              if
+              not
+              product.in_stock
+              %}disabled{%
+              endif
+              %}
+            >
+              <i class="fas fa-minus text-xs"></i>
+            </button>
+            <input
+              type="number"
+              value="1"
+              min="1"
+              max="{% if product.in_stock %}{{ product.stock|default:10 }}{% else %}0{% endif %}"
+              class="qtyInput w-12 text-center text-sm border-x-2 border-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-inset font-medium text-gray-900"
+              {%
+              if
+              not
+              product.in_stock
+              %}disabled{%
+              endif
+              %}
+            />
+            <button
+              class="increaseQty px-2 py-1 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-700 text-sm transition"
+              {%
+              if
+              not
+              product.in_stock
+              %}disabled{%
+              endif
+              %}
+            >
+              <i class="fas fa-plus text-xs"></i>
+            </button>
           </div>
-          <button class="btn btn-primary add-to-cart flex items-center justify-center gap-1 text-xs sm:text-sm px-2 py-1 rounded hover:bg-[var(--primary-dark)] transition cursor-pointer">
+
+          <button
+            class="add-to-cart cursor-pointer flex-1 flex items-center justify-center gap-1 text-xs sm:text-sm px-3 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 active:bg-orange-700 transition shadow-sm hover:shadow-md font-medium"
+            data-product-id="{{ product.id }}"
+            data-product-name="{{ product.name }}"
+            {%
+            if
+            not
+            product.in_stock
+            %}disabled{%
+            endif
+            %}
+          >
             <i class="fa-solid fa-cart-shopping text-xs sm:text-sm"></i>
-            Add
+            <span>Add</span>
           </button>
         </div>
       </section>
     </div>
+    {% empty %}
+    <div class="col-span-full text-center py-12">
+      <i class="fas fa-box-open text-6xl text-gray-300 mb-4"></i>
+      <p class="text-gray-500 text-lg font-medium">
+        No featured products available.
+      </p>
+    </div>
     {% endfor %}
   </div>
-
-  <!-- Pagination -->
-<!-- Simple Modern Pagination -->
-<div class="flex justify-center items-center mt-6 space-x-3 text-sm">
-  <!-- Previous -->
-  {% if featured_products.has_previous %}
-    <a href="?featured_page={{ featured_products.previous_page_number }}" 
-       class="px-4 py-2 rounded-md bg-[var(--bg-brown)] text-white hover:bg-[var(--primary)] transition">
-       Prev
-    </a>
-  {% else %}
-    <span class="px-4 py-2 rounded-md bg-gray-200 text-gray-400 cursor-not-allowed">Prev</span>
-  {% endif %}
-
-  <!-- Page Info -->
-  <span class="px-4 py-2 text-gray-700">
-    Page <span class="font-semibold">{{ featured_products.number }}</span> of {{ featured_products.paginator.num_pages }}
-  </span>
-
-  <!-- Next -->
-  {% if featured_products.has_next %}
-    <a href="?featured_page={{ featured_products.next_page_number }}" 
-       class="px-4 py-2 rounded-md bg-[var(--bg-brown)] text-white hover:bg-[var(--primary)] transition">
-       Next
-    </a>
-  {% else %}
-    <span class="px-4 py-2 rounded-md bg-gray-200 text-gray-400 cursor-not-allowed">Next</span>
-  {% endif %}
-</div>
-
 </section>
 
 <!-- Full Width Simple Banner Section -->
 <section class="mt-26 w-[90%] mx-auto">
   <div class="w-full overflow-hidden">
-    {% if banners %}
-    {% for banner in banners %}
-    <img src="{{ banner.image.url }}" alt="Offer" class="w-full h-auto object-cover rounded-xl">
-    {% endfor %}
-    {% endif %}
+    {% if banners %} {% for banner in banners %}
+    <img
+      src="{{ banner.image.url }}"
+      alt="Offer"
+      class="w-full h-auto object-cover rounded-xl"
+    />
+    {% endfor %} {% endif %}
   </div>
 </section>
 
 <!-- Best Offers Section -->
-<section class="mt-26 container mx-auto px-4">
-  <!-- Section Title -->
+<section class="mt-20 container mx-auto px-4">
   <div class="mb-6">
-    <h2 class="text-2xl sm:text-3xl font-extrabold text-[var(--text-primary)] inline-block relative pb-2">
+    <h2
+      class="text-xl sm:text-2xl md:text-3xl font-extrabold text-[var(--text-primary)] inline-block relative pb-2"
+    >
       Best Offers
-      <span class="absolute left-0 bottom-0 w-20 h-1 bg-[var(--bg-brown)] rounded-full"></span>
+      <span
+        class="absolute left-0 bottom-0 w-16 sm:w-20 h-1 bg-[var(--bg-brown)] rounded-full"
+      ></span>
     </h2>
   </div>
 
-  <!-- Grid Container -->
-  <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 lg:gap-4">
-    {% for p in best_offers %}
-    <div class="product-card relative bg-gray-100 rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 w-full max-w-[250px] mx-auto cursor-pointer" data-product-id="{{ p.id }}">
-      <!-- Product Image -->
-      <div class="block relative group bg-white rounded-xl m-2">
-        {% if p.main_image %}
-        <img src="{{ p.main_image.url }}" alt="{{ p.name }}" class="w-full h-48 sm:h-56 md:h-60 object-contain rounded-xl transition-transform duration-300 group-hover:scale-105">
-        {% endif %}
-        <!-- Discount Badge -->
-        {% if p.discount_percentage %}
+  <div
+    class="products-grid grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 lg:gap-4"
+  >
+    {% for product in best_offers %}
+    <div
+      class="product-card relative bg-gray-100 rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 w-full max-w-[250px] mx-auto cursor-pointer"
+      data-product-id="{{ product.id }}"
+      data-in-stock="{{ product.in_stock|yesno:'true,false' }}"
+    >
+      <!-- Product Image & Discount -->
+      <a
+        href="{% url 'product_details' product.slug %}"
+        class="block relative group bg-white rounded-xl m-2"
+      >
+        <img
+          src="{{ product.main_image.url|default:'https://via.placeholder.com/250' }}"
+          alt="{{ product.name }}"
+          class="w-full h-48 sm:h-56 md:h-60 object-contain rounded-xl transition-transform duration-300 group-hover:scale-105"
+        />
+
+        {% if product.discount_percentage > 0 %}
         <div class="absolute top-2 left-2 flex flex-col items-center z-20">
           <i class="fa-solid fa-bookmark text-5xl text-yellow-500"></i>
-          <span class="-mt-11 text-xs sm:text-xs font-bold text-[var(--text-primary)] text-center leading-tight">
-            {{ p.discount_percentage }}%<br>OFF
+          <span
+            class="-mt-11 text-xs font-bold text-gray-900 text-center leading-tight"
+          >
+            {{ product.discount_percentage }}%<br />OFF
+          </span>
+        </div>
+        {% endif %} {% if not product.in_stock %}
+        <div
+          class="absolute inset-0 bg-black/50 flex items-center justify-center rounded-xl"
+        >
+          <span
+            class="bg-red-600 text-white px-4 py-2 rounded-lg font-semibold text-sm"
+          >
+            Out of Stock
           </span>
         </div>
         {% endif %}
-        <!-- Hover Overlay Buttons -->
-        <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-2 sm:gap-3 transition-opacity duration-300 rounded-xl">
-          <button class="p-2 sm:p-3 bg-[var(--bg-brown)] text-white rounded-full shadow-md hover:bg-[var(--primary)] transition cursor-pointer">
-            <i class="fa-regular fa-heart text-sm sm:text-base"></i>
-          </button>
-          <a href="{% url 'product_details' p.slug %}" class="p-2 sm:p-3 bg-[var(--bg-brown)] text-white rounded-full shadow-md hover:bg-[var(--primary)] transition cursor-pointer">
-            <i class="fa-regular fa-eye text-sm sm:text-base"></i>
-          </a>
-        </div>
-      </div>
+      </a>
+
       <!-- Product Info -->
       <section class="p-2 sm:p-3 space-y-1 sm:space-y-2">
-        <div class="flex justify-between items-center">
-          <a class="text-sm text-[var(--text-primary)] line-clamp-2">{{ p.name }}</a>
-          <p class="text-xs font-medium {% if p.in_stock %}text-green-600{% else %}text-red-600{% endif %}">
-            {% if p.in_stock %}In Stock{% else %}Out of Stock{% endif %}
+        <div class="flex justify-between items-start gap-2">
+          <a
+            href="{% url 'product_details' product.slug %}"
+            class="text-sm text-[var(--text-primary)] line-clamp-2 hover:underline"
+          >
+            {{ product.name }}
+          </a>
+          {% if product.in_stock %}
+          <span
+            class="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full font-medium whitespace-nowrap"
+          >
+            In Stock
+          </span>
+          {% else %}
+          <span
+            class="text-xs px-2 py-1 bg-red-100 text-red-700 rounded-full font-medium whitespace-nowrap"
+          >
+            Out of Stock
+          </span>
+          {% endif %}
+        </div>
+
+        <div class="flex items-center justify-start mt-1 gap-2">
+          {% if product.cost_price > product.price %}
+          <p class="text-xs sm:text-sm text-gray-400 line-through">
+            Rs {{ product.cost_price|floatformat:0 }}
+          </p>
+          {% endif %}
+          <p class="font-bold text-orange-600 text-sm sm:text-base">
+            Rs {{ product.price|floatformat:0 }}
           </p>
         </div>
-        <!-- Price Row -->
-        <div class="flex items-center justify-start mt-1 space-x-2 sm:space-x-3">
-          {% if p.cost_price > p.price %}
-          <p class="text-xs sm:text-sm text-[var(--text-secondary)] line-through">Rs. {{ p.cost_price }}</p>
-          {% endif %}
-          <p class="font-bold text-green-600 text-sm sm:text-base">Rs. {{ p.price }}</p>
-        </div>
-        <!-- Quantity + Add to Cart -->
-        <div class="flex flex-wrap items-center justify-start gap-2 mt-2">
-          <div class="flex items-center border border-gray-300 rounded overflow-hidden">
-            <button class="decreaseQty px-2 py-1 bg-gray-200 hover:bg-gray-300 text-sm cursor-pointer">-</button>
-            <input type="number" value="1" min="1" class="qtyInput w-10 text-center text-sm border-l border-r border-gray-300 focus:outline-none">
-            <button class="increaseQty px-2 py-1 bg-gray-200 hover:bg-gray-300 text-sm cursor-pointer">+</button>
+
+        <!-- Quantity & Add to Cart -->
+        <div class="flex flex-wrap items-center justify-between gap-2 mt-2">
+          <div
+            class="flex items-center border-2 border-gray-300 rounded-lg overflow-hidden"
+          >
+            <button
+              class="decreaseQty px-2 py-1 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-700 text-sm transition"
+              {%
+              if
+              not
+              product.in_stock
+              %}disabled{%
+              endif
+              %}
+            >
+              <i class="fas fa-minus text-xs"></i>
+            </button>
+            <input
+              type="number"
+              value="1"
+              min="1"
+              max="{% if product.in_stock %}{{ product.stock|default:10 }}{% else %}0{% endif %}"
+              class="qtyInput w-12 text-center text-sm border-x-2 border-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-inset font-medium text-gray-900"
+              {%
+              if
+              not
+              product.in_stock
+              %}disabled{%
+              endif
+              %}
+            />
+            <button
+              class="increaseQty px-2 py-1 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-700 text-sm transition"
+              {%
+              if
+              not
+              product.in_stock
+              %}disabled{%
+              endif
+              %}
+            >
+              <i class="fas fa-plus text-xs"></i>
+            </button>
           </div>
-          <button class="btn btn-primary add-to-cart flex items-center justify-center gap-1 text-xs sm:text-sm px-2 py-1 rounded hover:bg-[var(--primary-dark)] transition cursor-pointer">
+
+          <button
+            class="add-to-cart cursor-pointer flex-1 flex items-center justify-center gap-1 text-xs sm:text-sm px-3 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 active:bg-orange-700 transition shadow-sm hover:shadow-md font-medium"
+            data-product-id="{{ product.id }}"
+            data-product-name="{{ product.name }}"
+            {%
+            if
+            not
+            product.in_stock
+            %}disabled{%
+            endif
+            %}
+          >
             <i class="fa-solid fa-cart-shopping text-xs sm:text-sm"></i>
-            Add
+            <span>Add</span>
           </button>
         </div>
       </section>
     </div>
+    {% empty %}
+    <div class="col-span-full text-center py-12">
+      <i class="fas fa-box-open text-6xl text-gray-300 mb-4"></i>
+      <p class="text-gray-500 text-lg font-medium">
+        No best offer products available.
+      </p>
+    </div>
     {% endfor %}
   </div>
-
-  <!-- Pagination -->
-<!-- Simple Modern Pagination -->
-<div class="flex justify-center items-center mt-6 space-x-3 text-sm">
-  <!-- Previous -->
-  {% if featured_products.has_previous %}
-    <a href="?featured_page={{ featured_products.previous_page_number }}" 
-       class="px-4 py-2 rounded-md bg-[var(--bg-brown)] text-white hover:bg-[var(--primary)] transition">
-       Prev
-    </a>
-  {% else %}
-    <span class="px-4 py-2 rounded-md bg-gray-200 text-gray-400 cursor-not-allowed">Prev</span>
-  {% endif %}
-
-  <!-- Current Page -->
-  <span class="px-4 py-2 rounded-md bg-[var(--primary)] text-white font-semibold">
-    {{ featured_products.number }}
-  </span>
-
-  <!-- Next -->
-  {% if featured_products.has_next %}
-    <a href="?featured_page={{ featured_products.next_page_number }}" 
-       class="px-4 py-2 rounded-md bg-[var(--bg-brown)] text-white hover:bg-[var(--primary)] transition">
-       Next
-    </a>
-  {% else %}
-    <span class="px-4 py-2 rounded-md bg-gray-200 text-gray-400 cursor-not-allowed">Next</span>
-  {% endif %}
-</div>
-
 </section>
-{% endblock %}
 
-{% block extra_js %}
+{% endblock %} {% block extra_js %}
 <script>
-$(document).ready(function () {
-  // Initialize Swiper
-  const heroSwiper = new Swiper('.heroSwiper', {
-    loop: true,
-    autoplay: { delay: 5000, disableOnInteraction: false },
-    pagination: { el: '.swiper-pagination', clickable: true },
-    navigation: { nextEl: '.swiper-button-next', prevEl: '.swiper-button-prev' },
-    speed: 1000,
-    effect: 'slide',
-    grabCursor: true
-  });
-
-  // Toastr helper
-  function showToast(message, type = 'info') {
-    toastr.options = {
-      "closeButton": true,
-      "progressBar": true,
-      "positionClass": "toast-top-right",
-      "timeOut": "3000"
-    };
-    switch(type) {
-      case 'success': toastr.success(message); break;
-      case 'error': toastr.error(message); break;
-      case 'warning': toastr.warning(message); break;
-      default: toastr.info(message); break;
-    }
-  }
-
-  // Wishlist toggle
-  $('.wishlist-btn').on('click', function(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    const $heart = $(this).find('.fa-heart');
-    const isLiked = $heart.hasClass('fas');
-
-    if (!isLiked) {
-      $heart.removeClass('far').addClass('fas').css('color', '#ef4444');
-      $(this).css('transform', 'scale(1.2)').delay(200).queue(function(next) {
-        $(this).css('transform', 'scale(1)'); next();
-      });
-      showToast('Added to wishlist!', 'success');
-    } else {
-      $heart.removeClass('fas').addClass('far').css('color', '#6b7280');
-      showToast('Removed from wishlist', 'info');
-    }
-  });
-
-  // Add to Cart
-  $('.product-card .add-to-cart').on('click', function(e) {
-    e.preventDefault();
-    const $card = $(this).closest('.product-card');
-    const qty = parseInt($card.find('.qtyInput').val()) || 1;
-    const productId = $card.data('product-id');
-    const $btn = $(this);
-
-    if (!productId) {
-      showToast('Product ID not found', 'error');
-      return;
-    }
-
-    // Disable button while processing
-    $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
-
-    $.ajax({
-      url: '/api/cart/add/',
-      method: 'POST',
-      headers: {
-        'X-CSRFToken': $('[name=csrfmiddlewaretoken]').val() || $('meta[name=csrf-token]').attr('content')
+  $(document).ready(function () {
+    // Initialize Swiper
+    const heroSwiper = new Swiper(".heroSwiper", {
+      loop: true,
+      autoplay: { delay: 5000, disableOnInteraction: false },
+      pagination: { el: ".swiper-pagination", clickable: true },
+      navigation: {
+        nextEl: ".swiper-button-next",
+        prevEl: ".swiper-button-prev",
       },
-      contentType: 'application/json',
-      data: JSON.stringify({
-        product_id: productId,
-        quantity: qty
-      }),
-      success: function(response) {
-        if (response.success) {
-          showToast(response.message, 'success');
-          $('#desktopCartBadge, #mobileCartBadge').text(response.cart_count);
-        } else {
-          showToast(response.message, 'error');
-        }
-      },
-      error: function(xhr) {
-        const response = xhr.responseJSON;
-        if (xhr.status === 401) {
-          showToast('Please login to add items to cart', 'warning');
-        } else {
-          showToast(response?.message || 'An error occurred while adding to cart', 'error');
-        }
-      },
-      complete: function() {
-        $btn.prop('disabled', false).html('<i class="fa-solid fa-cart-shopping text-xs sm:text-sm"></i> Add');
+      speed: 1000,
+      effect: "slide",
+      grabCursor: true,
+    });
+
+    // Toastr helper
+    function showToast(message, type = "info") {
+      toastr.options = {
+        closeButton: true,
+        progressBar: true,
+        positionClass: "toast-top-right",
+        timeOut: "3000",
+      };
+      switch (type) {
+        case "success":
+          toastr.success(message);
+          break;
+        case "error":
+          toastr.error(message);
+          break;
+        case "warning":
+          toastr.warning(message);
+          break;
+        default:
+          toastr.info(message);
+          break;
       }
+    }
+
+    // Add to Cart
+    $(".product-card .add-to-cart").on("click", function (e) {
+      e.preventDefault();
+      const $card = $(this).closest(".product-card");
+      const qty = parseInt($card.find(".qtyInput").val()) || 1;
+      const productId = $card.data("product-id");
+      const $btn = $(this);
+
+      if (!productId) {
+        showToast("Product ID not found", "error");
+        return;
+      }
+
+      $btn
+        .prop("disabled", true)
+        .html('<i class="fas fa-spinner fa-spin"></i>');
+
+      $.ajax({
+        url: "/api/cart/add/",
+        method: "POST",
+        headers: {
+          "X-CSRFToken":
+            $("[name=csrfmiddlewaretoken]").val() ||
+            $("meta[name=csrf-token]").attr("content"),
+        },
+        contentType: "application/json",
+        data: JSON.stringify({ product_id: productId, quantity: qty }),
+        success: function (response) {
+          if (response.success) {
+            showToast(response.message, "success");
+            $("#desktopCartBadge, #mobileCartBadge").text(response.cart_count);
+          } else {
+            showToast(response.message, "error");
+          }
+        },
+        error: function (xhr) {
+          const response = xhr.responseJSON;
+          if (xhr.status === 401)
+            showToast("Please login to add items to cart", "warning");
+          else showToast(response?.message || "An error occurred", "error");
+        },
+        complete: function () {
+          $btn
+            .prop("disabled", false)
+            .html(
+              '<i class="fa-solid fa-cart-shopping text-xs sm:text-sm"></i> Add'
+            );
+        },
+      });
+    });
+
+    // Quantity increment/decrement
+    $(".product-card .increaseQty").on("click", function () {
+      const $input = $(this).siblings(".qtyInput");
+      $input.val(parseInt($input.val()) + 1);
+    });
+
+    $(".product-card .decreaseQty").on("click", function () {
+      const $input = $(this).siblings(".qtyInput");
+      const current = parseInt($input.val());
+      if (current > 1) $input.val(current - 1);
     });
   });
-
-  // Quantity increment/decrement
-  $('.product-card .increaseQty').on('click', function() {
-    const $input = $(this).siblings('.qtyInput');
-    $input.val(parseInt($input.val()) + 1);
-  });
-
-  $('.product-card .decreaseQty').on('click', function() {
-    const $input = $(this).siblings('.qtyInput');
-    const current = parseInt($input.val());
-    if(current > 1) $input.val(current - 1);
-  });
-});
 </script>
 {% endblock %}

@@ -43,16 +43,7 @@
     <span class="{% if request.path == '/dashboard/orders/' %}text-[var(--primary)]{% endif %}">My Orders</span>
   </a>
 
-  <a href="{% url 'customer_wishlist' %}" 
-     class="group flex items-center gap-3 px-6 py-3 border-l-4 
-            {% if request.path == '/dashboard/wishlist/' %}border-[var(--primary)] bg-[var(--bg-light)]{% else %}border-transparent{% endif %} 
-            transition-all">
-    <div class="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center 
-                group-hover:bg-[var(--primary)] group-hover:text-white transition-all">
-      <i class="fa fa-heart"></i>
-    </div>
-    <span class="{% if request.path == '/dashboard/wishlist/' %}text-[var(--primary)]{% endif %}">Wishlist</span>
-  </a>
+
 
   <div class="border-t border-gray-100 my-2"></div>
 

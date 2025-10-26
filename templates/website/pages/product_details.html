@@ -158,54 +158,50 @@
         </a>
       </div>
 
-  <!-- Rating & Stats -->
-<div class="flex items-center justify-between gap-6 py-3 border-y border-gray-200">
-  <div class="flex items-center gap-2 text-gray-700">
-    <div class="flex items-center gap-1">
-      {% for i in "12345" %}
-        {% if forloop.counter <= product.average_rating %}
-          <i class="fas fa-star text-yellow-500 text-sm"></i>
-        {% elif forloop.counter|add:-1 < product.average_rating %}
-          <i class="fas fa-star-half-alt text-yellow-500 text-sm"></i>
-        {% else %}
-          <i class="far fa-star text-gray-300 text-sm"></i>
+      <!-- Rating & Stats -->
+      <div class="flex items-center justify-between gap-6 py-3 border-y border-gray-200">
+        <div class="flex items-center gap-2 text-gray-700">
+          <div class="flex items-center gap-1">
+            {% for i in "12345" %}
+              {% if forloop.counter <= product.average_rating %}
+                <i class="fas fa-star text-yellow-500 text-sm"></i>
+              {% elif forloop.counter|add:-1 < product.average_rating %}
+                <i class="fas fa-star-half-alt text-yellow-500 text-sm"></i>
+              {% else %}
+                <i class="far fa-star text-gray-300 text-sm"></i>
+              {% endif %}
+            {% endfor %}
+          </div>
+          <span class="text-sm">({{ product.reviews.count }} reviews)</span>
+        </div>
+        <div class="flex items-center gap-1 text-gray-400 text-sm">
+          <i class="far fa-eye"></i> <span>{{ product.views_count }} views</span>
+        </div>
+      </div>
+
+      <!-- Price -->
+      <div class="flex items-center gap-4">
+        <span class="text-4xl font-bold text-gray-900" id="currentPrice">Rs {{ product.price|floatformat:0 }}</span>
+        {% if product.cost_price and product.cost_price > product.price %}
+          <span class="text-gray-400 line-through text-xl">Rs {{ product.cost_price|floatformat:0 }}</span>
+          <span class="bg-red-50 text-red-600 text-sm font-semibold px-3 py-1 rounded-full shadow-sm">
+            Save {{ product.discount_percentage }}%
+          </span>
         {% endif %}
-      {% endfor %}
-    </div>
-    <span class="text-sm">({{ product.reviews.count }} reviews)</span>
-  </div>
+      </div>
 
-  <div class="flex items-center gap-1 text-gray-400 text-sm">
-    <i class="far fa-eye"></i> <span>{{ product.views_count }} views</span>
-  </div>
-</div>
-
-<!-- Price -->
-<div class="flex items-center gap-4">
-  <span class="text-4xl font-bold text-gray-900" id="currentPrice">Rs {{ product.price|floatformat:0 }}</span>
-  {% if product.cost_price and product.cost_price > product.price %}
-    <span class="text-gray-400 line-through text-xl">Rs {{ product.cost_price|floatformat:0 }}</span>
-    <span class="bg-red-50 text-red-600 text-sm font-semibold px-3 py-1 rounded-full shadow-sm">
-      Save {{ product.discount_percentage }}%
-    </span>
-  {% endif %}
-</div>
-
-<!-- Stock Status -->
-<div>
-  {% if product.in_stock %}
-    <span class="inline-flex items-center gap-2 text-green-700 font-medium bg-green-50 px-3 py-1 rounded-full shadow-sm">
-      <i class="fas fa-check-circle"></i> In Stock - {{ product.stock }} units
-    </span>
-  {% else %}
-    <span class="inline-flex items-center gap-2 text-red-700 font-medium bg-red-50 px-3 py-1 rounded-full shadow-sm">
-      <i class="fas fa-times-circle"></i> Out of Stock
-    </span>
-  {% endif %}
-</div>
-
-
-    
+      <!-- Stock Status -->
+      <div>
+        {% if product.in_stock %}
+          <span class="inline-flex items-center gap-2 text-green-700 font-medium bg-green-50 px-3 py-1 rounded-full shadow-sm">
+            <i class="fas fa-check-circle"></i> In Stock - {{ product.stock }} units
+          </span>
+        {% else %}
+          <span class="inline-flex items-center gap-2 text-red-700 font-medium bg-red-50 px-3 py-1 rounded-full shadow-sm">
+            <i class="fas fa-times-circle"></i> Out of Stock
+          </span>
+        {% endif %}
+      </div>
 
       <!-- Product Variants -->
       {% if product.variants.all %}
@@ -241,33 +237,24 @@
         <div class="flex items-center gap-3">
           <label class="text-sm font-semibold text-gray-700 w-20">Quantity</label>
           <div class="flex items-center border-2 border-gray-300 rounded-lg overflow-hidden">
-            <button class="decreaseQty w-10 h-10 flex items-center justify-center hover:bg-gray-50 active:bg-gray-100 transition-colors text-gray-700" 
-                    type="button">
+            <button class="decreaseQty px-2 py-1 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-700 text-sm transition" {% if not product.in_stock %}disabled{% endif %}>
               <i class="fas fa-minus text-xs"></i>
             </button>
-            <input type="number" value="1" min="1" max="{{ product.stock }}" 
-                   class="qtyInput w-20 h-10 text-center border-x-2 border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#FF7F00] focus:ring-inset text-gray-900 font-medium">
-            <button class="increaseQty w-10 h-10 flex items-center justify-center hover:bg-gray-50 active:bg-gray-100 transition-colors text-gray-700" 
-                    type="button">
+            <input type="number" value="1" min="1" max="{% if product.in_stock %}{{ product.stock }}{% else %}0{% endif %}" 
+                   class="qtyInput w-12 text-center text-sm border-x-2 border-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-inset font-medium text-gray-900" {% if not product.in_stock %}disabled{% endif %}>
+            <button class="increaseQty px-2 py-1 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-700 text-sm transition" {% if not product.in_stock %}disabled{% endif %}>
               <i class="fas fa-plus text-xs"></i>
             </button>
           </div>
         </div>
 
         <div class="flex gap-3">
-          {% if product.in_stock %}
-          <button class="addToCart flex-1 bg-[#FF7F00] hover:bg-[#E67300] active:bg-[#CC6600] text-white font-semibold py-3.5 px-6 rounded-lg transition-all shadow-sm hover:shadow-md transform hover:-translate-y-0.5 active:translate-y-0">
-            <i class="fas fa-shopping-cart mr-2"></i>
-            Add to Cart
-          </button>
-          {% else %}
-          <button class="flex-1 bg-gray-300 text-gray-500 font-semibold py-3.5 px-6 rounded-lg cursor-not-allowed" disabled>
-            <i class="fas fa-ban mr-2"></i>
-            Out of Stock
-          </button>
-          {% endif %}
-          <button class="addToWishlist w-14 h-14 flex items-center justify-center border-2 border-gray-300 rounded-lg hover:border-red-500 hover:bg-red-50 transition-all group">
-            <i class="far fa-heart text-lg text-gray-600 group-hover:text-red-500 transition-colors"></i>
+          <button class="add-to-cart flex-1 flex items-center justify-center gap-1 text-sm px-3 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 active:bg-orange-700 transition shadow-sm hover:shadow-md font-medium cursor-pointer" 
+                  data-product-id="{{ product.id }}" 
+                  data-product-name="{{ product.name }}" 
+                  {% if not product.in_stock %}disabled{% endif %}>
+            <i class="fa-solid fa-cart-shopping text-sm"></i>
+            <span>Add</span>
           </button>
         </div>
       </div>
@@ -279,10 +266,7 @@
     <div class="lg:col-span-2 space-y-8">
       <!-- Description -->
       <div class="bg-white rounded-lg border border-gray-200 p-6">
-        <h2 class="text-2xl font-bold text-gray-900 mb-4 flex items-center">
-        
-          Description
-        </h2>
+        <h2 class="text-2xl font-bold text-gray-900 mb-4 flex items-center">Description</h2>
         <div class="text-gray-700 leading-relaxed">{{ product.description|safe }}</div>
       </div>
 
@@ -329,10 +313,7 @@
     <!-- Product Details Sidebar -->
     <div>
       <div class="bg-white border border-gray-200 rounded-lg p-6 sticky top-24">
-        <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center">
-         
-          Product Details
-        </h3>
+        <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center">Product Details</h3>
         <div class="space-y-3 text-sm">
           <div class="flex justify-between items-center py-2.5 border-b border-gray-100">
             <span class="text-gray-600 font-medium">SKU</span>
@@ -359,18 +340,16 @@
     </div>
   </div>
 
-
   <!-- Full Width Simple Banner Section -->
-<section class="mt-12 mb-8 w-[90%] mx-auto">
-  <div class="w-full overflow-hidden cursor-pointer">
-    {% if banners%}
-    {% for banners in banners %}
-      <img src="{{ banners.image.url }}" alt="Offer" class="w-full h-auto object-cover rounded-xl">
-    {% endfor %}
-    {% endif %}
-  </div>
-</section>
-
+  <section class="mt-12 mb-8 w-[90%] mx-auto">
+    <div class="w-full overflow-hidden cursor-pointer">
+      {% if banners %}
+        {% for banner in banners %}
+          <img src="{{ banner.image.url }}" alt="Offer" class="w-full h-auto object-cover rounded-xl">
+        {% endfor %}
+      {% endif %}
+    </div>
+  </section>
 
   <!-- Related Products -->
   {% if related_products %}
@@ -386,7 +365,7 @@
                class="w-full h-full object-contain group-hover:scale-110 transition-transform duration-300">
         </div>
         <div class="p-3 border-t border-gray-100">
-          <p class="text-sm text-gray-900 mb-2 line-clamp-2  group-hover:text-[#FF7F00] transition-colors">
+          <p class="text-sm text-gray-900 mb-2 line-clamp-2 group-hover:text-[#FF7F00] transition-colors">
             {{ related_product.name }}
           </p>
           <div class="flex items-center gap-2">
@@ -401,7 +380,6 @@
     </div>
   </section>
   {% endif %}
-
 </div>
 {% endblock %}
 
@@ -411,9 +389,23 @@ $(document).ready(function() {
   let selectedVariant = null;
   const basePrice = {{ product.price }};
   
-  // ===================================
-  // IMAGE MAGNIFIER WITH PROPER ZOOM
-  // ===================================
+  // Toastr helper
+  function showToast(message, type = 'info') {
+    toastr.options = {
+      "closeButton": true,
+      "progressBar": true,
+      "positionClass": "toast-top-right",
+      "timeOut": "3000"
+    };
+    switch(type) {
+      case 'success': toastr.success(message); break;
+      case 'error': toastr.error(message); break;
+      case 'warning': toastr.warning(message); break;
+      default: toastr.info(message); break;
+    }
+  }
+
+  // Image Magnifier
   function initImageMagnifier() {
     const container = $('#imageContainer');
     const mainImage = $('#mainImage');
@@ -421,9 +413,7 @@ $(document).ready(function() {
     
     if (!container.length || !mainImage.length || !glass.length) return;
     
-    const zoomLevel = 2.5; // Magnification level
-    
-    // Set background image for the magnifier
+    const zoomLevel = 2.5;
     glass.css('background-image', `url('${mainImage.attr('src')}')`);
     
     container.on('mouseenter', function() {
@@ -443,25 +433,20 @@ $(document).ready(function() {
       const containerWidth = container.width();
       const containerHeight = container.height();
       
-      // Get cursor position relative to container
       let x = e.pageX - containerOffset.left;
       let y = e.pageY - containerOffset.top;
       
-      // Prevent magnifier from going outside image boundaries
       const glassRadius = glass.width() / 2;
-      
       if (x < glassRadius) x = glassRadius;
       if (y < glassRadius) y = glassRadius;
       if (x > containerWidth - glassRadius) x = containerWidth - glassRadius;
       if (y > containerHeight - glassRadius) y = containerHeight - glassRadius;
       
-      // Position the magnifier glass
       glass.css({
         left: (x - glassRadius) + 'px',
         top: (y - glassRadius) + 'px'
       });
       
-      // Calculate background position for zoom effect
       const bgPosX = -(x * zoomLevel - glass.width() / 2);
       const bgPosY = -(y * zoomLevel - glass.height() / 2);
       
@@ -474,45 +459,34 @@ $(document).ready(function() {
   
   initImageMagnifier();
   
-  // ===================================
-  // THUMBNAIL IMAGE SWITCHING
-  // ===================================
+  // Thumbnail Image Switching
   $('.thumbnail-item').on('click', function() {
     const imageUrl = $(this).data('image');
     const $mainImage = $('#mainImage');
     
-    // Fade effect on change
     $mainImage.css('opacity', '0.5');
-    
     setTimeout(() => {
       $mainImage.attr('src', imageUrl);
       $('#magnifierGlass').css('background-image', `url('${imageUrl}')`);
       $mainImage.css('opacity', '1');
     }, 150);
     
-    // Update active thumbnail
     $('.thumbnail-item').removeClass('active border-2').addClass('border');
     $(this).addClass('active border-2').removeClass('border');
   });
   
-  // ===================================
-  // VARIANT SELECTION (TOGGLE)
-  // ===================================
+  // Variant Selection
   $('.variant-option').on('click', function() {
     const $this = $(this);
     const isSelected = $this.hasClass('selected');
     
     if (isSelected) {
-      // Deselect
       deselectVariant($this);
       selectedVariant = null;
     } else {
-      // Deselect all first
       $('.variant-option').each(function() {
         deselectVariant($(this));
       });
-      
-      // Select this one
       selectVariant($this);
       selectedVariant = $this.data('variant-id');
     }
@@ -534,24 +508,18 @@ $(document).ready(function() {
       .addClass('far fa-circle text-gray-400');
   }
   
-  // ===================================
-  // DYNAMIC PRICE UPDATE
-  // ===================================
+  // Dynamic Price Update
   function updatePrice() {
     let finalPrice = basePrice;
-    
     if (selectedVariant) {
       const $variant = $(`.variant-option[data-variant-id="${selectedVariant}"]`);
       const priceAdjustment = parseFloat($variant.data('price-adjustment')) || 0;
       finalPrice = basePrice + priceAdjustment;
     }
-    
     $('#currentPrice').text('Rs ' + finalPrice.toFixed(0));
   }
   
-  // ===================================
-  // QUANTITY CONTROLS
-  // ===================================
+  // Quantity Controls
   $('.increaseQty').on('click', function() {
     const $input = $(this).siblings('.qtyInput');
     const max = parseInt($input.attr('max'));
@@ -560,20 +528,18 @@ $(document).ready(function() {
     if (current < max) {
       $input.val(current + 1);
     } else {
-      toastr.warning(`Maximum available quantity is ${max}`);
+      showToast(`Maximum available quantity is ${max}`, 'warning');
     }
   });
   
   $('.decreaseQty').on('click', function() {
     const $input = $(this).siblings('.qtyInput');
     let current = parseInt($input.val()) || 1;
-    
     if (current > 1) {
       $input.val(current - 1);
     }
   });
   
-  // Validate quantity input
   $('.qtyInput').on('change', function() {
     const max = parseInt($(this).attr('max'));
     const min = parseInt($(this).attr('min'));
@@ -583,24 +549,21 @@ $(document).ready(function() {
       $(this).val(min);
     } else if (value > max) {
       $(this).val(max);
-      toastr.warning(`Maximum available quantity is ${max}`);
+      showToast(`Maximum available quantity is ${max}`, 'warning');
     }
   });
   
-  // ===================================
-  // ADD TO CART
-  // ===================================
-  $('.addToCart').on('click', function() {
-    const quantity = parseInt($('.qtyInput').val()) || 1;
-    const productId = {{ product.id }};
+  // Add to Cart
+  $('.add-to-cart').on('click', function() {
+    const $btn = $(this);
+    const qty = parseInt($('.qtyInput').val()) || 1;
+    const productId = $btn.data('product-id');
     const variantId = selectedVariant;
     
-    const $btn = $(this);
-    const originalHtml = $btn.html();
-    $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-2"></i>Adding to Cart...');
+    $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
     
     $.ajax({
-      url: '{% url "add_to_cart" %}',
+      url: '/api/cart/add/',
       method: 'POST',
       headers: {
         'X-CSRFToken': $('[name=csrfmiddlewaretoken]').val() || $('meta[name=csrf-token]').attr('content')
@@ -608,66 +571,33 @@ $(document).ready(function() {
       contentType: 'application/json',
       data: JSON.stringify({
         product_id: productId,
-        quantity: quantity,
+        quantity: qty,
         variant_id: variantId
       }),
       success: function(response) {
         if (response.success) {
-          toastr.success(response.message || 'Product added to cart successfully!');
-          
-          // Update cart count
-          if (typeof updateCartCount === 'function') {
-            updateCartCount(response.cart_count);
-          }
-          if (response.cart_count > 0) {
-            $('.cart-count').text(response.cart_count).show();
-          }
-          
-          // Reset quantity to 1
+          showToast(response.message, 'success');
+          $('#desktopCartBadge, #mobileCartBadge').text(response.cart_count);
           $('.qtyInput').val(1);
         } else {
-          toastr.error(response.message || 'Failed to add product to cart');
+          showToast(response.message, 'error');
         }
       },
       error: function(xhr) {
         const response = xhr.responseJSON;
         if (xhr.status === 401) {
-          toastr.warning('Please login to add items to your cart');
+          showToast('Please login to add items to cart', 'warning');
           setTimeout(() => {
             window.location.href = '{% url "login_page" %}?next={{ request.path }}';
           }, 1500);
         } else {
-          toastr.error(response?.message || 'An error occurred. Please try again.');
+          showToast(response?.message || 'An error occurred', 'error');
         }
       },
       complete: function() {
-        $btn.prop('disabled', false).html(originalHtml);
+        $btn.prop('disabled', false).html('<i class="fa-solid fa-cart-shopping text-sm"></i> <span>Add</span>');
       }
     });
-  });
-  
-  // ===================================
-  // ADD TO WISHLIST
-  // ===================================
-  $('.addToWishlist').on('click', function() {
-    const $btn = $(this);
-    const $heart = $btn.find('i');
-    const isInWishlist = $heart.hasClass('fas');
-    
-    if (isInWishlist) {
-      // Remove from wishlist
-      $heart.removeClass('fas text-red-500').addClass('far text-gray-600');
-      $btn.removeClass('border-red-500 bg-red-50');
-      toastr.info('Removed from wishlist');
-    } else {
-      // Add to wishlist
-      $heart.removeClass('far text-gray-600').addClass('fas text-red-500');
-      $btn.addClass('border-red-500 bg-red-50');
-      toastr.success('Added to wishlist!');
-    }
-    
-    // TODO: Make AJAX call to backend to actually add/remove from wishlist
-    // $.ajax({ url: '/wishlist/toggle/', ... });
   });
 });
 </script>

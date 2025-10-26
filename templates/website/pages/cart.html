@@ -24,14 +24,14 @@
                    alt="{{ item.product.name }}" 
                    class="w-20 h-20 object-cover rounded flex-shrink-0">
               <div class="flex-1 min-w-0">
-                <h3 class="font-semibold text-[var(--text-primary)] mb-1">{{ item.product.name }}</h3>
+                <p class="text-[var(--text-primary)] mb-1">{{ item.product.name }}</p>
                 {% if item.variant %}
                 <p class="text-xs text-[var(--text-secondary)] mb-1">{{ item.variant.get_variant_type_display }}: {{ item.variant.name }} {% if item.variant.price_adjustment != 0 %}({% if item.variant.price_adjustment > 0 %}+{% endif %}Rs {{ item.variant.price_adjustment }}){% endif %}</p>
                 {% endif %}
                 <p class="text-xs text-[var(--text-secondary)] mb-2">SKU: {{ item.product.sku }}</p>
                 <p class="item-price font-bold text-[var(--success)] text-lg">Rs {{ item.get_item_price }}</p>
               </div>
-              <button class="removeItem text-red-500 hover:text-red-700 h-8 w-8 flex items-center justify-center" 
+              <button class="removeItem text-red-500 hover:text-red-700 h-8 w-8 flex items-center justify-center cusror-pointer" 
                       data-cart-item-id="{{ item.id }}">
                 <i class="fa fa-trash"></i>
               </button>
@@ -76,7 +76,7 @@
                          alt="{{ item.product.name }}" 
                          class="w-16 h-16 object-cover rounded">
                     <div>
-                      <h3 class="font-semibold text-[var(--text-primary)]">{{ item.product.name }}</h3>
+                      <p class=" text-[var(--text-primary)]">{{ item.product.name }}</p>
                       {% if item.variant %}
                       <p class="text-sm text-[var(--text-secondary)]">{{ item.variant.get_variant_type_display }}: {{ item.variant.name }} {% if item.variant.price_adjustment != 0 %}({% if item.variant.price_adjustment > 0 %}+{% endif %}Rs {{ item.variant.price_adjustment }}){% endif %}</p>
                       {% endif %}
@@ -102,7 +102,7 @@
                   <span class="font-bold text-[var(--text-primary)] item-subtotal">Rs {{ item.get_total_price }}</span>
                 </td>
                 <td class="text-center py-4 px-6">
-                  <button class="removeItem text-red-500 hover:text-red-700 p-2" 
+                  <button class="removeItem text-red-500 hover:text-red-700 p-2 cusror-pointer" 
                           data-cart-item-id="{{ item.id }}">
                     <i class="fa fa-trash"></i>
                   </button>

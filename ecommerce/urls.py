@@ -59,9 +59,7 @@ urlpatterns = [
     path("customer-profile/",views.customer_profile,name='customer_profile'),
     path("dashboard/edit/profile/",views.edit_profile,name='edit_profile'),
     path("dashboard/orders/",views.my_orders,name='customer_orders'),
-    path("dashboard/wishlist/",views.my_wishlist,name='customer_wishlist'),
-    
-    
+
       path('ckeditor/', include('ckeditor_uploader.urls')),
     
 ]
