@@ -4,7 +4,7 @@
 {% block content %}
 <div class="bg-white rounded-xl shadow p-6">
   <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-4">
-    <h1 class="text-2xl font-semibold text-gray-800">Users</h1>
+    <h1 class="text-2xl font-semibold text-gray-800"><i class="fas fa-users"></i> Users</h1>
     <div>
       <a href="{% url 'admin_user_add' %}" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">+ Add User</a>
     </div>
@@ -56,10 +56,13 @@
           </td>
           <td class="px-4 py-3">{{ user.date_joined|date:"Y-m-d H:i" }}</td>
           <td class="px-4 py-3 text-center space-x-3">
-            <a href="{% url 'admin_user_update' user.id %}" class="text-blue-600 hover:text-blue-800 font-medium">Edit</a>
+            <a href="{% url 'admin_user_update' user.id %}" title="Edit" class="text-blue-600 hover:text-blue-800">
+              <i class="fas fa-edit"></i>
+            </a>
             {% if request.user.id != user.id %}
-            |
-            <a href="{% url 'admin_user_delete' user.id %}" onclick="return confirm('Delete this user?')" class="text-red-600 hover:text-red-800 font-medium">Delete</a>
+            <a href="{% url 'admin_user_delete' user.id %}" title="Delete" onclick="return confirm('Delete this user?')" class="text-red-600 hover:text-red-800">
+              <i class="fas fa-trash-alt"></i>
+            </a>
             {% endif %}
           </td>
         </tr>

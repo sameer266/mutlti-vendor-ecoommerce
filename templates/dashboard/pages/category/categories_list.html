@@ -1,11 +1,15 @@
 {% extends 'dashboard/components/base.html' %}
 {% load static %}
 
+
+
 {% block content %}
 <div class="bg-white rounded-xl shadow p-6">
   <div class="flex justify-between items-center mb-6">
-    <h1 class="text-2xl font-semibold text-gray-800">Categories</h1>
-    <a href="{% url 'admin_category_add' %}" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">+ Add Category</a>
+    <h1 class="text-2xl font-semibold text-gray-800"><i class="fas fa-tags"></i> Categories</h1>
+    <a href="{% url 'admin_category_add' %}" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+      <i class="fas fa-plus mr-1"></i> Add Category
+    </a>
   </div>
 
   <div class="overflow-x-auto">
@@ -16,7 +20,6 @@
           <th class="px-4 py-3 text-left">Image</th>
           <th class="px-4 py-3 text-left">Name</th>
           <th class="px-4 py-3 text-left">Featured</th>
-
           <th class="px-4 py-3 text-left">Order</th>
           <th class="px-4 py-3 text-center">Actions</th>
         </tr>
@@ -40,13 +43,18 @@
               <span class="text-gray-400 text-xs">No</span>
             {% endif %}
           </td>
-
           <td class="px-4 py-3">{{ category.order }}</td>
-          <td class="px-4 py-3 text-center">
-            <a href="{% url 'admin_category_update' category.id %}" class="text-blue-600 hover:text-blue-800 font-medium">Edit</a>
-            |
-            <a href="{% url 'admin_category_delete' category.id %}" class="text-red-600 hover:text-red-800 font-medium" onclick="return confirm('Delete this category?')">Delete</a>
-          </td>
+      <td class="px-4 py-3 text-center">
+  <div class="inline-flex items-center space-x-3 justify-center">
+    <a href="{% url 'admin_category_update' category.id %}" class="text-blue-600 hover:text-blue-800" title="Edit">
+      <i class="fas fa-edit"></i>
+    </a>
+    <a href="{% url 'admin_category_delete' category.id %}" class="text-red-600 hover:text-red-800" title="Delete" onclick="return confirm('Delete this category?')">
+      <i class="fas fa-trash-alt"></i>
+    </a>
+  </div>
+</td>
+
         </tr>
         {% empty %}
         <tr>
@@ -76,5 +84,3 @@
   });
 </script>
 {% endblock %}
-
-

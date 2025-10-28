@@ -7,9 +7,9 @@ from django.contrib.auth.models import User
 from django.http import JsonResponse
 from django.contrib import messages
 from .models import (
-    UserRole, UserProfile, Vendor, Category, Product, ProductImage, ProductVariant, Order, OrderItem, 
-    Review, Coupon, ShippingZone, Organization, Newsletter, Contact, 
-    Notification, Slider, Banner, HomeCategory, VendorPayout, VendorCommission, VendorPayoutRequest
+    UserRole,  Vendor, Category, Product, ProductImage, ProductVariant, Order, OrderItem, 
+    Review, Coupon,  Organization, Newsletter, Contact, 
+    Notification, Slider, Banner, VendorCommission, VendorPayoutRequest,VendorWallet,VendorCommission
 )
 
 # Helper decorator to check admin access
@@ -40,15 +40,11 @@ def admin_dashboard(request):
     total_revenue = Order.objects.filter(payment_status='paid').aggregate(Sum('total'))['total__sum'] or 0
     active_sliders = Slider.objects.filter(is_active=True).count()
     active_banners = Banner.objects.filter(is_active=True).count()
-    active_home_categories = HomeCategory.objects.filter(is_active=True).count()
+    active_home_categories = Category.objects.filter(is_featured=True).count()
     total_reviews = Review.objects.count()
     unread_contacts = Contact.objects.filter(is_read=False).count()
     newsletter_subscribers = Newsletter.objects.filter(is_active=True).count()
     unread_notifications = Notification.objects.filter(is_read=False).count()
-    recent_orders = Order.objects.order_by('-created_at')[:5]
-    recent_products = Product.objects.order_by('-created_at')[:5]
-    recent_sliders = Slider.objects.order_by('-created_at')[:5]
-    recent_banners = Banner.objects.order_by('-created_at')[:5]
 
     context = {
         'total_users': total_users,
@@ -72,12 +68,9 @@ def admin_dashboard(request):
         'unread_contacts': unread_contacts,
         'newsletter_subscribers': newsletter_subscribers,
         'unread_notifications': unread_notifications,
-        'recent_orders': recent_orders,
-        'recent_products': recent_products,
-        'recent_sliders': recent_sliders,
-        'recent_banners': recent_banners,
+      
     }
-    return render(request, 'dashboard/pages/dashboard.html', context)
+    return render(request, 'dashboard/pages/admin_dashboard.html', context)
 
 # User Management
 @admin_required
@@ -160,61 +153,101 @@ def admin_vendors_verified_kyc(request):
     vendors = Vendor.objects.filter(verification_status='verified').order_by('-created_at')
     return render(request, 'dashboard/pages/vendor/verified_vendors.html', {'vendors': vendors})
 
+import random
+import string
+from django.core.mail import send_mail
+from django.conf import settings
+
+
 @admin_required
 def admin_vendor_add(request):
     if request.method == 'POST':
-        user_id = request.POST.get('user')
-        user = get_object_or_404(User, pk=user_id)
+        first_name=request.POST.get('first_name')
+        last_name=request.POST.get('last_name')
+        email=request.POST.get('email'),
+        user=User.objects.create(first_name=first_name,last_name=last_name,email=email)
+        # Generate random password (8–10 chars, mix of letters/numbers/symbols)
+        random_password = ''.join(random.choices(string.ascii_letters + string.digits + "!@#$%^&*", k=10))
+        user.set_password(random_password)
+        user.save()
+
         vendor = Vendor.objects.create(
             user=user,
             shop_name=request.POST.get('shop_name'),
             phone=request.POST.get('phone'),
-            email=request.POST.get('email'),
             address=request.POST.get('address'),
             city=request.POST.get('city'),
             province=request.POST.get('province'),
             pan_number=request.POST.get('pan_number'),
             citizenship_number=request.POST.get('citizenship_number', ''),
-            bank_name=request.POST.get('bank_name', ''),
-            bank_account_number=request.POST.get('bank_account_number', ''),
-            bank_account_holder=request.POST.get('bank_account_holder', ''),
             verification_status=request.POST.get('verification_status', 'pending')
         )
+        if request.FILES.get('qr_image'):
+            vendor.qr_image = request.FILES['qr_image']
+
         if request.FILES.get('shop_logo'):
             vendor.shop_logo = request.FILES['shop_logo']
+
         if request.FILES.get('shop_banner'):
             vendor.shop_banner = request.FILES['shop_banner']
+
         if request.FILES.get('pan_document'):
             vendor.pan_document = request.FILES['pan_document']
+
         if request.FILES.get('citizenship_front'):
             vendor.citizenship_front = request.FILES['citizenship_front']
+
         if request.FILES.get('citizenship_back'):
             vendor.citizenship_back = request.FILES['citizenship_back']
+
         if request.FILES.get('company_registration'):
             vendor.company_registration = request.FILES['company_registration']
+
         vendor.save()
+
+        try:
+            send_mail(
+                subject='Your Vendor Account Has Been Created',
+                message=f'Hello {user.first_name},\n\nYour vendor account has been created successfully.\n'
+                        f'Password: {random_password}\n\n'
+                        f'Please change your password after logging in.',
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[user.email],
+                fail_silently=True,
+            )
+        except Exception as e:
+            print("Email sending failed:", e)
+
         return redirect('admin_vendors_list')
+
     users = User.objects.all()
     provinces = Vendor.PROVINCE_CHOICES
-    return render(request, 'dashboard/pages/vendor/add_vendor.html', {'users': users, 'provinces': provinces})
+    return render(request, 'dashboard/pages/vendor/add_vendor.html', {
+        'users': users,
+        'provinces': provinces
+    })
+
+
 
 @admin_required
 def admin_vendor_update(request, pk):
     vendor = get_object_or_404(Vendor, pk=pk)
     if request.method == 'POST':
+        vendor.user.first_name=request.POST.get('full_name')
+        vendor.user.last_name=request.POST.get('last_name')
+        vendor.user.email=request.POST.get('email')
         vendor.shop_name = request.POST.get('shop_name')
         vendor.phone = request.POST.get('phone')
-        vendor.email = request.POST.get('email')
         vendor.address = request.POST.get('address')
         vendor.city = request.POST.get('city')
         vendor.province = request.POST.get('province')
         vendor.pan_number = request.POST.get('pan_number')
         vendor.citizenship_number = request.POST.get('citizenship_number', '')
-        vendor.bank_name = request.POST.get('bank_name', '')
-        vendor.bank_account_number = request.POST.get('bank_account_number', '')
-        vendor.bank_account_holder = request.POST.get('bank_account_holder', '')
+        
         vendor.verification_status = request.POST.get('verification_status')
         vendor.rejection_reason = request.POST.get('rejection_reason', '')
+        if request.FILES.get('qr_image'):
+            vendor.qr_image=request.FILES['qr_image']
         if request.FILES.get('shop_logo'):
             vendor.shop_logo = request.FILES['shop_logo']
         if request.FILES.get('shop_banner'):
@@ -404,7 +437,7 @@ def admin_product_add(request):
         return redirect('admin_products_list')
     categories = Category.objects.filter(is_active=True)
     vendors = Vendor.objects.filter(is_active=True)
-    return render(request, 'dashboard/pages/product/add_product.html', {'categories': categories, 'vendors': vendors})
+    return render(request, 'vendor/product/add_product.html', {'categories': categories, 'vendors': vendors})
 
 @admin_required
 def admin_product_update(request, pk):
@@ -566,127 +599,170 @@ def admin_orders_list(request):
         'orders': orders,
         'order_model': Order,
     })
-
+    
+    
+    
 # Payments Overview
+
+
 @admin_required
 def admin_payments_overview(request):
     search = request.GET.get('search', '')
     date_from = request.GET.get('from', '')
     date_to = request.GET.get('to', '')
 
+    # --- Vendor Filter ---
     vendors = Vendor.objects.all().order_by('shop_name')
     if search:
         vendors = vendors.filter(shop_name__icontains=search)
 
-    orders = OrderItem.objects.select_related('order', 'vendor').all()
+    # --- Get All Delivered & Paid Orders ---
+    orders = OrderItem.objects.select_related('order', 'vendor').filter(
+        order__status='delivered',
+        order__payment_status='paid'
+    )
+
+    # --- Date Filters (on Order created_at) ---
     if date_from:
         orders = orders.filter(order__created_at__date__gte=date_from)
     if date_to:
         orders = orders.filter(order__created_at__date__lte=date_to)
 
-    # Default Commission if none configured
-    DEFAULT_COMMISSION = Decimal('0.10')
+    # --- Commission Rate (Latest VendorCommission) ---
+    commission_obj = VendorCommission.objects.order_by('-created_at').first()
+    commission_rate = commission_obj.rate if commission_obj else Decimal('0.10')
+
+    # --- Initialize Totals ---
+    total_platform_revenue = Decimal('0.00')
+    total_vendor_earnings = Decimal('0.00')
+    total_payouts = Decimal('0.00')
+    pending_total=Decimal('0.00')
 
     vendor_rows = []
-    total_platform_revenue = Decimal('0')
-    total_vendor_earnings = Decimal('0')
-    total_payouts = Decimal('0')
 
-    vendor_id_to_vendor_earning = {}
-    vendor_id_to_admin_commission = {}
-    vendor_id_to_gross = {}
-    for oi in orders:
-        amount = Decimal(oi.get_total())
-        rate = DEFAULT_COMMISSION
-        # If vendor-specific commission exists, use the latest active
-        vc = VendorCommission.objects.filter(vendor_id=oi.vendor_id, active=True).order_by('-effective_from', '-created_at').first()
-        if vc and vc.rate is not None:
-            rate = Decimal(vc.rate)
-        admin_commission = (amount * rate).quantize(Decimal('0.01'))
-        vendor_earning = (amount - admin_commission).quantize(Decimal('0.01'))
-        total_platform_revenue += admin_commission
-        total_vendor_earnings += vendor_earning
-        vendor_id_to_vendor_earning[oi.vendor_id] = vendor_id_to_vendor_earning.get(oi.vendor_id, Decimal('0')) + vendor_earning
-        vendor_id_to_admin_commission[oi.vendor_id] = vendor_id_to_admin_commission.get(oi.vendor_id, Decimal('0')) + admin_commission
-        vendor_id_to_gross[oi.vendor_id] = vendor_id_to_gross.get(oi.vendor_id, Decimal('0')) + amount
-
+    # --- Compute Per-Vendor Aggregation ---
     for v in vendors:
-        gross = vendor_id_to_gross.get(v.id, Decimal('0'))
-        admin_commission_sum = vendor_id_to_admin_commission.get(v.id, Decimal('0'))
-        vendor_earning_sum = vendor_id_to_vendor_earning.get(v.id, Decimal('0'))
-        vendor_paid = sum((p.amount for p in v.payouts.all()), Decimal('0'))
-        pending = (vendor_earning_sum - vendor_paid).quantize(Decimal('0.01'))
-        total_payouts += vendor_paid
+        # All delivered + paid order items for this vendor
+        vendor_orders = orders.filter(vendor=v)
+
+        gross_sales = Decimal('0.00')
+        admin_commission_sum = Decimal('0.00')
+        vendor_earning_sum = Decimal('0.00')
+        
+
+
+        for oi in vendor_orders:
+            amount = Decimal(oi.get_total())
+            admin_commission = (amount * commission_rate).quantize(Decimal('0.01'))
+            vendor_earning = (amount - admin_commission).quantize(Decimal('0.01'))
+
+            gross_sales += amount
+            admin_commission_sum += admin_commission
+            vendor_earning_sum += vendor_earning
+
+        # Get vendor wallet balance (total paid to vendor)
+        wallet, _ = VendorWallet.objects.get_or_create(vendor=v)
+        vendor_wallet = wallet.balance.quantize(Decimal('0.01'))
+        
+        pending = VendorPayoutRequest.objects.filter(vendor=v, status='pending').aggregate(total=Sum('requested_amount'))['total'] or Decimal('0.00')  
+         
+        # Update global totals
+        pending_total += pending 
+        total_platform_revenue += admin_commission_sum
+        total_vendor_earnings += vendor_earning_sum
+        total_payouts += VendorPayoutRequest.objects.filter(vendor=v, status='paid').aggregate(total=Sum('requested_amount'))['total'] or Decimal('0.00')   
+
         vendor_rows.append({
             'vendor': v,
-            'total_revenue': gross,
+            'total_revenue': gross_sales,
             'admin_commission': admin_commission_sum,
             'vendor_earning': vendor_earning_sum,
-            'paid': vendor_paid,
+            'wallet': vendor_wallet,
             'pending': pending,
         })
 
+    # --- Prepare Context ---
     context = {
         'vendor_rows': vendor_rows,
-        'total_platform_revenue': total_platform_revenue,
-        'total_vendor_earnings': total_vendor_earnings,
-        'total_payouts': total_payouts,
-        'pending_total': (total_vendor_earnings - total_payouts).quantize(Decimal('0.01')),
+        'total_platform_revenue': total_platform_revenue.quantize(Decimal('0.01')),
+        'total_vendor_earnings': total_vendor_earnings.quantize(Decimal('0.01')),
+        'total_payouts': total_payouts.quantize(Decimal('0.01')),
+        'pending_total':pending_total,
+        'commission_rate_percent': (commission_rate * 100).quantize(Decimal('0.01')),
+        'search': search,
+        'date_from': date_from,
+        'date_to': date_to,
     }
+
     return render(request, 'dashboard/pages/vendor/overview.html', context)
+
+
 
 @admin_required
 def admin_vendor_payments_detail(request, vendor_id):
-    vendor = get_object_or_404(Vendor, pk=vendor_id)
-    DEFAULT_COMMISSION = Decimal('0.10')
+        vendor = get_object_or_404(Vendor, pk=vendor_id)
+        
+        commission_obj = VendorCommission.objects.order_by('-created_at').first()
+        commission_rate = commission_obj.rate if commission_obj else Decimal('0.10')
 
-    order_items = OrderItem.objects.filter(vendor=vendor).select_related('order').order_by('-order__created_at')
-    payouts = vendor.payouts.all().order_by('-created_at')
+        order_items = (
+            OrderItem.objects.filter(vendor=vendor, order__status='delivered', order__payment_status='paid')
+            .select_related('order')
+            .order_by('-order__created_at')
+        )
+        payouts = VendorPayoutRequest.objects.filter(vendor=vendor).order_by('-created_at')
 
-    total_earning = Decimal('0')
-    total_commission = Decimal('0')
-    orders_data = []
-    for oi in order_items:
-        amount = Decimal(oi.get_total())
-        vc = VendorCommission.objects.filter(vendor_id=vendor.id, active=True).order_by('-effective_from', '-created_at').first()
-        rate = Decimal(vc.rate) if vc and vc.rate is not None else DEFAULT_COMMISSION
-        admin_commission = (amount * rate).quantize(Decimal('0.01'))
-        vendor_earning = (amount - admin_commission).quantize(Decimal('0.01'))
-        total_earning += vendor_earning
-        total_commission += admin_commission
-        orders_data.append({
-            'order': oi.order,
-            'order_item': oi,
-            'amount': amount,
-            'admin_commission': admin_commission,
-            'vendor_earning': vendor_earning,
-            'payment_status': oi.order.payment_status,
-        })
+        total_earning = Decimal('0')
+        total_commission = Decimal('0')
+        net_earning = Decimal('0')
+        
+        orders_data = []
 
-    paid_out = sum((p.amount for p in payouts), Decimal('0'))
-    remaining = (total_earning - paid_out).quantize(Decimal('0.01'))
+        for oi in order_items:
+            amount = Decimal(oi.get_total())
+            admin_commission = (amount * commission_rate).quantize(Decimal('0.01'))
+            vendor_earning = (amount - admin_commission).quantize(Decimal('0.01'))
 
-    context = {
-        'vendor': vendor,
-        'orders_data': orders_data,
-        'payouts': payouts,
-        'total_earning': total_earning,
-        'total_commission': total_commission,
-        'paid_out': paid_out,
-        'remaining': remaining,
-    }
-    return render(request, 'dashboard/pages/vendor/vendor_detail.html', context)
+            total_earning += amount
+            net_earning += vendor_earning
+            total_commission += admin_commission
+
+            orders_data.append({
+                'order': oi.order,
+                'order_item': oi,
+                'amount': amount,
+                'admin_commission': admin_commission,
+                'vendor_earning': vendor_earning,
+                'payment_status': oi.order.payment_status,\
+                    
+            })
+        wallet, _ = VendorWallet.objects.get_or_create(vendor=vendor)
+        wallet = wallet.balance
+        
+
+        context = {
+            'vendor': vendor,
+            'orders_data': orders_data,
+            'payouts': payouts,
+            'total_earning': total_earning,
+            'total_commission': total_commission,
+            'wallet_balance': wallet,
+            'net_earning': net_earning,
+            'commission_rate_percent': (commission_rate * 100).quantize(Decimal('0.01')),
+        }
+
+        return render(request, 'dashboard/pages/vendor/vendor_detail.html', context)
+
 
 # Payout Requests
 @admin_required
 def admin_payout_requests_list(request):
-    status_filter = request.GET.get('status', '').strip()
+    status_filter = request.GET.get('status')
     requests_qs = VendorPayoutRequest.objects.select_related('vendor').all().order_by('-created_at')
-    if status_filter in ['pending', 'approved', 'rejected', 'paid']:
+    if status_filter in ['pending','rejected', 'paid']:
         requests_qs = requests_qs.filter(status=status_filter)
     totals = {
         'pending': VendorPayoutRequest.objects.filter(status='pending').aggregate(total=Sum('requested_amount'))['total'] or 0,
-        'approved': VendorPayoutRequest.objects.filter(status='approved').aggregate(total=Sum('requested_amount'))['total'] or 0,
         'rejected': VendorPayoutRequest.objects.filter(status='rejected').aggregate(total=Sum('requested_amount'))['total'] or 0,
         'paid': VendorPayoutRequest.objects.filter(status='paid').aggregate(total=Sum('requested_amount'))['total'] or 0,
     }
@@ -695,12 +771,11 @@ def admin_payout_requests_list(request):
 @admin_required
 def admin_payout_requests_pending(request):
     status_filter = request.GET.get('status', '').strip() or 'pending'
-    if status_filter not in ['pending', 'approved', 'rejected', 'paid']:
+    if status_filter not in ['pending', 'rejected', 'paid']:
         status_filter = 'pending'
     requests_qs = VendorPayoutRequest.objects.select_related('vendor').filter(status=status_filter).order_by('-created_at')
     totals = {
         'pending': VendorPayoutRequest.objects.filter(status='pending').aggregate(total=Sum('requested_amount'))['total'] or 0,
-        'approved': VendorPayoutRequest.objects.filter(status='approved').aggregate(total=Sum('requested_amount'))['total'] or 0,
         'rejected': VendorPayoutRequest.objects.filter(status='rejected').aggregate(total=Sum('requested_amount'))['total'] or 0,
         'paid': VendorPayoutRequest.objects.filter(status='paid').aggregate(total=Sum('requested_amount'))['total'] or 0,
     }
@@ -709,39 +784,38 @@ def admin_payout_requests_pending(request):
 @admin_required
 def admin_payout_requests_rejected(request):
     status_filter = request.GET.get('status', '').strip() or 'rejected'
-    if status_filter not in ['pending', 'approved', 'rejected', 'paid']:
+    if status_filter not in ['pending','rejected', 'paid']:
         status_filter = 'rejected'
     requests_qs = VendorPayoutRequest.objects.select_related('vendor').filter(status=status_filter).order_by('-created_at')
     totals = {
         'pending': VendorPayoutRequest.objects.filter(status='pending').aggregate(total=Sum('requested_amount'))['total'] or 0,
-        'approved': VendorPayoutRequest.objects.filter(status='approved').aggregate(total=Sum('requested_amount'))['total'] or 0,
         'rejected': VendorPayoutRequest.objects.filter(status='rejected').aggregate(total=Sum('requested_amount'))['total'] or 0,
         'paid': VendorPayoutRequest.objects.filter(status='paid').aggregate(total=Sum('requested_amount'))['total'] or 0,
     }
     return render(request, 'dashboard/pages/payout/rejected_payouts.html', {'requests': requests_qs, 'totals': totals})
 
+# Payout Request Status Change (JSON)
 @admin_required
 def admin_payout_request_change_status(request, pk):
     if request.method != 'POST':
         return JsonResponse({'success': False, 'error': 'Invalid method'}, status=405)
+
     req = get_object_or_404(VendorPayoutRequest, pk=pk)
     new_status = request.POST.get('status')
-    if new_status not in ['pending', 'approved', 'rejected', 'paid']:
+
+    if new_status not in ['pending', 'rejected', 'paid']:
         return JsonResponse({'success': False, 'error': 'Invalid status'}, status=400)
+
     req.status = new_status
     req.admin_response = request.POST.get('admin_response', '')
     req.save(update_fields=['status', 'admin_response'])
+    messages.success(request, f'Payout request status updated to {new_status}.')
+    return JsonResponse({
+        'success': True,
+        'status': new_status,
+        'admin_response': req.admin_response
+    })
 
-    if new_status == 'paid':
-        VendorPayout.objects.create(
-            vendor=req.vendor,
-            amount=req.requested_amount,
-            method=request.POST.get('method', ''),
-            transaction_id=request.POST.get('transaction_id', ''),
-            admin_remarks='Auto-paid from request'
-        )
-
-    return JsonResponse({'success': True})
 
 @admin_required
 def admin_orders_pending(request):
@@ -765,7 +839,7 @@ def admin_order_delete(request, order_number):
     order.delete()
     return redirect('admin_orders_list')
 
-@admin_required
+@login_required
 def admin_order_change_status(request, order_number):
     if request.method != 'POST':
         return JsonResponse({'success': False, 'error': 'Invalid method'}, status=405)
@@ -779,22 +853,38 @@ def admin_order_change_status(request, order_number):
     if payment_status and payment_status in dict(Order.PAYMENT_STATUS_CHOICES):
         order.payment_status = payment_status
     order.save()
+    messages.success(request, 'Order updated successfully.')
     return JsonResponse({'success': True})
 
-@admin_required
+
+@login_required
 def admin_order_items_json(request, order_number):
     order = get_object_or_404(Order, order_number=order_number)
     items = []
+
     for item in order.items.select_related('product', 'variant').all():
+        # Get all variants for the product
+        all_variants = []
+        for variant in item.product.variants.all():
+            all_variants.append({
+                'variant_type': variant.get_variant_type_display(),
+                'name': variant.name,
+                'price_adjustment': str(variant.price_adjustment),
+            })
+
         items.append({
-            'product_name': item.product_name or (item.product.name if item.product else ''),
-            'variant_name': item.variant_name or (item.variant.name if item.variant else ''),
+            'product_name': item.product.name,
+            'selected_variant': item.variant.name if item.variant else '',
             'quantity': item.quantity,
             'price': str(item.price),
             'total': str(item.get_total()),
-            'image_url': item.product_image.url if item.product_image else (item.product.main_image.url if item.product and item.product.main_image else ''),
+            'image_url': item.product.main_image.url if item.product.main_image else '',
+            'all_variants': all_variants,
         })
+
     return JsonResponse({'success': True, 'items': items})
+
+
 
 # Review Management
 @admin_required
@@ -845,55 +935,42 @@ def admin_review_delete(request, pk):
     messages.success(request, 'Review deleted successfully.')
     return redirect('admin_reviews_list')
 
-# Contact Management
+
+
+#============================
+#   Contact Management
+# ============================
 @admin_required
 def admin_contacts_list(request):
     search = request.GET.get('search', '')
     contacts = Contact.objects.all().order_by('-created_at')
 
-    if search:
-        contacts = contacts.filter(
-            Q(name__icontains=search) |
-            Q(email__icontains=search) |
-            Q(subject__icontains=search) |
-            Q(message__icontains=search)
-        )
-
-    return render(request, 'admin/contacts_list.html', {'contacts': contacts})
+    return render(request, 'dashboard/pages/contact/contact_list.html', {'contacts': contacts})
 
 @admin_required
-def admin_contact_add(request):
-    if request.method == 'POST':
-        Contact.objects.create(
-            name=request.POST.get('name'),
-            email=request.POST.get('email'),
-            phone=request.POST.get('phone', ''),
-            subject=request.POST.get('subject', ''),
-            message=request.POST.get('message')
-        )
-        return redirect('admin_contacts_list')
-    return render(request, 'admin/contact_add.html')
+def admin_contacts_unread(request):
+    contacts = Contact.objects.filter(is_read=False).order_by('-created_at')
+    return render(request, 'dashboard/pages/contact/contact_unread.html', {'contacts': contacts})
+
 
 @admin_required
-def admin_contact_update(request, pk):
-    contact = get_object_or_404(Contact, pk=pk)
-    if request.method == 'POST':
-        contact.name = request.POST.get('name')
-        contact.email = request.POST.get('email')
-        contact.phone = request.POST.get('phone', '')
-        contact.subject = request.POST.get('subject', '')
-        contact.message = request.POST.get('message')
-        contact.is_read = request.POST.get('is_read') == 'on'
-        contact.replied = request.POST.get('replied') == 'on'
-        contact.save()
-        return redirect('admin_contacts_list')
-    return render(request, 'admin/contact_update.html', {'contact': contact})
+def admin_read_contact(request):
+    contact_id=request.GET.get('id')
+    is_read=request.GET.get('is_read','true').lower() == 'true'
+    contact = get_object_or_404(Contact, id=contact_id)
+    contact.is_read = is_read
+    contact.save(update_fields=['is_read'])
+    status = "read" if is_read else "unread"
+    messages.success(request, f"Message from {contact.name} marked as {status}.")
+    return redirect('admin_contacts_list') 
 
 @admin_required
 def admin_contact_delete(request, pk):
     contact = get_object_or_404(Contact, pk=pk)
     contact.delete()
     return redirect('admin_contacts_list')
+
+
 
 # Newsletter Management
 @admin_required
@@ -1026,46 +1103,7 @@ def admin_banner_delete(request, pk):
     banner.delete()
     return redirect('admin_banners_list')
 
-# HomeCategory Management
-@admin_required
-def admin_home_categories_list(request):
-    home_categories = HomeCategory.objects.all().order_by('position', '-created_at')
-    return render(request, 'dashboard/pages/content/home_categories_list.html', {'home_categories': home_categories})
 
-@admin_required
-def admin_home_category_add(request):
-    if request.method == 'POST':
-        home_category = HomeCategory.objects.create(
-            title=request.POST.get('title'),
-            link=request.POST.get('link', ''),
-            position=int(request.POST.get('position', 0))
-        )
-        if request.FILES.get('image'):
-            home_category.image = request.FILES['image']
-        home_category.save()
-        messages.success(request, 'Home category created successfully.')
-        return redirect('admin_home_categories_list')
-    return render(request, 'dashboard/pages/content/home_category_add.html')
-
-@admin_required
-def admin_home_category_update(request, pk):
-    home_category = get_object_or_404(HomeCategory, pk=pk)
-    if request.method == 'POST':
-        home_category.title = request.POST.get('title')
-        home_category.link = request.POST.get('link', '')
-        home_category.position = int(request.POST.get('position', 0))
-        if request.FILES.get('image'):
-            home_category.image = request.FILES['image']
-        home_category.save()
-        messages.success(request, 'Home category updated successfully.')
-        return redirect('admin_home_categories_list')
-    return render(request, 'dashboard/pages/content/home_category_update.html', {'home_category': home_category})
-
-@admin_required
-def admin_home_category_delete(request, pk):
-    home_category = get_object_or_404(HomeCategory, pk=pk)
-    home_category.delete()
-    return redirect('admin_home_categories_list')
 
 # Coupon Management
 @admin_required
@@ -1115,54 +1153,9 @@ def admin_coupon_delete(request, pk):
     coupon.delete()
     return redirect('admin_coupons_list')
 
-# Shipping Zone Management
-@admin_required
-def admin_shipping_zones_list(request):
-    search = request.GET.get('search', '')
-    shipping_zones = ShippingZone.objects.all().order_by('cost')
 
-    if search:
-        shipping_zones = shipping_zones.filter(
-            Q(name__icontains=search) |
-            Q(provinces__icontains=search)
-        )
-
-    return render(request, 'admin/shipping_zones_list.html', {'shipping_zones': shipping_zones})
-
-@admin_required
-def admin_shipping_zone_add(request):
-    if request.method == 'POST':
-        ShippingZone.objects.create(
-            name=request.POST.get('name'),
-            provinces=request.POST.get('provinces'),
-            cost=Decimal(request.POST.get('cost')),
-            free_shipping_threshold=Decimal(request.POST.get('free_shipping_threshold')) if request.POST.get('free_shipping_threshold') else None,
-            estimated_days=request.POST.get('estimated_days', '')
-        )
-        return redirect('admin_shipping_zones_list')
-    return render(request, 'admin/shipping_zone_add.html')
-
-@admin_required
-def admin_shipping_zone_update(request, pk):
-    shipping_zone = get_object_or_404(ShippingZone, pk=pk)
-    if request.method == 'POST':
-        shipping_zone.name = request.POST.get('name')
-        shipping_zone.provinces = request.POST.get('provinces')
-        shipping_zone.cost = Decimal(request.POST.get('cost'))
-        shipping_zone.free_shipping_threshold = Decimal(request.POST.get('free_shipping_threshold')) if request.POST.get('free_shipping_threshold') else None
-        shipping_zone.estimated_days = request.POST.get('estimated_days', '')
-        shipping_zone.save()
-        return redirect('admin_shipping_zones_list')
-    return render(request, 'admin/shipping_zone_update.html', {'shipping_zone': shipping_zone})
-
-@admin_required
-def admin_shipping_zone_delete(request, pk):
-    shipping_zone = get_object_or_404(ShippingZone, pk=pk)
-    shipping_zone.delete()
-    return redirect('admin_shipping_zones_list')
 
 # Organization Management
-
 # View: Display Organization Info
 @admin_required
 def admin_organization_view(request):
@@ -1244,3 +1237,515 @@ def admin_notification_delete(request, pk):
     notification = get_object_or_404(Notification, pk=pk)
     notification.delete()
     return redirect('admin_notifications_list')
+
+
+
+# Admin Profile
+@admin_required
+def admin_profile_view(request):
+    return  render(request,'dashboard/pages/profile/admin_profile.html')
+
+@admin_required
+def admin_profile_edit(request):
+    if request.method == "POST":
+        first_name = request.POST.get('first_name')
+        last_name = request.POST.get('last_name')
+        email = request.POST.get('email')
+        user=request.user
+        user.first_name=first_name
+        user.last_name=last_name
+        user.email=email
+        user.save()
+        messages.success(request,'Profile Updated Successfully')
+        return redirect('admin_profile')
+    return render(request,'dashboard/pages/profile/admin_profile_edit.html')
+
+# =====================================
+#   Vendor  Dashboard
+# =================================
+
+@login_required
+def vendor_dashboard(request):
+    user = request.user
+    vendor_user=Vendor.objects.get(user=user)
+    products = Product.objects.filter(vendor=vendor_user)
+    orders = Order.objects.filter(
+    items__vendor=vendor_user).distinct()
+
+    context = {
+        'total_products': products.count(),
+        'active_products': products.filter(is_active=True).count(),
+        'low_stock_products': products.filter(stock__lte=5).count(),
+        'total_orders': orders.count(),
+        'pending_orders': orders.filter(status='pending').count(),
+        'delivered_orders': orders.filter(status='delivered').count(),
+        'total_revenue': orders.filter(status='delivered').aggregate(total=Sum('total'))['total'] or 0,
+    }
+
+    return render(request, 'vendor/vendor_dashboard.html', context)
+
+
+
+
+
+# Product Management
+@login_required
+def vendor_products_list(request):
+    print(request)
+    search = request.GET.get('search', '')
+    category_id = request.GET.get('category', '')
+    vendor=Vendor.objects.get(user=request.user)
+    products = Product.objects.filter(vendor=vendor).order_by('-created_at')
+    
+    if search:
+        products = products.filter(
+            Q(name__icontains=search) |
+            Q(description__icontains=search) |
+            Q(brand__icontains=search) |
+            Q(sku__icontains=search)
+        )
+
+    if category_id:
+        products = products.filter(category_id=category_id)
+
+    categories = Category.objects.filter(is_active=True)
+
+
+    return render(request, 'vendor/product/products_list.html', {
+        'products': products,
+        'categories': categories,
+    })
+
+
+
+
+@login_required
+def vendor_product_add(request):
+    if request.method == 'POST':
+        category_id = request.POST.get('category')
+        vendor=Vendor.objects.get(user=request.user)
+        category = get_object_or_404(Category, pk=category_id)
+        product = Product.objects.create(
+            vendor=vendor,
+            category=category,
+            name=request.POST.get('name'),
+            description=request.POST.get('description'),
+            price=Decimal(request.POST.get('price')),
+            cost_price=Decimal(request.POST.get('cost_price')) if request.POST.get('cost_price') else None,
+            stock=int(request.POST.get('stock', 0)),
+            low_stock_alert=int(request.POST.get('low_stock_alert', 5)),
+            brand=request.POST.get('brand', ''),
+            weight=Decimal(request.POST.get('weight')) if request.POST.get('weight') else None,
+            is_featured=True if request.POST.get('is_featured') == 'on' else False,
+        )
+        if request.FILES.get('main_image'):
+            product.main_image = request.FILES['main_image']
+            product.save()
+        else:
+            product.save()
+
+        # Handle gallery images (multiple)
+        for img in request.FILES.getlist('gallery_images'):
+            ProductImage.objects.create(product=product, image=img)
+
+        # Handle variants: expect arrays variant_type[], variant_name[], variant_price_adjustment[], variant_stock[], variant_sku[]
+        variant_types = request.POST.getlist('variant_type[]')
+        variant_names = request.POST.getlist('variant_name[]')
+        variant_price_adjustments = request.POST.getlist('variant_price_adjustment[]')
+        
+
+        for i in range(len(variant_names)):
+            name = variant_names[i].strip()
+            if not name:
+                continue
+            ProductVariant.objects.create(
+                product=product,
+                variant_type=variant_types[i] if i < len(variant_types) and variant_types[i] else 'other',
+                name=name,
+                price_adjustment=Decimal(variant_price_adjustments[i]) if i < len(variant_price_adjustments) and variant_price_adjustments[i] else 0,
+            )
+
+        return redirect('admin_products_list')
+    categories = Category.objects.filter(is_active=True)
+    vendors = Vendor.objects.filter(is_active=True)
+    return render(request, 'vendor/product/add_product.html', {'categories': categories, 'vendors': vendors})
+
+
+
+
+
+@login_required
+def vendor_product_update(request, pk):
+    product = get_object_or_404(Product, pk=pk)
+    if request.method == 'POST':
+        
+        category_id = request.POST.get('category')
+        product.category = get_object_or_404(Category, pk=category_id)
+        product.name = request.POST.get('name')
+        product.description = request.POST.get('description')
+        product.price = Decimal(request.POST.get('price'))
+        product.cost_price = Decimal(request.POST.get('cost_price')) if request.POST.get('cost_price') else None
+        product.stock = int(request.POST.get('stock', 0))
+        product.low_stock_alert = int(request.POST.get('low_stock_alert', 5))
+        product.brand = request.POST.get('brand', '')
+        product.weight = Decimal(request.POST.get('weight')) if request.POST.get('weight') else None
+        product.is_featured = True if request.POST.get('is_featured') == 'on' else False
+
+        if request.FILES.get('main_image'):
+            product.main_image = request.FILES['main_image']
+        product.save()
+
+        # Append new gallery images if any
+        for img in request.FILES.getlist('gallery_images'):
+            ProductImage.objects.create(product=product, image=img)
+
+        # Update existing variants and optionally delete
+        existing_ids = request.POST.getlist('existing_variant_id[]')
+        existing_types = request.POST.getlist('existing_variant_type[]')
+        existing_names = request.POST.getlist('existing_variant_name[]')
+        existing_price_adjustments = request.POST.getlist('existing_variant_price_adjustment[]')
+        
+        delete_ids = set(request.POST.getlist('existing_variant_delete[]'))
+
+        for idx in range(len(existing_ids)):
+            variant_id = existing_ids[idx]
+            try:
+                variant = ProductVariant.objects.get(id=variant_id, product=product)
+            except ProductVariant.DoesNotExist:
+                continue
+
+            if variant_id in delete_ids:
+                variant.delete()
+                continue
+
+            name_val = existing_names[idx].strip() if idx < len(existing_names) else variant.name
+            if not name_val:
+                # skip empty names to avoid unique_together issues
+                continue
+            variant.variant_type = existing_types[idx] if idx < len(existing_types) and existing_types[idx] else variant.variant_type
+            variant.name = name_val
+            variant.price_adjustment = Decimal(existing_price_adjustments[idx]) if idx < len(existing_price_adjustments) and existing_price_adjustments[idx] else Decimal('0')
+            try:
+                variant.save()
+            except Exception:
+                # Silently ignore unique constraint conflicts for now
+                pass
+
+        # Append new variants from form
+        variant_types = request.POST.getlist('variant_type[]')
+        variant_names = request.POST.getlist('variant_name[]')
+        variant_price_adjustments = request.POST.getlist('variant_price_adjustment[]')
+        
+
+        for i in range(len(variant_names)):
+            name = variant_names[i].strip()
+            if not name:
+                continue
+            try:
+                ProductVariant.objects.create(
+                    product=product,
+                    variant_type=variant_types[i] if i < len(variant_types) and variant_types[i] else 'other',
+                    name=name,
+                    price_adjustment=Decimal(variant_price_adjustments[i]) if i < len(variant_price_adjustments) and variant_price_adjustments[i] else 0,
+                )
+            except Exception:
+                # Ignore duplicates violating unique_together
+                pass
+        return redirect('vendor_products_list')
+    categories = Category.objects.filter(is_active=True)
+ 
+    return render(request, 'vendor/product/edit_product.html', {
+        'product': product,
+        'categories': categories,
+    })
+
+
+
+@login_required
+def vendor_products_low_stock(request):
+    search = request.GET.get('search', '')
+    category_id = request.GET.get('category', '')
+    vendor=Vendor.objects.get(user=request.user)
+    products = Product.objects.filter(vendor=vendor,stock__gt=0, stock__lte=F('low_stock_alert')).order_by('stock')
+
+    if search:
+        products = products.filter(
+            Q(name__icontains=search) |
+            Q(description__icontains=search) |
+            Q(brand__icontains=search) |
+            Q(sku__icontains=search)
+        )
+
+    if category_id:
+        products = products.filter(category_id=category_id)
+
+ 
+    categories = Category.objects.filter(is_active=True)
+ 
+    return render(request, 'vendor/product/low_stock_products.html', {
+        'products': products,
+        'categories': categories,
+       
+    })
+
+
+
+@login_required
+def vendor_product_delete(request, pk):
+    
+    product = get_object_or_404(Product, pk=pk)
+    product.delete()
+    return redirect('vendor_products_list')
+
+
+
+# Order Management
+@login_required
+def vendor_orders_list(request):
+    search = request.GET.get('search', '')
+    status_filter = request.GET.get('status', '')
+    payment_status = request.GET.get('payment_status', '')
+    vendor=Vendor.objects.get(user=request.user)
+    orders = Order.objects.filter(
+    items__vendor=vendor).distinct().order_by('-created_at')    
+
+    if search:
+        orders = orders.filter(
+            Q(order_number__icontains=search) |
+            Q(user__first_name=search) |
+            Q(user__email__icontains=search) |
+            Q(user__profile__phone__icontains=search)
+        )
+
+    if status_filter:
+        orders = orders.filter(status=status_filter)
+
+    if payment_status:
+        orders = orders.filter(payment_status=payment_status)
+
+    return render(request, 'vendor/order/orders_list.html', {
+        'orders': orders,
+        'order_model': Order,
+    })
+    
+@login_required
+def vendor_orders_pending(request):
+    vendor=Vendor.objects.get(user=request.user)
+    orders = Order.objects.filter(
+    items__vendor=vendor, status='pending').distinct().order_by('-created_at')
+    return render(request, 'vendor/order/pending_orders.html', {
+        'orders': orders,
+        'order_model': Order,
+    })
+
+@login_required
+def vendor_orders_delivered(request):
+    vendor=Vendor.objects.get(user=request.user)
+    orders = Order.objects.filter(
+    items__vendor=vendor, status='delivered').distinct().order_by('-created_at')
+    return render(request, 'vendor/order/delivered_orders.html', {
+        'orders': orders,
+        'order_model': Order,
+    })
+    
+
+# Vendor Payouts
+@login_required
+def vendor_payouts_list(request):
+    user = request.user
+    vendor = Vendor.objects.get(user=user)
+
+    search = request.GET.get('search', '')
+    status_filter = request.GET.get('status', '')
+
+    payout_requests = VendorPayoutRequest.objects.filter(vendor=vendor)
+
+    if search:
+        payout_requests = payout_requests.filter(
+            Q(admin_response__icontains=search)
+        )
+
+    if status_filter:
+        payout_requests = payout_requests.filter(status=status_filter)
+
+    totals = {
+        'total_requested': payout_requests.aggregate(total=Sum('requested_amount'))['total'] or 0,
+        'total_paid': payout_requests.filter(status='paid').aggregate(total=Sum('requested_amount'))['total'] or 0,
+    }
+
+    payout_requests = payout_requests.order_by('-created_at')
+
+    return render(request, 'vendor/payout/payout_request_list.html', {
+        'payout_requests': payout_requests,
+        'totals': totals,
+        'status_filter': status_filter,
+        'search': search
+    })
+
+
+
+@login_required
+def pending_payout_requests(request):
+    """
+    Display pending payout requests for the vendor.
+    """
+    vendor = Vendor.objects.get(user=request.user)
+    payout_requests = VendorPayoutRequest.objects.filter(vendor=vendor, status='pending').order_by('-created_at')
+
+    return render(request, 'vendor/payout/pending_payout.html', {
+        'payout_requests': payout_requests
+    })
+
+
+@login_required
+def rejected_payout_requests(request):
+    """
+    Display rejected payout requests for the vendor.
+    """
+    vendor = Vendor.objects.get(user=request.user)
+    payout_requests = VendorPayoutRequest.objects.filter(vendor=vendor, status='rejected').order_by('-created_at')
+
+    return render(request, 'vendor/payout/rejected_payout.html', {
+        'payout_requests': payout_requests
+    })
+    
+    
+
+@login_required
+def vendor_payout_request_add(request):
+    vendor = get_object_or_404(Vendor, user=request.user)
+    wallet, _ = VendorWallet.objects.get_or_create(vendor=vendor)
+
+    if request.method == 'POST':
+        if VendorPayoutRequest.objects.filter(vendor=vendor, status="pending"):
+            messages.error(
+        request,
+        "You already have a payout request that is pending. "
+        "You can send a new request only after the previous one is paid or rejected."
+    )
+            return redirect('vendor_payout_list')
+        try:
+            requested_amount = Decimal(request.POST.get('requested_amount', '0'))
+        except:
+            messages.error(request, "Invalid amount entered.")
+            return redirect('vendor_payout_requests_add')
+
+        #  Validation checks
+        if requested_amount <= 0:
+            messages.error(request, "Amount must be greater than zero.")
+            return redirect('vendor_payout_requests_add')
+
+        if requested_amount > wallet.balance:
+            messages.error(request, "Insufficient balance for this payout request.")
+            return redirect('vendor_payout_requests_add')
+
+        #  Create payout request (do NOT deduct balance yet)
+        VendorPayoutRequest.objects.create(
+            vendor=vendor,
+            requested_amount=requested_amount,
+            status='pending',  # initial status
+            admin_response='',
+        )
+
+        messages.success(
+            request, 
+            " Payout request submitted successfully and is awaiting admin approval."
+        )
+        return redirect('vendor_payout_list')
+
+    context = {
+        "vendor": vendor,
+        "available_balance": wallet.balance,  # show wallet balance
+    }
+    return render(request, 'vendor/payout/add_payout_request.html', context)
+
+
+@login_required
+def vendor_wallet_view(request):
+   
+    vendor = get_object_or_404(Vendor, user=request.user)
+    
+    wallet, _ = VendorWallet.objects.get_or_create(vendor=vendor)
+    orders = OrderItem.objects.filter(
+        vendor=vendor,
+        order__status='delivered',
+        order__payment_status='paid'
+    ).select_related('order').order_by('-order__created_at')
+    
+    context = {
+        'vendor': vendor,
+        'wallet': wallet,
+        'orders': orders,
+    }
+    
+    return render(request, 'vendor/wallet/wallet.html', context)
+
+
+# Vendor Profile
+@login_required
+def vendor_profile_view(request):
+    vendor=Vendor.objects.get(user=request.user)
+    return render(request,'vendor/profile/vendor_profile.html',{'vendor':vendor})
+
+
+
+
+
+@login_required
+def vendor_profile_edit_view(request):
+    vendor = Vendor.objects.get(user=request.user)
+    
+    if request.method == 'POST':
+        vendor.shop_name = request.POST.get('shop_name', vendor.shop_name)
+        vendor.description = request.POST.get('description', vendor.description)
+        vendor.phone = request.POST.get('phone', vendor.phone)
+        vendor.email = request.POST.get('email', vendor.email)
+        vendor.address = request.POST.get('address', vendor.address)
+        vendor.city = request.POST.get('city', vendor.city)
+        vendor.province = request.POST.get('province', vendor.province)
+        vendor.pan_number = request.POST.get('pan_number', vendor.pan_number)
+        vendor.citizenship_number = request.POST.get('citizenship_number', vendor.citizenship_number)
+
+        files = request.FILES
+        if 'shop_logo' in files:
+            vendor.shop_logo = files['shop_logo']
+        if 'shop_banner' in files:
+            vendor.shop_banner = files['shop_banner']
+        
+        vendor.save()
+        return redirect('vendor_profile')
+    
+    context = {'vendor': vendor}
+    return render(request, 'vendor/profile/vendor_profile_edit.html', context)
+
+
+from django.contrib.auth import update_session_auth_hash
+
+@login_required
+def change_password_view(request):
+    if request.method == 'POST':
+        current_password = request.POST.get('current_password')
+        new_password = request.POST.get('new_password')
+        confirm_password = request.POST.get('confirm_password')
+
+        user = request.user
+
+        if not user.check_password(current_password):
+            messages.error(request, "Current password is incorrect.")
+        elif new_password != confirm_password:
+            messages.error(request, "New password and confirmation do not match.")
+        elif len(new_password) < 6:
+            messages.error(request, "Password must be at least 6 characters long.")
+        else:
+            user.set_password(new_password)
+            user.save()
+            update_session_auth_hash(request, user) 
+            messages.success(request, "Password updated successfully.")
+            if user.role.role=='admin':
+                return redirect('admin_dashboard')
+            elif user.role.role == 'vendor':
+                return redirect('vendor_profile')
+            elif user.role.role == 'customer':
+                return redirect('customer_profile')
+
+    return render(request, 'dashboard/pages/change_password.html')

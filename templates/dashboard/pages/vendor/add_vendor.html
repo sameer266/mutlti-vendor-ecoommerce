@@ -13,14 +13,19 @@
     {% csrf_token %}
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <div>
-        <label class="block text-sm font-medium text-gray-700">User</label>
-        <select name="user" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5">
-          {% for u in users %}
-            <option value="{{ u.id }}">{{ u.username }} ({{ u.email }})</option>
-          {% endfor %}
-        </select>
-      </div>
+    <div>
+      <label class="block text-sm font-medium text-gray-700" >First Name</label>
+      <input type="text" name="first_name" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5" required>
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700">Last Name</label>
+      <input type="text" name="last_name" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5" required>
+    </div>
+
+   
+
+    </div>
 
       <div>
         <label class="block text-sm font-medium text-gray-700">Shop Name</label>
@@ -66,19 +71,10 @@
         <input type="text" name="citizenship_number" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5">
       </div>
 
-      <div>
-        <label class="block text-sm font-medium text-gray-700">Bank Name</label>
-        <input type="text" name="bank_name" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5">
-      </div>
-
-      <div>
-        <label class="block text-sm font-medium text-gray-700">Bank Account Number</label>
-        <input type="text" name="bank_account_number" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5">
-      </div>
-
-      <div>
-        <label class="block text-sm font-medium text-gray-700">Bank Account Holder</label>
-        <input type="text" name="bank_account_holder" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5">
+      <!-- QR Image Upload -->
+      <div class="md:col-span-2">
+        <label class="block text-sm font-medium text-gray-700">Payment QR Code</label>
+        <input type="file" name="qr_image" accept="image/*" class="mt-1 block w-full">
       </div>
 
       <div>

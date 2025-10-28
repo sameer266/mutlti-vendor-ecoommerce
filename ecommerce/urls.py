@@ -47,7 +47,6 @@ urlpatterns = [
     path('order-confirmation/<int:order_id>/', views.order_confirmation, name='order_confirmation'),
  
     
-    
     path("login/",views.login_page,name="login_page"),
     path("signup/",views.signup_page,name='signup_page'),
     path("logout",views.logout_view,name="logout"),
@@ -58,9 +57,11 @@ urlpatterns = [
     # ============= Customer Dashboard ============
     path("customer-profile/",views.customer_profile,name='customer_profile'),
     path("dashboard/edit/profile/",views.edit_profile,name='edit_profile'),
-    path("dashboard/orders/",views.my_orders,name='customer_orders'),
+    path("dashboard/orders/",views.customer_orders,name='customer_orders'),
+    path("dashboard/order/<str:order_number>/",views.customer_order_detail,name='customer_order_detail'),
 
-      path('ckeditor/', include('ckeditor_uploader.urls')),
+
+    path('ckeditor/', include('ckeditor_uploader.urls')),
     
 ]
 

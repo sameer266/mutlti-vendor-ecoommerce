@@ -4,7 +4,7 @@
 {% block content %}
 <div class="bg-white rounded-xl shadow p-6">
   <div class="flex justify-between items-center mb-6">
-    <h1 class="text-2xl font-semibold text-gray-800">Sliders</h1>
+    <h1 class="text-2xl font-semibold text-gray-800"><i class="fas fa-file-alt"></i> Sliders</h1>
     <a href="{% url 'admin_slider_add' %}" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">+ Add Slider</a>
   </div>
 
@@ -26,7 +26,6 @@
           <td class="px-4 py-3">
             <div class="flex flex-wrap gap-1">
               {% if s.image %}
-                {% comment %} If you have multiple images per slider stored separately, loop through them {% endcomment %}
                 {% for img in s.images.all %}
                   <img src="{{ img.image.url }}" class="h-10 w-20 object-cover rounded border border-gray-200"/>
                 {% empty %}
@@ -41,16 +40,21 @@
           <td class="px-4 py-3">{{ s.subtitle|default:'-' }}</td>
           <td class="px-4 py-3">
             {% if s.link %}
-              <a href="{{ s.link }}" class="text-blue-600" target="_blank">{{ s.link }}</a>
+              <a href="{{ s.link }}" class="text-blue-600 hover:underline" target="_blank">{{ s.link }}</a>
             {% else %}
               -
             {% endif %}
           </td>
           <td class="px-4 py-3">{{ s.created_at|date:"Y-m-d H:i" }}</td>
-          <td class="px-4 py-3 text-center">
-            <a href="{% url 'admin_slider_update' s.id %}" class="text-blue-600 hover:text-blue-800 font-medium">Edit</a>
-            |
-            <a href="{% url 'admin_slider_delete' s.id %}" onclick="return confirm('Delete this slider?')" class="text-red-600 hover:text-red-800 font-medium">Delete</a>
+          <td class="px-4 py-3 text-center space-x-3">
+            <!-- Edit icon -->
+            <a href="{% url 'admin_slider_update' s.id %}" class="text-blue-600 hover:text-blue-800" title="Edit">
+              <i class="fas fa-edit"></i>
+            </a>
+            <!-- Delete icon -->
+            <a href="{% url 'admin_slider_delete' s.id %}" onclick="return confirm('Delete this slider?')" class="text-red-600 hover:text-red-800" title="Delete">
+              <i class="fas fa-trash-alt"></i>
+            </a>
           </td>
         </tr>
         {% endfor %}
@@ -70,7 +74,10 @@
       ordering: true,
       responsive: true,
       language: { search: "_INPUT_", searchPlaceholder: "Search sliders..." },
-      columnDefs: [ { orderable: false, targets: 0 }, { orderable: false, targets: -1 } ] // Disable sorting for Images & Actions
+      columnDefs: [
+        { orderable: false, targets: 0 }, // Images
+        { orderable: false, targets: -1 } // Actions
+      ]
     });
   });
 </script>

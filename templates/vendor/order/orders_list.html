@@ -1,0 +1,195 @@
+{% extends 'dashboard/components/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="bg-white rounded-xl shadow p-6">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-semibold text-gray-800">Orders</h1>
+    <a href="#" class="opacity-60 cursor-not-allowed text-sm">Add Order (disabled)</a>
+  </div>
+
+  <!-- Filters -->
+  <form method="get" class="mb-4 grid grid-cols-1 md:grid-cols-4 gap-4">
+    <input type="text" name="search" value="{{ request.GET.search }}" placeholder="Search #, name, email, phone" class="border border-gray-300 rounded-lg p-2.5" />
+
+    <select name="status" class="border border-gray-300 rounded-lg p-2.5">
+      <option value="">All Status</option>
+      {% for value,label in order_model.STATUS_CHOICES %}
+        <option value="{{ value }}" {% if request.GET.status == value %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+
+    <select name="payment_status" class="border border-gray-300 rounded-lg p-2.5">
+      <option value="">All Payment</option>
+      {% for value,label in order_model.PAYMENT_STATUS_CHOICES %}
+        <option value="{{ value }}" {% if request.GET.payment_status == value %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+
+    <div>
+      <button class="bg-gray-800 text-white px-4 py-2 rounded-lg w-full">Filter</button>
+    </div>
+  </form>
+
+  <!-- Orders Table -->
+  <div class="overflow-x-auto">
+    <table class="w-full border border-gray-200 rounded-lg text-sm">
+      <thead class="bg-gray-100">
+        <tr>
+          <th class="px-4 py-3 text-left">Order #</th>
+          <th class="px-4 py-3 text-left">Customer</th>
+          <th class="px-4 py-3 text-left">Contact</th>
+          <th class="px-4 py-3 text-left">Total</th>
+          <th class="px-4 py-3 text-left">Payment</th>
+          <th class="px-4 py-3 text-left">Status</th>
+          <th class="px-4 py-3 text-left">Created</th>
+          <th class="px-4 py-3 text-center">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for order in orders %}
+        <tr class="hover:bg-gray-50">
+          <td class="px-4 py-3 font-medium">{{ order.order_number }}</td>
+          <td class="px-4 py-3">{{ order.full_name }}</td>
+          <td class="px-4 py-3">
+            {{ order.email }}<br>
+            <span class="text-xs text-gray-500">{{ order.phone }}</span>
+          </td>
+          <td class="px-4 py-3">Rs {{ order.total }}</td>
+          <td class="px-4 py-3">
+            {% for value, label in order_model.PAYMENT_STATUS_CHOICES %}
+              {% if order.payment_status == value %}
+                {{ label }}
+              {% endif %}
+            {% endfor %}
+          </td>
+          <td class="px-4 py-3">
+            <select class="status-select border rounded p-1" data-id="{{ order.order_number }}">
+              {% for value,label in order_model.STATUS_CHOICES %}
+                <option value="{{ value }}" {% if order.status == value %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </td>
+          <td class="px-4 py-3">{{ order.created_at|date:"Y-m-d H:i" }}</td>
+          <td class="px-4 py-3 text-center flex justify-center gap-3">
+            <!-- View Items -->
+            <button 
+              class="view-items-btn flex items-center gap-2 text-blue-600 hover:text-blue-800 font-medium"
+              data-id="{{ order.order_number }}"
+              title="View Items"
+            >
+              <i class="fa-solid fa-eye"></i>
+            </button>
+
+            <!-- Delete -->
+            <a 
+              href="{% url 'admin_order_delete' order.order_number %}" 
+              class="flex items-center gap-2 text-red-600 hover:text-red-800 font-medium"
+              title="Delete Order"
+              onclick="return confirm('Delete this order?')"
+            >
+              <i class="fa-solid fa-trash"></i> 
+            </a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="8" class="text-center text-gray-500 py-6">No orders found.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+}
+
+// Update status/payment
+$(document).on('change', '.status-select, .payment-select', function(){
+    const row = $(this).closest('tr');
+    const orderNumber = $(this).data('id');
+    const status = row.find('.status-select').val();
+    const paymentStatus = row.find('.payment-select').val();
+
+    $.ajax({
+        url: `{% url 'admin_order_change_status' 'ORD00000000000000' %}`.replace('ORD00000000000000', orderNumber),
+        type: 'POST',
+        data: { status, payment_status: paymentStatus },
+        headers: { 'X-CSRFToken': getCookie('csrftoken') },
+        success: function(resp){
+            if (resp.success) location.reload();
+            else alert('Failed to update order');
+        },
+        error: function(){ alert('Server error updating order'); }
+    });
+});
+
+// View items modal
+$(document).on('click', '.view-items-btn', function(e){
+    e.preventDefault();
+    const orderNumber = $(this).data('id');
+
+    $.get(`{% url 'admin_order_items_json' 'ORD00000000000000' %}`.replace('ORD00000000000000', orderNumber), function(resp){
+        if (!resp.success) { alert('Failed to load items'); return; }
+
+        const rows = resp.items.map(it => {
+            const variantsHtml = it.all_variants.length ? `
+                <ul class="text-sm text-gray-600 mt-1">
+                    ${it.all_variants.map(v => `<li>${v.variant_type}: ${v.name} (Rs ${v.price_adjustment})</li>`).join('')}
+                </ul>` : '';
+
+            return `
+                <tr>
+                    <td class="px-4 py-2">${it.image_url ? `<img src="${it.image_url}" class="h-10 w-10 object-cover rounded"/>` : ''}</td>
+                    <td class="px-4 py-2">${it.product_name} ${variantsHtml}</td>
+                    <td class="px-4 py-2">${it.selected_variant}</td>
+                    <td class="px-4 py-2">${it.quantity}</td>
+                    <td class="px-4 py-2">Rs ${it.price}</td>
+                    <td class="px-4 py-2">Rs ${it.total}</td>
+                </tr>`;
+        }).join('');
+
+        const modal = `
+            <div id="orderItemsModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+                <div class="bg-white w-full max-w-4xl rounded-lg shadow-lg">
+                    <div class="flex items-center justify-between px-6 py-4 border-b">
+                        <h3 class="text-lg font-semibold">Order Items - ${orderNumber}</h3>
+                        <button id="closeItemsModal" class="text-gray-500 hover:text-gray-700">✕</button>
+                    </div>
+                    <div class="p-6 overflow-x-auto">
+                        <table class="w-full text-sm border border-gray-200">
+                            <thead class="bg-gray-100">
+                                <tr>
+                                    <th class="px-4 py-2 text-left">Image</th>
+                                    <th class="px-4 py-2 text-left">Product & Variants</th>
+                                    <th class="px-4 py-2 text-left">Selected Variant</th>
+                                    <th class="px-4 py-2 text-left">Qty</th>
+                                    <th class="px-4 py-2 text-left">Price</th>
+                                    <th class="px-4 py-2 text-left">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>${rows || `<tr><td colspan="6" class="text-center py-6 text-gray-500">No items</td></tr>`}</tbody>
+                        </table>
+                    </div>
+                    <div class="px-6 py-3 border-t text-right">
+                        <button id="closeItemsModal2" class="bg-gray-200 px-4 py-2 rounded">Close</button>
+                    </div>
+                </div>
+            </div>`;
+        $('body').append(modal);
+    });
+});
+
+// Close modal
+$(document).on('click', '#closeItemsModal, #closeItemsModal2', function(){
+    $('#orderItemsModal').remove();
+});
+</script>
+{% endblock %}

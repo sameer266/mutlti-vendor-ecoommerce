@@ -5,7 +5,7 @@
 <div class="bg-white rounded-xl shadow p-6">
   <!-- Header -->
   <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6">
-    <h1 class="text-2xl font-semibold text-gray-800">Vendors</h1>
+    <h1 class="text-2xl font-semibold text-gray-800"><i class="fas fa-store"></i> Vendors</h1>
     <a href="{% url 'admin_vendor_add' %}" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
       + Add Vendor
     </a>
@@ -38,7 +38,7 @@
           <th class="px-4 py-3 text-left">Owner</th>
           <th class="px-4 py-3 text-left">Contact</th>
           <th class="px-4 py-3 text-left">Documents</th>
-          <th class="px-4 py-3 text-left">Bank Info</th>
+          <th class="px-4 py-3 text-left">Payment QR</th>
           <th class="px-4 py-3 text-left">Status</th>
           <th class="px-4 py-3 text-left">Created</th>
           <th class="px-4 py-3 text-center">Actions</th>
@@ -52,27 +52,24 @@
           <td class="px-4 py-4">
             <div class="flex items-start gap-3">
               {% if vendor.shop_logo %}
-              <img src="{{ vendor.shop_logo.url }}" alt="logo" class="w-12 h-12 object-cover rounded" />
+                <img src="{{ vendor.shop_logo.url }}" alt="logo" class="w-12 h-12 object-cover rounded border" />
               {% endif %}
               <div class="flex-1">
                 <div class="font-semibold text-gray-800">{{ vendor.shop_name }}</div>
                 {% if vendor.shop_banner %}
-                <a href="{{ vendor.shop_banner.url }}" target="_blank" class="text-xs text-blue-600 hover:underline">View Banner</a>
+                  <a href="{{ vendor.shop_banner.url }}" target="_blank" class="text-xs text-blue-600 hover:underline">View Banner</a>
                 {% endif %}
-
-                <!-- Description with See More -->
                 {% if vendor.description %}
                 <p class="text-xs text-gray-600 mt-1 description-text">
                   {% if vendor.description|length > 80 %}
-                  <span class="short-desc">{{ vendor.description|slice:":80" }}...</span>
-                  <span class="full-desc hidden">{{ vendor.description }}</span>
-                  <a href="#" class="text-blue-600 text-xs see-more-btn">See more</a>
+                    <span class="short-desc">{{ vendor.description|slice:":80" }}...</span>
+                    <span class="full-desc hidden">{{ vendor.description }}</span>
+                    <a href="#" class="text-blue-600 text-xs see-more-btn">See more</a>
                   {% else %}
-                  {{ vendor.description }}
+                    {{ vendor.description }}
                   {% endif %}
                 </p>
                 {% endif %}
-
                 <p class="text-xs text-gray-500 mt-1">{{ vendor.address }}, {{ vendor.city }} ({{ vendor.get_province_display }})</p>
               </div>
             </div>
@@ -81,15 +78,15 @@
           <!-- Owner -->
           <td class="px-4 py-4">
             {% if vendor.user %}
-            <div class="font-medium">{{ vendor.user.username }}</div>
+              <div class="font-medium">{{ vendor.user.first_name}} {{vendor.user.last_name}}</div>
             {% else %}
-            <span class="text-gray-400">N/A</span>
+              <span class="text-gray-400">N/A</span>
             {% endif %}
           </td>
 
           <!-- Contact -->
           <td class="px-4 py-4">
-            <div>{{ vendor.email }}</div>
+            <div>{{ vendor.user.email }}</div>
             <div class="text-gray-600">{{ vendor.phone }}</div>
           </td>
 
@@ -109,23 +106,27 @@
             {% if vendor.company_registration %}<div class="mt-1"><a href="{{ vendor.company_registration.url }}" target="_blank" class="text-blue-600 text-xs hover:underline">Company Reg.</a></div>{% endif %}
           </td>
 
-          <!-- Bank Info -->
-          <td class="px-4 py-4">
-            {% if vendor.bank_name %}<div>{{ vendor.bank_name }}</div>{% endif %}
-            {% if vendor.bank_account_number %}<div class="text-gray-600 text-xs">Acc: {{ vendor.bank_account_number }}</div>{% endif %}
-            {% if vendor.bank_account_holder %}<div class="text-gray-600 text-xs">Holder: {{ vendor.bank_account_holder }}</div>{% endif %}
+          <!-- Payment QR -->
+          <td class="px-4 py-4 text-center">
+            {% if vendor.qr_image %}
+              <a href="{{ vendor.qr_image.url }}" target="_blank" title="Click to view QR code">
+                <img src="{{ vendor.qr_image.url }}" alt="QR Code" class="w-20 h-20 object-contain rounded border p-1 hover:shadow-lg transition" />
+              </a>
+            {% else %}
+              <span class="text-gray-400 text-xs">N/A</span>
+            {% endif %}
           </td>
 
           <!-- Status -->
           <td class="px-4 py-4">
             {% if vendor.verification_status == 'verified' %}
-            <span class="bg-green-100 text-green-700 px-2 py-0.5 rounded-full text-xs font-semibold">Verified</span>
+              <span class="bg-green-100 text-green-700 px-2 py-0.5 rounded-full text-xs font-semibold">Verified</span>
             {% elif vendor.verification_status == 'pending' %}
-            <span class="bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full text-xs font-semibold">Pending</span>
+              <span class="bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full text-xs font-semibold">Pending</span>
             {% elif vendor.verification_status == 'rejected' %}
-            <span class="bg-red-100 text-red-700 px-2 py-0.5 rounded-full text-xs font-semibold">Rejected</span>
+              <span class="bg-red-100 text-red-700 px-2 py-0.5 rounded-full text-xs font-semibold">Rejected</span>
             {% endif %}
-            {% if vendor.verified_at %}<div class="text-xs text-gray-500 mt-1">Verified: {{ vendor.verified_at|date:"Y-m-d H:i" }}</div>{% endif %}
+            {% if vendor.verified_at %}<div class="text-xs text-gray-500 mt-1">Updated: {{ vendor.verified_at|date:"Y-m-d H:i" }}</div>{% endif %}
             {% if vendor.rejection_reason %}<div class="text-xs text-red-600 mt-1">Reason: {{ vendor.rejection_reason }}</div>{% endif %}
           </td>
 
@@ -147,6 +148,7 @@
     </table>
   </div>
 </div>
+
 <script>
 $(document).ready(function() {
   // See more / See less toggle
@@ -159,8 +161,4 @@ $(document).ready(function() {
   });
 });
 </script>
-
 {% endblock %}
-
-
-

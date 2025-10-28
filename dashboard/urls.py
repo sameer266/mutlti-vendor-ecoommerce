@@ -59,9 +59,9 @@ urlpatterns = [
 
     # Contact Management
     path('contacts/', views.admin_contacts_list, name='admin_contacts_list'),
-    path('contacts/add/', views.admin_contact_add, name='admin_contact_add'),
-    path('contacts/<int:pk>/update/', views.admin_contact_update, name='admin_contact_update'),
     path('contacts/<int:pk>/delete/', views.admin_contact_delete, name='admin_contact_delete'),
+    path('contacts/unread/',views.admin_contacts_unread,name="admin_contact_unread"),
+    path('contacts/read/', views.admin_read_contact, name='admin_read_contacts'),
 
     # Newsletter Management
     path('newsletter/', views.admin_newsletter_list, name='admin_newsletter_list'),
@@ -81,24 +81,14 @@ urlpatterns = [
     path('banners/<int:pk>/update/', views.admin_banner_update, name='admin_banner_update'),
     path('banners/<int:pk>/delete/', views.admin_banner_delete, name='admin_banner_delete'),
 
-    # Home Category Management
-    path('home-categories/', views.admin_home_categories_list, name='admin_home_categories_list'),
-    path('home-categories/add/', views.admin_home_category_add, name='admin_home_category_add'),
-    path('home-categories/<int:pk>/update/', views.admin_home_category_update, name='admin_home_category_update'),
-    path('home-categories/<int:pk>/delete/', views.admin_home_category_delete, name='admin_home_category_delete'),
-
+   
     # Coupon Management
     path('coupons/', views.admin_coupons_list, name='admin_coupons_list'),
     path('coupons/add/', views.admin_coupon_add, name='admin_coupon_add'),
     path('coupons/<int:pk>/update/', views.admin_coupon_update, name='admin_coupon_update'),
     path('coupons/<int:pk>/delete/', views.admin_coupon_delete, name='admin_coupon_delete'),
 
-    # Shipping Zone Management
-    path('shipping-zones/', views.admin_shipping_zones_list, name='admin_shipping_zones_list'),
-    path('shipping-zones/add/', views.admin_shipping_zone_add, name='admin_shipping_zone_add'),
-    path('shipping-zones/<int:pk>/update/', views.admin_shipping_zone_update, name='admin_shipping_zone_update'),
-    path('shipping-zones/<int:pk>/delete/', views.admin_shipping_zone_delete, name='admin_shipping_zone_delete'),
-
+ 
     # Organization Management
     path('organization/', views.admin_organization_view, name='admin_organization_view'),
     path('organization/update/', views.admin_organization_update, name='admin_organization_update'),
@@ -108,4 +98,39 @@ urlpatterns = [
     path('notifications/add/', views.admin_notification_add, name='admin_notification_add'),
     path('notifications/<int:pk>/update/', views.admin_notification_update, name='admin_notification_update'),
     path('notifications/<int:pk>/delete/', views.admin_notification_delete, name='admin_notification_delete'),
+    
+    
+    # Profile Management
+    path('profile/',views.admin_profile_view,name="admin_profile"),
+    path('profile/update/',views.admin_profile_edit,name="admin_profile_edit"),
+    
+    # Change Password
+    path('change-password/',views.change_password_view,name="change_password"),
+    
+    
+    # =================================
+    #   Vendor
+    # =================================
+    path('vendor-dashboard/', views.vendor_dashboard, name='vendor_dashboard'),
+    path('vendor/products/', views.vendor_products_list, name='vendor_products_list'),
+    path('vendor/products/add/', views.vendor_product_add, name='vendor_product_add'),
+    path('vendor/products/<int:pk>/update/', views.vendor_product_update, name='vendor_product_update'),
+    path('vendor/products/<int:pk>/delete/', views.vendor_product_delete, name='vendor_product_delete'),
+    path('vendor/products/low-stock/', views.vendor_products_low_stock, name='vendor_products_low_stock'),
+    
+    path('vendor/orders/', views.vendor_orders_list, name='vendor_orders_list'),
+    path('vendor/orders/pending/', views.vendor_orders_pending, name='vendor_orders_pending'),
+    path('vendor/orders/delivered/', views.vendor_orders_delivered, name='vendor_orders_delivered'),
+    
+    path('vendor/payout-lists/', views.vendor_payouts_list, name='vendor_payout_list'),
+    path('vendor/payout-requests/add/', views.vendor_payout_request_add, name='vendor_payout_requests_add'),
+    path('vendor/payouts/pending/', views.pending_payout_requests, name='vendor_pending_payout'),
+    path('vendor/payouts/rejected/', views.rejected_payout_requests, name='vendor_rejected_payout'),
+
+    path('vendor/wallet/', views.vendor_wallet_view, name='vendor_wallet_view'),
+    
+    path('vendor/profile/',views.vendor_profile_view,name='vendor_profile'),
+    path('vendor/profile/edit/', views.vendor_profile_edit_view, name='vendor_edit_profile'),
 ]
+    
+    

@@ -100,7 +100,7 @@
 
   <!-- Vendors Grid -->
   <section class="container mx-auto px-4 py-8">
-    <div id="vendorsGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 relative">
+    <div id="vendorsGrid" class="grid grid-cols-2  sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 relative">
       {% for vendor in vendors %}
         <a href="{% url 'vendor_details' vendor.slug %}" class="vendor-card bg-white rounded-xl shadow-[var(--shadow-sm)] overflow-hidden block"
            data-vendor-name="{{ vendor.shop_name|lower }}"

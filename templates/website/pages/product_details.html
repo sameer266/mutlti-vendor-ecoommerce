@@ -1,6 +1,6 @@
 {% extends 'website/components/base.html' %}
 
-{% block title %}{{ product.name }} - Fresh Mart Store{% endblock %}
+{% block title %}{{ product.name }}{% endblock %}
 
 {% block extra_head %}
 <style>
@@ -89,7 +89,7 @@
 <div class="container mx-auto px-4 py-6 max-w-7xl">
 
   <!-- Breadcrumb -->
-  <nav class="flex mb-6" aria-label="Breadcrumb">
+  <nav class=" hidden md:flex mb-6" aria-label="Breadcrumb">
     <ol class="inline-flex items-center space-x-2 text-sm">
       <li>
         <a href="{% url 'home' %}" class="text-gray-600 hover:text-[#FF7F00] transition-colors">Home</a>
@@ -150,7 +150,10 @@
     <div class="space-y-6">
       <!-- Title & Vendor -->
       <div>
-        <h1 class="text-3xl lg:text-4xl font-bold text-gray-900 mb-3">{{ product.name }}</h1>
+       <p class="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-3 ">
+  {{ product.name }}
+</p>
+
         <a href="{% url 'vendor_details' product.vendor.slug %}" 
            class="inline-flex items-center text-sm text-gray-600 hover:text-[#FF7F00] transition-colors group">
           <i class="fas fa-store mr-2 group-hover:scale-110 transition-transform"></i>
@@ -179,62 +182,66 @@
         </div>
       </div>
 
-      <!-- Price -->
-      <div class="flex items-center gap-4">
-        <span class="text-4xl font-bold text-gray-900" id="currentPrice">Rs {{ product.price|floatformat:0 }}</span>
-        {% if product.cost_price and product.cost_price > product.price %}
-          <span class="text-gray-400 line-through text-xl">Rs {{ product.cost_price|floatformat:0 }}</span>
-          <span class="bg-red-50 text-red-600 text-sm font-semibold px-3 py-1 rounded-full shadow-sm">
-            Save {{ product.discount_percentage }}%
-          </span>
-        {% endif %}
-      </div>
+     <!-- Price & Discount -->
+<div class="inline-flex flex-col sm:flex-row sm:items-center sm:gap-4 gap-2 mb-4">
+  <span class="text-2xl sm:text-3xl font-bold text-gray-900" id="currentPrice">
+    Rs {{ product.price|floatformat:0 }}
+  </span>
+  {% if product.cost_price and product.cost_price > product.price %}
+  <span class="text-gray-400 line-through text-lg sm:text-xl">
+    Rs {{ product.cost_price|floatformat:0 }}
+  </span>
+  <span class="bg-red-50 text-red-600 text-xs sm:text-sm font-semibold px-2 sm:px-3 py-1 rounded-full shadow-sm">
+    Save {{ product.discount_percentage }}%
+  </span>
+  {% endif %}
+</div>
 
-      <!-- Stock Status -->
-      <div>
-        {% if product.in_stock %}
-          <span class="inline-flex items-center gap-2 text-green-700 font-medium bg-green-50 px-3 py-1 rounded-full shadow-sm">
-            <i class="fas fa-check-circle"></i> In Stock - {{ product.stock }} units
-          </span>
-        {% else %}
-          <span class="inline-flex items-center gap-2 text-red-700 font-medium bg-red-50 px-3 py-1 rounded-full shadow-sm">
-            <i class="fas fa-times-circle"></i> Out of Stock
-          </span>
-        {% endif %}
-      </div>
+<!-- Stock Status -->
+<div class="mb-4">
+  {% if product.in_stock %}
+    <span class="inline-flex items-center gap-2 text-green-700 font-medium bg-green-50 px-2 sm:px-3 py-1 rounded-full shadow-sm text-xs sm:text-sm">
+      <i class="fas fa-check-circle"></i> In Stock - {{ product.stock }} units
+    </span>
+  {% else %}
+    <span class="inline-flex items-center gap-2 text-red-700 font-medium bg-red-50 px-2 sm:px-3 py-1 rounded-full shadow-sm text-xs sm:text-sm">
+      <i class="fas fa-times-circle"></i> Out of Stock
+    </span>
+  {% endif %}
+</div>
 
-      <!-- Product Variants -->
-      {% if product.variants.all %}
-      <div class="space-y-3">
-        <h3 class="text-sm font-semibold text-gray-900 uppercase tracking-wide">
-          Select Options
-          <span class="text-gray-500 font-normal text-xs normal-case">(Click to toggle)</span>
-        </h3>
-        <div class="flex flex-wrap gap-2">
-          {% for variant in product.variants.all %}
-          <div class="variant-option border-2 border-gray-300 rounded-lg px-4 py-2.5 cursor-pointer" 
-               data-variant-id="{{ variant.id }}" 
-               data-price-adjustment="{{ variant.price_adjustment }}">
-            <div class="flex items-center gap-2">
-              <i class="far fa-circle text-xs text-gray-400 variant-icon"></i>
-              <div>
-                <div class="text-sm font-medium text-gray-900">{{ variant.name }}</div>
-                {% if variant.price_adjustment != 0 %}
-                  <div class="text-xs text-[#FF7F00] font-semibold">
-                    {% if variant.price_adjustment > 0 %}+{% endif %}Rs {{ variant.price_adjustment }}
-                  </div>
-                {% endif %}
-              </div>
-            </div>
+<!-- Product Variants -->
+{% if product.variants.all %}
+<div class="space-y-3 mb-4">
+  <h3 class="text-sm sm:text-base font-semibold text-gray-900 uppercase tracking-wide">
+    Select Options
+    <span class="text-gray-500 font-normal text-xs normal-case">(Click to toggle)</span>
+  </h3>
+  <div class="flex flex-wrap gap-2">
+    {% for variant in product.variants.all %}
+    <div class="variant-option border-2 border-gray-300 rounded-lg px-3 py-2 cursor-pointer text-xs sm:text-sm" 
+         data-variant-id="{{ variant.id }}" 
+         data-price-adjustment="{{ variant.price_adjustment }}">
+      <div class="flex items-center gap-2">
+        <i class="far fa-circle text-xs text-gray-400 variant-icon"></i>
+        <div>
+          <div class="text-sm font-medium text-gray-900">{{ variant.name }}</div>
+          {% if variant.price_adjustment != 0 %}
+          <div class="text-xs sm:text-sm text-[#FF7F00] font-semibold">
+            {% if variant.price_adjustment > 0 %}+{% endif %}Rs {{ variant.price_adjustment }}
           </div>
-          {% endfor %}
+          {% endif %}
         </div>
       </div>
-      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
 
-      <!-- Quantity & Actions -->
-      <div class="space-y-4 pt-4">
-        <div class="flex items-center gap-3">
+<!-- Quantity & Actions -->
+<div class="space-y-4 pt-4">
+  <div class="flex items-center gap-2">
           <label class="text-sm font-semibold text-gray-700 w-20">Quantity</label>
           <div class="flex items-center border-2 border-gray-300 rounded-lg overflow-hidden">
             <button class="decreaseQty px-2 py-1 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-700 text-sm transition" {% if not product.in_stock %}disabled{% endif %}>
@@ -246,18 +253,20 @@
               <i class="fas fa-plus text-xs"></i>
             </button>
           </div>
-        </div>
-
-        <div class="flex gap-3">
-          <button class="add-to-cart flex-1 flex items-center justify-center gap-1 text-sm px-3 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 active:bg-orange-700 transition shadow-sm hover:shadow-md font-medium cursor-pointer" 
-                  data-product-id="{{ product.id }}" 
-                  data-product-name="{{ product.name }}" 
-                  {% if not product.in_stock %}disabled{% endif %}>
-            <i class="fa-solid fa-cart-shopping text-sm"></i>
-            <span>Add</span>
-          </button>
-        </div>
       </div>
+
+  <div class="flex flex-col sm:flex-row gap-3">
+    <button class="add-to-cart flex-1 flex items-center justify-center gap-1 text-sm px-3 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 active:bg-orange-700 transition shadow-sm hover:shadow-md font-medium cursor-pointer"
+            data-product-id="{{ product.id }}" 
+            data-product-name="{{ product.name }}" 
+            {% if not product.in_stock %}disabled{% endif %}>
+      <i class="fa-solid fa-cart-shopping text-sm"></i>
+      <span>Add</span>
+    </button>
+  </div>
+</div>
+
+
     </div>
   </div>
 
@@ -352,34 +361,61 @@
   </section>
 
   <!-- Related Products -->
-  {% if related_products %}
-  <section class="bg-gray-50 rounded-xl p-6">
-    <h2 class="text-2xl font-bold text-gray-900 mb-6">More from {{ product.vendor.shop_name }}</h2>
-    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-      {% for related_product in related_products %}
-      <a href="{% url 'product_details' related_product.slug %}" 
-         class="group bg-white border border-gray-200 rounded-lg overflow-hidden hover:border-[#FF7F00] hover:shadow-lg transition-all transform hover:-translate-y-1">
-        <div class="aspect-square bg-white p-3">
-          <img src="{{ related_product.main_image.url }}" 
-               alt="{{ related_product.name }}" 
-               class="w-full h-full object-contain group-hover:scale-110 transition-transform duration-300">
-        </div>
-        <div class="p-3 border-t border-gray-100">
-          <p class="text-sm text-gray-900 mb-2 line-clamp-2 group-hover:text-[#FF7F00] transition-colors">
-            {{ related_product.name }}
-          </p>
-          <div class="flex items-center gap-2">
-            <span class="font-bold text-gray-900">Rs {{ related_product.price | floatformat:0}}</span>
-            {% if related_product.cost_price and related_product.cost_price > related_product.price %}
-              <span class="text-xs text-gray-400 line-through">Rs {{ related_product.cost_price }}</span>
-            {% endif %}
-          </div>
+
+{% if related_products %}
+<section class="bg-gray-50 rounded-xl p-6 mt-18">
+ <h2 class="font-semibold text-gray-900 mb-4 relative inline-block text-lg">
+  Recommended Products
+  <span class="absolute left-0 bottom-0 w-26 h-1 bg-[#A0522D] rounded-full"></span>
+</h2>
+
+  <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+    {% for product in related_products %}
+    <div class="bg-white rounded-xl shadow-sm hover:shadow-lg transition-shadow duration-300 overflow-hidden group">
+      
+      <!-- Image -->
+      <a href="{% url 'product_details' product.slug %}" class="block">
+        <div class="aspect-[1/1] bg-gray-100 flex items-center justify-center p-3">
+          <img
+            src="{{ product.main_image|default:'https://via.placeholder.com/200' }}"
+            alt="{{ product.name }}"
+            class="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
+          />
         </div>
       </a>
-      {% endfor %}
+
+      <!-- Product Info -->
+      <div class="p-3 text-center">
+        <a href="{% url 'product_details' product.slug %}" 
+           class="block text-sm text-gray-900 line-clamp-2 hover:text-orange-600 font-medium transition-colors">
+          {{ product.name | truncatechars:30 }} 
+        </a>
+
+        <div class="mt-1 flex justify-center items-center gap-2">
+          {% if product.cost_price and product.cost_price > product.price %}
+          <p class="text-xs text-gray-400 line-through">
+            Rs {{ product.cost_price|floatformat:0 }}
+          </p>
+          {% endif %}
+          <p class="font-bold text-orange-600 text-sm">
+            Rs {{ product.price|floatformat:0 }}
+          </p>
+        </div>
+      </div>
+
     </div>
-  </section>
-  {% endif %}
+    {% empty %}
+    <div class="col-span-full text-center py-12">
+      <i class="fas fa-box-open text-6xl text-gray-300 mb-4"></i>
+      <p class="text-gray-500 text-lg font-medium">No products available.</p>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+
+
 </div>
 {% endblock %}
 

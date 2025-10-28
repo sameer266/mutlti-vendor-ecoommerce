@@ -7,7 +7,7 @@ from dashboard.models import (
     Slider,
     Banner,
     Category,
-    Product,Cart,Vendor,ProductVariant,OTPVerification,Order,Wishlist,OrderItem,Coupon,CouponUsage
+    Product,Cart,Vendor,ProductVariant,OTPVerification,Order,OrderItem,Coupon,CouponUsage
 )
 from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
 from  django.contrib import messages
@@ -22,6 +22,12 @@ from django.core.exceptions import ValidationError
 from django.contrib.auth.decorators import login_required
 from datetime import timedelta
 from django.db.models import Q
+from django.conf import settings
+
+
+from .recommender import get_recommendations
+
+
 
 def home_page(request):
     sliders = Slider.objects.filter(is_active=True).order_by('-created_at')[:5]
@@ -30,13 +36,13 @@ def home_page(request):
     
     # Featured Products Pagination
     featured_products = Product.objects.filter(is_active=True, is_featured=True).order_by('-created_at')
-    featured_paginator = Paginator(featured_products, 12)  # 12 items per page
+    featured_paginator = Paginator(featured_products, 18)  # 12 items per page
     featured_page_number = request.GET.get('featured_page', 1)
     featured_products_page = featured_paginator.get_page(featured_page_number)
     
     # Best Offers Pagination
     best_offers = Product.objects.filter(is_active=True).order_by('-views_count', '-created_at')
-    best_offers_paginator = Paginator(best_offers, 12)  # 12 items per page
+    best_offers_paginator = Paginator(best_offers, 18)  # 12 items per page
     best_offers_page_number = request.GET.get('best_offers_page', 1)
     best_offers_page = best_offers_paginator.get_page(best_offers_page_number)
 
@@ -591,37 +597,50 @@ def order_confirmation(request, order_id):
     return render(request, 'website/pages/order_confirmation.html', {'order': order})
 
 
-    
+
 def product_details(request, slug):
     """Display detailed product information"""
     try:
-        product = Product.objects.select_related('vendor', 'category').prefetch_related('images', 'variants', 'reviews').get(slug=slug, is_active=True)
-        
-        # Get related products from same vendor
-        related_products = Product.objects.filter(
-            vendor=product.vendor, 
-            is_active=True
-        ).exclude(id=product.id)[:8]
-        
-        # Get reviews for this product
-        reviews = product.reviews.select_related('user').order_by('-created_at')[:10]
-        
+        product = Product.objects.select_related('vendor', 'category')\
+                    .prefetch_related('images', 'variants', 'reviews')\
+                    .get(slug=slug, is_active=True)
+
         # Increment view count
         product.views_count += 1
         product.save(update_fields=['views_count'])
 
+        # Get recommended products
+        recommended_df = get_recommendations(product.id, top_n=30)
+
+        recommended_products = []
+        if not recommended_df.empty:
+            for _, row in recommended_df.iterrows():
+                recommended_products.append({
+                    'id': row['id'],
+                    'name': row['name'],
+                    'slug': row['slug'],
+                    'price': row['price'],
+                    'cost_price':row['cost_price'],
+                    
+                    # Build full image URL
+                    'main_image': row['main_image'] if row['main_image'].startswith('http') else settings.MEDIA_URL + str(row['main_image']),
+                })
+
+        # Get latest 10 reviews
+        reviews = product.reviews.select_related('user').order_by('-created_at')[:10]
+
         context = {
             'product': product,
-            'related_products': related_products,
+            'related_products': recommended_products,
             'reviews': reviews,
-            "banners":Banner.objects.filter(is_active=True,page="products")
+            'banners': Banner.objects.filter(is_active=True, page="products"),
         }
+
         return render(request, 'website/pages/product_details.html', context)
-        
+
     except Product.DoesNotExist:
         messages.error(request, 'Product not found')
         return redirect('home')
-    
 
 
 # -------------------------
@@ -660,14 +679,12 @@ def login_page(request):
             user.check_password(password)
             if user.role.role =='admin':
                 auth_login(request, user)
+                messages.success(request,'Login Successfull')
                 return redirect('admin_dashboard')
-            elif user.role.role == 'vendor':
+      
+            elif user.role.role == 'customer' or user.role.role == 'vendor':
                 auth_login(request, user)
-                
-                pass
-            elif user.role.role == 'customer':
-                auth_login(request, user)
-                
+                messages.success(request,'Login Successfull')
                 return redirect('customer_profile')
         except User.DoesNotExist:
             messages.error(request,'Invalid Username and Password')
@@ -678,6 +695,7 @@ def login_page(request):
 
 def logout_view(request):
     auth_logout(request)
+    messages.success(request,'Logout Successfull')
     return redirect('login_page')
     
     
@@ -805,10 +823,20 @@ def edit_profile(request):
 
 
 @login_required
-def my_orders(request):
+def customer_orders(request):
     orders = Order.objects.filter(user=request.user).order_by('-created_at')
     return render(request, 'website/pages/orders.html', {
         'orders': orders
     })
 
 
+
+@login_required
+def customer_order_detail(request, order_number):
+    order = get_object_or_404(Order, order_number=order_number, user=request.user)
+    order_items = OrderItem.objects.filter(order=order)
+
+    return render(request, 'website/pages/order_detail.html', {
+        'order': order,
+        'order_items': order_items,
+    })

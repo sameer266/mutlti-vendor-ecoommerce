@@ -3,9 +3,16 @@
     <button id="mobile-menu-button" class="md:hidden mr-4 text-gray-600 hover:text-blue-600">
       <i class="fas fa-bars"></i>
     </button>
-    <span class="text-xl font-bold text-blue-600">Admin</span>
-  </div>
 
+   <span class="text-xl font-bold text-blue-600">
+    {% if request.user.role.role == 'admin' %} 
+        Admin 
+    {% else %} 
+        Vendor 
+    {% endif %}
+</span>
+  </div>
+  
   <div class="flex items-center space-x-4">
     <span class="text-sm font-medium text-gray-700">Hello, {{user.first_name}} {{user.last_name}}</span>
 
@@ -17,7 +24,7 @@
 
 
     <!-- Logout Icon -->
-    <a href="" class="hover:text-blue-600 transition-colors duration-200" title="Logout" aria-label="Logout">
+    <a href="{% url 'logout'%}" class="hover:text-blue-600 transition-colors duration-200" title="Logout" aria-label="Logout">
       <i class="fas fa-sign-out-alt text-gray-600"></i>
     </a>
   </div>

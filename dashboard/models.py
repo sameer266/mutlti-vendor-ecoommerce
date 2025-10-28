@@ -5,7 +5,8 @@ from django.utils import timezone
 from django.core.validators import FileExtensionValidator
 from decimal import Decimal
 from ckeditor.fields import RichTextField    
-
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 
 class OTPVerification(models.Model):
@@ -52,10 +53,12 @@ class UserRole(models.Model):
 # User Management
 # -------------------------
 class UserProfile(models.Model):
+    GENDER_CHOICES=( ('male','Male'),
+                    ('female','Female'))
     user = models.OneToOneField(User, on_delete=models.CASCADE,related_name="profile")
     phone = models.CharField(max_length=15)
     avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)
-    
+    gender=models.CharField(default="male",choices=GENDER_CHOICES)
     # Address
     address = models.TextField(blank=True)
     city = models.CharField(max_length=100, blank=True)
@@ -97,7 +100,6 @@ class Vendor(models.Model):
     
     # Contact Info
     phone = models.CharField(max_length=15)
-    email = models.EmailField()
     address = models.TextField()
     city = models.CharField(max_length=100)
     
@@ -144,10 +146,7 @@ class Vendor(models.Model):
     )
     
     # Bank Details for Payment
-    bank_name = models.CharField(max_length=100, blank=True)
-    bank_account_number = models.CharField(max_length=30, blank=True)
-    bank_account_holder = models.CharField(max_length=200, blank=True)
-    
+    qr_image = models.ImageField(upload_to='vendor_qr/', blank=True, null=True)
     # Status & Verification
     VERIFICATION_STATUS = [
         ('pending', 'Pending Verification'),
@@ -184,63 +183,29 @@ class Vendor(models.Model):
 
 
 class VendorCommission(models.Model):
-    vendor = models.ForeignKey('Vendor', on_delete=models.CASCADE, related_name='commissions')
-    rate = models.DecimalField(max_digits=5, decimal_places=4, help_text='Commission rate as a decimal e.g. 0.1000 for 10%')
-    effective_from = models.DateTimeField(null=True, blank=True)
-    active = models.BooleanField(default=True)
+    rate = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=Decimal('0.10'),  # Default 10% commission
+        help_text='Commission rate as a decimal (e.g. 0.10 for 10%)'
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    class Meta:
-        ordering = ['-active', '-effective_from', '-created_at']
-
     def __str__(self):
-        percent = int((self.rate or 0) * 100)
-        return f"{self.vendor.shop_name} - {percent}%"
-
-
-
-class VendorPayout(models.Model):
-    STATUS_CHOICES = [
-        ('pending', 'Pending'),
-        ('processing', 'Processing'),
-        ('completed', 'Completed'),
-        ('failed', 'Failed'),
-    ]
-
-    vendor = models.ForeignKey('Vendor', on_delete=models.CASCADE, related_name='payouts')
-    amount = models.DecimalField(max_digits=12, decimal_places=2, help_text="Total payout amount to the vendor.")
-    method = models.CharField(max_length=100, blank=True, help_text="Payment method used (e.g. Bank, eSewa, Khalti, etc.)")
-    transaction_id = models.CharField(max_length=100, blank=True, help_text="Transaction or reference ID from the payment gateway.")
-    admin_remarks = models.CharField(max_length=255, blank=True, help_text="Remarks or notes from the admin regarding this payout.")
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending', help_text="Current status of the payout.")
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        ordering = ['-created_at']
-
-    def __str__(self):
-        return f"{self.vendor.shop_name} - {self.amount} ({self.get_status_display()})"
-
-    def mark_completed(self, transaction_id=None):
-        self.status = 'completed'
-        if transaction_id:
-            self.transaction_id = transaction_id
-        self.save()
-
-
+        percent = float(self.rate) * 100
+        return f"{percent:.0f}%"
+    
+    
 class VendorPayoutRequest(models.Model):
     STATUS_CHOICES = [
         ('pending', 'Pending'),
-        ('approved', 'Approved'),
         ('rejected', 'Rejected'),
         ('paid', 'Paid'),
     ]
 
     vendor = models.ForeignKey('Vendor', on_delete=models.CASCADE, related_name='payout_requests')
     requested_amount = models.DecimalField(max_digits=12, decimal_places=2)
-    message = models.TextField(blank=True, help_text="Optional message from vendor to admin")
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     admin_response = models.TextField(blank=True, help_text="Admin notes or reason for approval/rejection")
     created_at = models.DateTimeField(auto_now_add=True)
@@ -252,21 +217,32 @@ class VendorPayoutRequest(models.Model):
     def __str__(self):
         return f"{self.vendor.shop_name} - {self.requested_amount} ({self.get_status_display()})"
 
-    def approve(self):
-        """
-        Approve payout request and automatically create a VendorPayout record.
-        """
-        from .models import VendorPayout
-        payout = VendorPayout.objects.create(
-            vendor=self.vendor,
-            amount=self.requested_amount,
-            method="Manual",
-            admin_remarks="Auto-created after approval",
-            status="processing",
-        )
-        self.status = "approved"
-        self.save(update_fields=['status'])
-        return payout
+ 
+            
+            
+# -------------------------
+#  Wallet Management
+# -------------------------
+class VendorWallet(models.Model):
+    vendor = models.OneToOneField('Vendor', on_delete=models.CASCADE, related_name='wallet')
+    balance = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.vendor.shop_name} - Wallet Balance: {self.balance}"
+
+    def credit(self, amount):
+        """Add amount to wallet"""
+        self.balance += Decimal(amount)
+        self.save()
+
+    def debit(self, amount):
+        """Subtract amount from wallet if sufficient balance"""
+        if self.balance >= Decimal(amount):
+            self.balance -= Decimal(amount)
+            self.save()
+            return True
+        return False
 
 # -------------------------
 # Category Management (Hierarchical)
@@ -457,27 +433,12 @@ class Cart(models.Model):
         return f"Guest cart ({self.session_key}) - {self.product.name}"
 
 
-class Wishlist(models.Model):
-    # Authenticated user (optional for guest)
-    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
-    session_key = models.CharField(max_length=40, null=True, blank=True, help_text="For non-authenticated users")
-    
-    product = models.ForeignKey('Product', on_delete=models.CASCADE)
-    added_at = models.DateTimeField(auto_now_add=True)
-
-
-    def __str__(self):
-        if self.user:
-            return f"{self.user.username}'s wishlist - {self.product.name}"
-        return f"Guest wishlist ({self.session_key}) - {self.product.name}"
-
 # -------------------------
 # Order Management
 # -------------------------
 class Order(models.Model):
     STATUS_CHOICES = [
         ('pending', 'Pending'),
-        ('confirmed', 'Confirmed'),
         ('processing', 'Processing'),
         ('shipped', 'Shipped'),
         ('delivered', 'Delivered'),
@@ -564,29 +525,16 @@ class OrderItem(models.Model):
     product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True)
     variant = models.ForeignKey(ProductVariant, on_delete=models.SET_NULL, null=True, blank=True)
     
-    # Snapshot data (in case product is deleted/changed)
-    product_name = models.CharField(max_length=255)
-    product_image = models.ImageField(upload_to='order_items/', blank=True, null=True)
-    variant_name = models.CharField(max_length=100, blank=True)
-    
+ 
     quantity = models.PositiveIntegerField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
     
-    # Vendor fulfillment tracking
-    FULFILLMENT_STATUS = [
-        ('pending', 'Pending'),
-        ('processing', 'Processing'),
-        ('ready', 'Ready to Ship'),
-        ('shipped', 'Shipped'),
-        ('delivered', 'Delivered'),
-    ]
-    fulfillment_status = models.CharField(max_length=20, choices=FULFILLMENT_STATUS, default='pending')
-    
+
     def get_total(self):
         return self.quantity * self.price
     
     def __str__(self):
-        return f"{self.quantity} x {self.product_name}"
+        return f"{self.quantity} x {self.product.name}"
 
 
 # -------------------------
@@ -670,33 +618,33 @@ class CouponUsage(models.Model):
         return f"{self.user.username} used {self.coupon.code}"
 
 
-# -------------------------
-# Shipping Zones
-# -------------------------
-class ShippingZone(models.Model):
-    name = models.CharField(max_length=100)
+# # -------------------------
+# # Shipping Zones
+# # -------------------------
+# class ShippingZone(models.Model):
+#     name = models.CharField(max_length=100)
     
-    PROVINCE_CHOICES = [
-        ('province1', 'Koshi Province'),
-        ('madhesh', 'Madhesh Province'),
-        ('bagmati', 'Bagmati Province'),
-        ('gandaki', 'Gandaki Province'),
-        ('lumbini', 'Lumbini Province'),
-        ('karnali', 'Karnali Province'),
-        ('sudurpashchim', 'Sudurpashchim Province'),
-    ]
-    provinces = models.CharField(max_length=255, help_text='Comma-separated province codes')
+#     PROVINCE_CHOICES = [
+#         ('province1', 'Koshi Province'),
+#         ('madhesh', 'Madhesh Province'),
+#         ('bagmati', 'Bagmati Province'),
+#         ('gandaki', 'Gandaki Province'),
+#         ('lumbini', 'Lumbini Province'),
+#         ('karnali', 'Karnali Province'),
+#         ('sudurpashchim', 'Sudurpashchim Province'),
+#     ]
+#     provinces = models.CharField(max_length=255, help_text='Comma-separated province codes')
     
-    cost = models.DecimalField(max_digits=10, decimal_places=2)
-    free_shipping_threshold = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, help_text='Free shipping above this amount')
-    estimated_days = models.CharField(max_length=50, blank=True)
-    is_active = models.BooleanField(default=True)
+#     cost = models.DecimalField(max_digits=10, decimal_places=2)
+#     free_shipping_threshold = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, help_text='Free shipping above this amount')
+#     estimated_days = models.CharField(max_length=50, blank=True)
+#     is_active = models.BooleanField(default=True)
     
-    class Meta:
-        ordering = ['cost']
+#     class Meta:
+#         ordering = ['cost']
     
-    def __str__(self):
-        return f"{self.name} - Rs. {self.cost}"
+#     def __str__(self):
+#         return f"{self.name} - Rs. {self.cost}"
 
 
 # -------------------------
@@ -813,9 +761,6 @@ class Slider(models.Model):
         return self.title or f"Slider {self.id}"
 
 
-# Banner model
-# Banner model
-from django.db import models
 
 class Banner(models.Model):
     PAGE_CHOICES = [
@@ -842,17 +787,41 @@ class Banner(models.Model):
         return self.title or f"Banner {self.id}"
 
 
-# Home page category Section
-class HomeCategory(models.Model):
-    title = models.CharField(max_length=150, help_text="Title displayed below the image")
-    image = models.ImageField(upload_to='home_categories/')
-    link = models.URLField(max_length=500, blank=True, null=True, help_text="Optional URL for this tile")
-    position = models.PositiveIntegerField(default=0, help_text="Order in which it appears on homepage")
-    is_active = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+# ===========================
+#   Signals 
+# ===========================
+
+
+@receiver(post_save, sender=Order)
+def credit_vendor_wallet_on_order_complete(sender, instance, **kwargs):
+    """
+    Credit vendor wallet when an order is delivered.
+    Deducts admin commission using VendorCommission.
+    """
+    if instance.status == 'delivered':
+        for item in instance.items.all():
+            vendor = item.vendor
+            if vendor:
+                # Get vendor-specific commission rate, or default if not set
+                vc = VendorCommission.objects.first()
+                rate = vc.rate
+                total_amount = Decimal(item.get_total())
+                admin_commission = (total_amount * rate).quantize(Decimal('0.01'))
+                vendor_earning = (total_amount - admin_commission).quantize(Decimal('0.01'))
+
+                # Credit vendor wallet
+                wallet, _ = VendorWallet.objects.get_or_create(vendor=vendor)
+                wallet.credit(vendor_earning)
 
 
 
-    def __str__(self):
-        return self.title
+@receiver(post_save, sender=VendorPayoutRequest)
+def process_vendor_payout_request(sender, instance, **kwargs):
+    """
+    Process vendor payout request by debiting vendor wallet if approved.
+    """
+    if instance.status == 'paid':
+        wallet, _ = VendorWallet.objects.get_or_create(vendor=instance.vendor)
+        wallet.debit(instance.requested_amount)
+    
+        

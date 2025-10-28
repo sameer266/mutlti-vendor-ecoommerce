@@ -94,63 +94,6 @@
     });
 
     // -------------------------------
-    // Cart Badge + Add to Cart Button
-    // -------------------------------
-    $(document).ready(function() {
-      let cartCount = 0;
-
-      // Quantity controls
-      $(document).on('click', '.increaseQty', function() {
-        let $input = $(this).siblings('.qtyInput');
-        $input.val((parseInt($input.val())||1)+1);
-      });
-
-      $(document).on('click', '.decreaseQty', function() {
-        let $input = $(this).siblings('.qtyInput');
-        let val = parseInt($input.val())||1;
-        if(val>1) $input.val(val-1);
-      });
-
-      // Add to cart
-      $(document).on('click', '.btn-primary.add-to-cart', function() {
-        let $card = $(this).closest('.product-card');
-        let qty = parseInt($card.find('.qtyInput').val()) || 1;
-        let productName = $card.find('h3').text();
-
-        cartCount += qty;
-        $('#desktopCartBadge').text(cartCount);
-        $('#mobileCartBadge').text(cartCount);
-
-        toastr.options = {
-          "closeButton": true,
-          "progressBar": true,
-          "positionClass": "toast-top-right",
-          "timeOut": "3000"
-        };
-        toastr.success(qty + " × " + productName + " added to cart!");
-      });
-
-      // Scroll Hide/Show Navbar
-      let lastScrollY = $(window).scrollTop();
-      const $topBar = $('#top-bar');
-      const $mainHeader = $('#main-header');
-      $topBar.css('transition','transform 0.3s ease');
-      $mainHeader.css('transition','transform 0.3s ease');
-
-      $(window).on('scroll', function() {
-        let currentScroll = $(this).scrollTop();
-        if(currentScroll > lastScrollY && currentScroll > 50) {
-          $topBar.css('transform','translateY(-100%)');
-          $mainHeader.css('transform','translateY(-100%)');
-        } else {
-          $topBar.css('transform','translateY(0)');
-          $mainHeader.css('transform','translateY(0)');
-        }
-        lastScrollY = currentScroll;
-      });
-    });
-
-    // -------------------------------
     // Backend Messages as Toastr
     // -------------------------------
     {% if messages %}

@@ -1,0 +1,87 @@
+{% extends 'dashboard/components/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="space-y-6">
+
+  <!-- Header -->
+  <div class="flex justify-between items-center">
+    <h1 class="text-2xl font-semibold text-gray-800 flex items-center gap-2">
+      <i class="fas fa-wallet text-green-600"></i> {{ vendor.shop_name }} Wallet
+    </h1>
+    <a href="{% url 'vendor_payout_requests_add' %}"
+       class="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition flex items-center gap-2">
+      <i class="fas fa-plus-circle"></i> Request Payout
+    </a>
+  </div>
+
+  <!-- Wallet Balance Card -->
+  <div class="bg-white rounded-xl shadow p-6 flex items-center justify-between">
+    <div class="flex items-center gap-4">
+      <i class="fas fa-coins text-4xl text-yellow-500"></i>
+      <div>
+        <p class="text-gray-500">Current Wallet Balance</p>
+        <p class="text-3xl font-bold text-green-600">Rs. {{ wallet.balance|floatformat:2 }}</p>
+      </div>
+    </div>
+    <div>
+      <span class="text-sm text-gray-400">Updated: {{ wallet.updated_at|date:"Y-m-d H:i" }}</span>
+    </div>
+  </div>
+
+  <!-- Delivered Orders -->
+  <h2 class="text-xl font-semibold mt-6 flex items-center gap-2">
+    <i class="fas fa-truck text-blue-500"></i> Delivered Orders
+  </h2>
+  <div class="bg-white rounded-xl shadow p-4 overflow-x-auto">
+    <table id="deliveredOrdersTable" class="w-full text-sm table-auto">
+      <thead class="bg-gray-100 text-gray-700 font-medium">
+        <tr>
+          <th class="px-4 py-2"><i class="fas fa-hashtag"></i> Order #</th>
+          <th class="px-4 py-2"><i class="fas fa-box-open"></i> Product</th>
+          <th class="px-4 py-2"><i class="fas fa-sort-numeric-up"></i> Quantity</th>
+          <th class="px-4 py-2"><i class="fas fa-coins"></i> Total (Rs.)</th>
+          <th class="px-4 py-2"><i class="fas fa-calendar-check"></i> Delivered At</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in orders %}
+        <tr class="hover:bg-gray-50">
+          <td class="px-4 py-2 font-medium">{{ item.order.order_number }}</td>
+          <td class="px-4 py-2">{{ item.product.name }}</td>
+          <td class="px-4 py-2">{{ item.quantity }}</td>
+          <td class="px-4 py-2">Rs. {{ item.get_total|floatformat:2 }}</td>
+          <td class="px-4 py-2">{{ item.order.delivered_at|date:"Y-m-d H:i" }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="5" class="text-center py-4 text-gray-500">No delivered orders yet.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  $(document).ready(function() {
+    $('#deliveredOrdersTable').DataTable({
+      pageLength: 10,
+      lengthChange: true,
+      searching: true,
+      ordering: true,
+      responsive: true,
+      language: { 
+        search: "_INPUT_", 
+        searchPlaceholder: "Search orders..." 
+      },
+      columnDefs: [
+        { orderable: false, targets: [] }
+      ]
+    });
+  });
+</script>
+{% endblock %}
