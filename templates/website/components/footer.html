@@ -8,21 +8,47 @@
         <h3 class="text-lg font-semibold mb-2">Have Questions?</h3>
         <div class="flex items-center space-x-3">
           <div class="text-[var(--primary)] text-xl"><i class="fa-solid fa-phone-rotary"></i></div>
-          <div>
-            <p class="text-sm">Reach us anytime</p>
-            <a href="tel:+61430967789" class="text-[var(--bg-brown)] font-medium hover:underline hover:text-[var(--primary)] transition">+61 430 967 789</a>
-          </div>
+          <div class="space-y-1">
+  <p class="text-sm text-gray-600">Reach us anytime</p>
+  <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
+    {% if organization.phone %}
+      <a href="tel:+977{{ organization.phone }}" 
+         class="text-[var(--bg-brown)] hover:text-[var(--primary)] transition underline-offset-2 hover:underline">
+ +977-{{ organization.phone }}
+      </a>
+    {% endif %}
+    
+    {% if organization.phone_secondary %}
+      <a href="tel:+977{{ organization.phone_secondary }}" 
+         class="text-[var(--bg-brown)]  hover:text-[var(--primary)] transition underline-offset-2 hover:underline">
+      +977-{{ organization.phone_secondary }}
+      </a>
+    {% endif %}
+  </div>
+</div>
+
         </div>
         <ul class="space-y-1 text-sm">
-          <li>Email: <a href="" class="hover:underline hover:text-[var(--primary)] transition">info@miterimart.com.au</a></li>
-          <li><a href="https://wa.me/61430967789" target="_blank" class="hover:underline hover:text-green-600 transition">Chat on WhatsApp</a></li>
+          <li>Email: <a href="" class="hover:underline hover:text-[var(--primary)] transition">{{organization.email}}</a></li>
+          <li><a href="https://wa.me/{{organization.phone}}" target="_blank" class="hover:underline hover:text-green-600 transition">Chat on WhatsApp</a></li>
         </ul>
         <div class="flex items-center space-x-3 mt-3">
           <span class="font-medium text-sm">Follow Us:</span>
-          <a href="https://www.facebook.com/MiteriMart" target="_blank" class="text-gray-600 hover:text-blue-600 transition"><i class="fa-brands fa-facebook-f"></i></a>
-          <a href="https://wa.me/61430967789" target="_blank" class="text-gray-600 hover:text-green-500 transition"><i class="fa-brands fa-whatsapp"></i></a>
-          <a href="https://www.instagram.com/miterimart" target="_blank" class="text-gray-600 hover:text-pink-500 transition"><i class="fa-brands fa-instagram"></i></a>
-          <a href="https://www.tiktok.com/@miteri.mart" target="_blank" class="text-gray-600 hover:text-black transition"><i class="fa-brands fa-tiktok"></i></a>
+          {% if organization.facebook %}
+          <a href="{{organization.facebook}}" target="_blank" class="text-gray-600 hover:text-blue-600 transition"><i class="fa-brands fa-facebook-f"></i></a>
+          {% endif %}
+          {% if organization.twitter %}
+          <a href="{{organization.twitter}}" target="_blank" class="text-gray-600 hover:text-sky-500 transition"><i class="fa-brands fa-twitter"></i></a>
+          {% endif %}
+          {% if organization.youtube %}
+          <a href="{{organization.youtube}}" target="_blank" class="text-gray-600 hover:text-red-600 transition"><i class="fa-brands fa-youtube"></i></a>
+          {% endif %}
+          {% if organization.instagram %}
+          <a href="{{organization.instagram}}" target="_blank" class="text-gray-600 hover:text-pink-500 transition"><i class="fa-brands fa-instagram"></i></a>
+          {% endif %}
+          {% if organization.tiktok %}
+          <a href="{{organization.tiktok}}" target="_blank" class="text-gray-600 hover:text-black transition"><i class="fa-brands fa-tiktok"></i></a>
+          {% endif %}
         </div>
       </div>
 
@@ -30,8 +56,7 @@
       <div class="space-y-4">
         <h3 class="text-lg font-semibold mb-2">More Information</h3>
         <ul class="space-y-2 text-sm">
-          <li><a href="https://miterimart.com.au/faqs" class="hover:text-[var(--primary)] hover:underline transition">FAQs</a></li>
-          <li><a href="https://miterimart.com.au/blogs" class="hover:text-[var(--primary)] hover:underline transition">Blogs</a></li>
+        
           <li><a href="https://miterimart.com.au/contacts" class="hover:text-[var(--primary)] hover:underline transition">Contact Us</a></li>
         </ul>
       </div>

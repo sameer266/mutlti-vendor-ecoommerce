@@ -3,14 +3,44 @@
   <div class="container mx-auto flex justify-between items-center px-4 py-2">
     <p>Welcome to Hello Bajar</p>
     <p>Need help? Call us:
-      <a href="tel:+61430967789" class="hover:text-[var(--primary)] font-semibold">
-        +61 430 967 789
+      <a href="tel:+{{organization.phone}} class="hover:text-[var(--primary)] font-semibold">
+        +{{organization.phone}}
       </a>
     </p>
     <ul class="hidden md:flex space-x-4">
-      <li><a href="#" class="hover:text-[var(--primary)] transition">FAQ</a></li>
-      <li><a href="#" class="hover:text-[var(--primary)] transition">Blog</a></li>
-      <li><a href="#" class="hover:text-[var(--primary)] transition">Contact</a></li>
+    
+  {% if organization.facebook %}
+    <a href="{{ organization.facebook }}" target="_blank" class="text-white hover:text-blue-800 transition text-xl">
+      <i class="fab fa-facebook"></i>
+    </a>
+  {% endif %}
+
+  {% if organization.instagram %}
+    <a href="{{ organization.instagram }}" target="_blank" class="text-white hover:text-pink-600 transition text-xl">
+      <i class="fab fa-instagram"></i>
+    </a>
+  {% endif %}
+
+  {% if organization.twitter %}
+    <a href="{{ organization.twitter }}" target="_blank" class="text-white hover:text-sky-700 transition text-xl">
+      <i class="fab fa-twitter"></i>
+    </a>
+  {% endif %}
+
+  {% if organization.youtube %}
+    <a href="{{ organization.youtube }}" target="_blank" class="text-white hover:text-red-700 transition text-xl">
+      <i class="fab fa-youtube"></i>
+    </a>
+  {% endif %}
+
+  {% if organization.tiktok %}
+    <a href="{{ organization.tiktok }}" target="_blank" class="text-white hover:text-black transition text-xl">
+      <i class="fab fa-tiktok"></i>
+    </a>
+  {% endif %}
+
+
+    
     </ul>
   </div>
 </div>

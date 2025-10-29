@@ -44,6 +44,7 @@
           <th class="px-4 py-3 text-left">Message</th>
           <th class="px-4 py-3 text-left">Requested At</th>
           <th class="px-4 py-3 text-left">Status</th>
+          <th class="px-4 py-3 text-left">Payment QR</th>
           <th class="px-4 py-3 text-left">Method</th>
           <th class="px-4 py-3 text-left">Txn ID</th>
           <th class="px-4 py-3 text-left">Remarks</th>
@@ -63,6 +64,13 @@
               <option value="rejected" {% if r.status == 'rejected' %}selected{% endif %}>Rejected</option>
               <option value="paid" {% if r.status == 'paid' %}selected{% endif %}>Paid</option>
             </select>
+          </td>
+          <td class="px-4 py-3">
+            {% if r.vendor.qr_image %}
+              <a href=" {{r.vendor.qr_image.url}}"><img src="{{ r.vendor.qr_image.url }}" alt="QR Code" class="h-12 w-12 object-contain">  </a>
+            {% else %}
+              -
+            {% endif %}
           </td>
           <td class="px-4 py-3">
             <input type="text" class="border border-gray-300 rounded px-2 py-1 text-xs w-full method-input" value="{{ r.method|default:'' }}">

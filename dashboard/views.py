@@ -694,7 +694,7 @@ def admin_payments_overview(request):
         'date_to': date_to,
     }
 
-    return render(request, 'dashboard/pages/vendor/overview.html', context)
+    return render(request, 'dashboard/pages/payment/overview.html', context)
 
 
 
@@ -751,7 +751,7 @@ def admin_vendor_payments_detail(request, vendor_id):
             'commission_rate_percent': (commission_rate * 100).quantize(Decimal('0.01')),
         }
 
-        return render(request, 'dashboard/pages/vendor/vendor_detail.html', context)
+        return render(request, 'dashboard/pages/payment/payment_detail.html', context)
 
 
 # Payout Requests
@@ -1097,12 +1097,13 @@ def admin_banner_update(request, pk):
         return redirect('admin_banners_list')
     return render(request, 'dashboard/pages/content/banner_update.html', {'banner': banner,'page_choices':Banner.PAGE_CHOICES})
 
+
+
 @admin_required
 def admin_banner_delete(request, pk):
     banner = get_object_or_404(Banner, pk=pk)
     banner.delete()
     return redirect('admin_banners_list')
-
 
 
 # Coupon Management
@@ -1167,11 +1168,17 @@ def admin_organization_view(request):
 @admin_required
 def admin_organization_update(request):
     organization = Organization.objects.first()
+    if organization is None:
+        organization = Organization.objects.create(
+            name='',
+            phone='',
+            address='',
+            email=''
+        )
     if request.method == 'POST':
+        print(request.POST)
         organization.name = request.POST.get('name')
-        organization.tagline = request.POST.get('tagline', '')
-        organization.email = request.POST.get('email')
-        organization.phone = request.POPST.get('phone')
+        organization.phone = request.POST.get('phone')
         organization.phone_secondary = request.POST.get('phone_secondary', '')
         organization.address = request.POST.get('address')
         organization.facebook = request.POST.get('facebook', '')
@@ -1181,8 +1188,6 @@ def admin_organization_update(request):
         organization.tiktok = request.POST.get('tiktok', '')
         if request.FILES.get('logo'):
             organization.logo = request.FILES['logo']
-        if request.FILES.get('favicon'):
-            organization.favicon = request.FILES['favicon']
         organization.save()
         return redirect('admin_organization_view')
     return render(request, 'dashboard/pages/organization/edit_organization.html', {'organization': organization})

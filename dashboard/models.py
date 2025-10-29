@@ -653,9 +653,7 @@ class CouponUsage(models.Model):
 class Organization(models.Model):
     # Basic Info
     name = models.CharField(max_length=200, default="My Store")
-    tagline = models.CharField(max_length=255, blank=True)
     logo = models.ImageField(upload_to='org/', blank=True, null=True)
-    favicon = models.ImageField(upload_to='org/', blank=True, null=True)
     
     # Contact
     email = models.EmailField()

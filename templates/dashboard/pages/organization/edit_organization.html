@@ -23,12 +23,7 @@
              class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500">
     </div>
 
-    <!-- Tagline -->
-    <div>
-      <label class="block text-gray-700 font-medium mb-1">Tagline</label>
-      <input type="text" name="tagline" value="{{ organization.tagline }}"
-             class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500">
-    </div>
+   
 
     <!-- Email -->
     <div>
@@ -68,15 +63,7 @@
              class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500">
     </div>
 
-    <!-- Favicon -->
-    <div>
-      <label class="block text-gray-700 font-medium mb-1">Favicon</label>
-      {% if organization.favicon %}
-        <img src="{{ organization.favicon.url }}" alt="Favicon" class="h-10 mb-2 border rounded-lg">
-      {% endif %}
-      <input type="file" name="favicon" accept="image/*"
-             class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500">
-    </div>
+  
 
     <!-- Social Links -->
     <div class="md:col-span-2 border-t pt-4">

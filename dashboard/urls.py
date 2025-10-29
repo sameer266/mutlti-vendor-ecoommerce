@@ -20,6 +20,8 @@ urlpatterns = [
     path('vendors/<int:pk>/delete/', views.admin_vendor_delete, name='admin_vendor_delete'),
     path('vendors/<int:pk>/status/', views.admin_vendor_change_status, name='admin_vendor_change_status'),
 
+    
+    # Payment Management
     path('payments/', views.admin_payments_overview, name='admin_payments_overview'),
     path('payments/vendor/<int:vendor_id>/', views.admin_vendor_payments_detail, name='admin_vendor_payments_detail'),
 
