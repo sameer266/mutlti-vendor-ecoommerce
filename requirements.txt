@@ -51,6 +51,7 @@ httptools==0.6.4
 hyperlink==21.0.0
 idna==3.10
 incremental==24.7.2
+joblib==1.5.2
 kombu==5.5.4
 msgpack==1.1.1
 multidict==6.5.0
@@ -58,6 +59,7 @@ nepali-datetime==1.0.8.3
 numpy==2.3.0
 oauthlib==3.3.0
 packaging==25.0
+pandas==2.3.3
 pillow==11.2.1
 prompt_toolkit==3.0.51
 propcache==0.3.2
@@ -70,10 +72,13 @@ python-dateutil==2.9.0.post0
 python-decouple==3.8
 python-dotenv==1.1.1
 python3-openid==3.2.0
+pytz==2025.2
 PyYAML==6.0.2
 redis==6.2.0
 requests==2.32.4
 requests-oauthlib==2.0.0
+scikit-learn==1.7.2
+scipy==1.16.2
 service-identity==24.2.0
 setuptools==80.9.0
 six==1.17.0
@@ -82,6 +87,7 @@ social-auth-app-django==5.4.3
 social-auth-core==4.6.1
 soupsieve==2.7
 sqlparse==0.5.3
+threadpoolctl==3.6.0
 Twisted==25.5.0
 txaio==23.1.1
 typing_extensions==4.14.0
