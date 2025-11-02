@@ -3,10 +3,7 @@
 
 {% block content %}
 <div class="bg-white rounded-xl shadow p-6">
-  <div class="flex justify-between items-center mb-6">
-    <h1 class="text-2xl font-semibold text-gray-800">Orders</h1>
-    <a href="#" class="opacity-60 cursor-not-allowed text-sm">Add Order (disabled)</a>
-  </div>
+
 
   <!-- Filters -->
   <form method="get" class="mb-4 grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -33,7 +30,7 @@
 
   <!-- Orders Table -->
   <div class="overflow-x-auto">
-    <table class="w-full border border-gray-200 rounded-lg text-sm">
+    <table  id="orderTable" class="w-full border border-gray-200 rounded-lg text-sm">
       <thead class="bg-gray-100">
         <tr>
           <th class="px-4 py-3 text-left">Order #</th>
@@ -111,6 +108,19 @@ function getCookie(name) {
     if (parts.length === 2) return parts.pop().split(';').shift();
 }
 
+ $(document).ready(function() {
+    $('#orderTable').DataTable({
+      pageLength: 10,
+      lengthChange: true,
+      searching: false,
+      ordering: true,
+      responsive: true,
+     
+      columnDefs: [
+        { orderable: false, targets: [5] } // Actions column
+      ]
+    });
+  });
 // Update status/payment
 $(document).on('change', '.status-select, .payment-select', function(){
     const row = $(this).closest('tr');

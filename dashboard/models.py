@@ -11,9 +11,9 @@ from django.dispatch import receiver
 
 class OTPVerification(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    otp_code = models.CharField(max_length=6)
+    otp_code = models.CharField(max_length=6,null=True,blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    expires_at = models.DateTimeField()
+    expires_at = models.DateTimeField(null=True,blank=True)
 
     def is_expired(self):
         return timezone.now() > self.expires_at

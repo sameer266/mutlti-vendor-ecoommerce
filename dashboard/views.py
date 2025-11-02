@@ -211,7 +211,7 @@ def admin_vendor_add(request):
                 message=f'Hello {user.first_name},\n\nYour vendor account has been created successfully.\n'
                         f'Password: {random_password}\n\n'
                         f'Please change your password after logging in.',
-                from_email=settings.DEFAULT_FROM_EMAIL,
+                from_email='hellobaja.com.np',
                 recipient_list=[user.email],
                 fail_silently=True,
             )

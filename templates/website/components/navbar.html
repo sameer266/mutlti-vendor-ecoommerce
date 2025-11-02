@@ -176,7 +176,7 @@
       <span>New</span>
     </a>
 
-    <a href="{% url 'customer_profile' %}" class="flex flex-col items-center gap-1 transition-all duration-200 {% if request.path == '/profile/' %}text-[var(--primary)] scale-110{% else %}hover:text-[var(--primary)]{% endif %}">
+    <a href="{% if user.is_authenticated %} {% url 'customer_profile' %} {%else%} {% url 'login_page'%} {% endif %}" class="flex flex-col items-center gap-1 transition-all duration-200 {% if request.path == '/login/' %}text-[var(--primary)] scale-110{% else %}hover:text-[var(--primary)]{% endif %}">
       <i class="fa-regular fa-user text-lg"></i>
       <span>Account</span>
     </a>

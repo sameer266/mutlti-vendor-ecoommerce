@@ -91,11 +91,9 @@
              class="text-sm text-[var(--text-primary)] line-clamp-2 hover:underline">
              {{ product.name }}
           </a>
-          {% if product.in_stock %}
-          <span class="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full">In Stock</span>
-          {% else %}
-          <span class="text-xs px-2 py-1 bg-red-100 text-red-700 rounded-full">Out of Stock</span>
-          {% endif %}
+        <p class="text-xs font-medium {% if product.in_stock %}text-green-600{% else %}text-red-600{% endif %}">
+                {% if product.in_stock %}In Stock{% else %}Out of Stock{% endif %}
+              </p>
         </div>
 
         <div class="flex items-center gap-2">
@@ -200,11 +198,9 @@
           <a href="{% url 'product_details' product.slug %}" class="text-sm text-[var(--text-primary)] line-clamp-2 hover:underline">
             {{ product.name }}
           </a>
-          {% if product.in_stock %}
-          <span class="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full">In Stock</span>
-          {% else %}
-          <span class="text-xs px-2 py-1 bg-red-100 text-red-700 rounded-full">Out of Stock</span>
-          {% endif %}
+         <p class="text-xs font-medium {% if product.in_stock %}text-green-600{% else %}text-red-600{% endif %}">
+                {% if product.in_stock %}In Stock{% else %}Out of Stock{% endif %}
+              </p>
         </div>
 
         <div class="flex items-center gap-2">

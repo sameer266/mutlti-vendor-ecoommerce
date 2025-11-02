@@ -7,7 +7,7 @@ from dashboard.models import (
     Slider,
     Banner,
     Category,
-    Product,Cart,Vendor,ProductVariant,OTPVerification,Order,OrderItem,Coupon,CouponUsage
+    Product,Cart,Vendor,ProductVariant,OTPVerification,Order,OrderItem,Coupon,CouponUsage,Contact,
 )
 from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
 from  django.contrib import messages
@@ -23,6 +23,11 @@ from django.contrib.auth.decorators import login_required
 from datetime import timedelta
 from django.db.models import Q
 from django.conf import settings
+from django.core.mail import send_mail
+import random
+from django.contrib.auth.decorators import login_required
+
+
 
 
 from .recommender import get_recommendations
@@ -643,30 +648,7 @@ def product_details(request, slug):
         return redirect('home')
 
 
-# -------------------------
-# User Authentication
-# -------------------------
-def register_view(request):
-    if request.method == 'POST':
-        username = request.POST.get('username')
-        email = request.POST.get('email')
-        password = request.POST.get('password')
-        phone = request.POST.get('phone')
-        
-        # Create user
-        user = User.objects.create_user(username=username, email=email, password=password)
-        
-        # Create user role (default: customer)
-        UserRole.objects.create(user=user, role='customer')
-        
-        # Create user profile
-        UserProfile.objects.create(user=user, phone=phone)
-        
-        # Auto login
-        auth_login(request, user)
-        return redirect('home')
-    
-    return render(request, 'register.html')
+
 
 
 def login_page(request):
@@ -693,14 +675,7 @@ def login_page(request):
     return render(request,'website/pages/login.html')
 
 
-def logout_view(request):
-    auth_logout(request)
-    messages.success(request,'Logout Successfull')
-    return redirect('login_page')
-    
-    
-from django.core.mail import send_mail
-import random
+
 
 def signup_page(request):
     if request.method == "POST":
@@ -717,24 +692,24 @@ def signup_page(request):
                 email=email,
                 password=password1,
                 first_name=full_name,
-                is_active=False  # temporarily deactivate until OTP verified
+                is_active=False  
             )
 
             # Generate OTP
             otp = str(random.randint(100000, 999999))
             expiry_time = timezone.now() + timezone.timedelta(minutes=5)
 
-            OTPVerification.objects.create(
+            otp_obj,_=OTPVerification.objects.get_or_create(
                 user=user,
-                otp_code=otp,
-                expires_at=expiry_time
+    
             )
-
-            # Send OTP email
+            otp_obj.otp_code=otp
+            otp_obj.expires_at=expiry_time
+            otp_obj.save()
             send_mail(
                 subject="Your Hello Bajar OTP Verification Code",
                 message=f"Hello {full_name},\n\nYour OTP code is: {otp}\nIt expires in 5 minutes.",
-                from_email="hellobajar.com.np",
+                from_email="hellobajar@gmail.com",
                 recipient_list=[email],
                 fail_silently=False,
             )
@@ -747,15 +722,70 @@ def signup_page(request):
     return render(request, 'website/pages/signup.html')
 
 
+
+def forget_password(request):
+    if request.method == "POST":
+        email=request.POST.get('email')
+        try:
+            user=User.objects.get(email=email)
+        except User.DoesNotExist:
+            messages.error(request,'No account found with that email')
+            return render(request,'website/pages/forget.html')
+        otp=str(random.randint(100000,999999))
+        expiry_time=timezone.now() + timezone.timedelta(minutes=5)
+        otp_obj,_=OTPVerification.objects.get_or_create(
+            user=user    
+        )
+        otp_obj.otp_code=otp
+        otp_obj.expires_at=expiry_time
+        otp_obj.save()
+        send_mail(
+            subject="Your Password Reset OTP",
+            message=f"Your OTP for password reset is {otp} . It will expire in 5 minutes.",
+            from_email="hellobajar@gmail.com",
+            recipient_list=[email],
+            fail_silently=False
+            
+        )
+        request.session['user_email']=email
+        messages.success(request,'OTP sent to your email')
+        return redirect('verify_otp_page')
+    return render(request,'website/pages/forget.html')
+
+
+def set_password_view(request):
+    email=request.session.get('user_email')
+    if not email:
+        messages.error(request,'Session expired. Please try again ')
+        return redirect('forget_password')
+    if request.method  == "POST":
+        new_password=request.POST.get('new_password')
+        try:
+            user=User.objects.get(email=email)
+            user.set_password(new_password)
+            user.save()
+            
+            del request.session['user_email']
+            otp=OTPVerification.objects.get(user=user)
+            otp.delete()
+            
+            messages.success(request,'Password changed successfully. Please Login')
+            return redirect('login_page')
+        except User.DoesNotExist:
+            messages.error(request,'User not found')
+            return redirect('forget_password')
+    return render(request,'website/pages/set_password.html')
+
+
+
 def verify_otp_page(request):
     email = request.session.get('user_email')
-
     try:
         user = User.objects.get(email=email)
         otp_obj = OTPVerification.objects.get(user=user)
     except (User.DoesNotExist, OTPVerification.DoesNotExist):
         messages.error(request, "Invalid request.")
-        return redirect('signup_page')
+        return redirect('login_page')
 
     if request.method == "POST":
         entered_otp = request.POST.get('otp', '').strip()
@@ -768,9 +798,14 @@ def verify_otp_page(request):
         if entered_otp == otp_obj.otp_code:
             user.is_active = True
             user.save()
-            UserRole.objects.create(role="customer",user=user)
-            otp_obj.delete()
-            auth_login(request, user)
+            if User.objects.filter(email=email).exists():
+                messages.success(request,'Otp is verified')
+                return redirect('set_password')
+            else:
+                UserRole.objects.create(role="customer",user=user)
+                otp_obj.delete()
+                del request.session['user_email']
+                auth_login(request, user)
             messages.success(request, "Your account has been verified successfully!")
             return redirect('login_page')
         else:
@@ -779,11 +814,39 @@ def verify_otp_page(request):
     return render(request, 'website/pages/otp.html', {'email': email})
 
 
+def logout_view(request):
+    auth_logout(request)
+    messages.success(request,'Logout Successfull')
+    return redirect('login_page')
+
+
+
+def contact_view(request):
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        email = request.POST.get('email')
+        phone = request.POST.get('phone')
+        subject = request.POST.get('subject')
+        message_text = request.POST.get('message')
+        Contact.objects.create(
+                name=name,
+                email=email,
+                phone=phone,
+                subject=subject,
+                message=message_text
+            )
+        messages.success(request, "Your message has been sent successfully!")
+        return redirect('contact')
+       
+
+    return render(request, 'website/pages/contact.html')
+
+    
+
+
 # =============================
 #  Customer Dashboard
 # =============================
-from django.contrib.auth.decorators import login_required
-
 
 @login_required
 def customer_profile(request):

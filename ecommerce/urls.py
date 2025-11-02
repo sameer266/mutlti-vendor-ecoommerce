@@ -45,11 +45,16 @@ urlpatterns = [
     path('checkout/', views.checkout, name='checkout_page'),
     path('apply-coupon/', views.apply_coupon, name='apply_coupon'),
     path('order-confirmation/<int:order_id>/', views.order_confirmation, name='order_confirmation'),
- 
+    
+    
     
     path("login/",views.login_page,name="login_page"),
     path("signup/",views.signup_page,name='signup_page'),
+    path("forget-password/",views.forget_password,name="forget_password"),
+    path('set-password',views.set_password_view,name="set_password"),
     path("logout",views.logout_view,name="logout"),
+    path('contact/',views.contact_view,name='contact'),
+    
     path('verify-otp/', views.verify_otp_page, name='verify_otp_page'),
     
     

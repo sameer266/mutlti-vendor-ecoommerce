@@ -26,3 +26,5 @@ admin.site.register(VendorWallet)
 
 admin.site.register(Slider)
 admin.site.register(Banner)
+
+admin.site.register(OTPVerification)

@@ -6,9 +6,22 @@
   <meta name="description" content="Your modern ecommerce store for quality products">
   <meta name="theme-color" content="#bd5e00ff">
   
-  <link rel="icon" type="image/png" href="{{organization.logo.url}}" />
+  <link rel="icon" type="image/png" href="{{ organization.logo.url }}" />
   <title>{% block title %} Hello Bajar {% endblock %}</title>
 
+  <!-- Social Preview (Open Graph) -->
+  <meta property="og:title" content=" Hello Bajar ">
+  <meta property="og:description" content="Your modern ecommerce store for quality products">
+  <meta property="og:image" content="{{ organization.logo.url }}">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="{{ request.build_absolute_uri }}">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Hello Bajar ">
+  <meta name="twitter:description" content="Your modern ecommerce store for quality products">
+  <meta name="twitter:image" content="{{ organization.logo.url }}">
+  <meta name="twitter:site" content="@YourTwitterHandle">
 
   <!-- External CSS Libraries -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
@@ -39,7 +52,6 @@
       --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
     }
 
-
     body, p, span, li, button, input {
       font-family:  'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     }
@@ -55,6 +67,7 @@
 
   {% block extra_head %}{% endblock %}
 </head>
+
 <body class="min-h-screen flex flex-col">
 
   <!-- Navbar -->
