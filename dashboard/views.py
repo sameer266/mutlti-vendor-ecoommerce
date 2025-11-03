@@ -9,7 +9,7 @@ from django.contrib import messages
 from .models import (
     UserRole,  Vendor, Category, Product, ProductImage, ProductVariant, Order, OrderItem, 
     Review, Coupon,  Organization, Newsletter, Contact, 
-    Notification, Slider, Banner, VendorCommission, VendorPayoutRequest,VendorWallet,VendorCommission
+    Notification, Slider, Banner, VendorCommission, VendorPayoutRequest,VendorWallet,VendorCommission,ShippingCost
 )
 
 # Helper decorator to check admin access
@@ -972,6 +972,35 @@ def admin_contact_delete(request, pk):
 
 
 
+# Shipping Cost Management
+@admin_required
+def shipping_cost_view(request):
+    shipping_cost = ShippingCost.objects.first()  # get the only record
+    return render(request, 'dashboard/pages/shipping/shipping_list.html', {
+        'shipping_cost': shipping_cost
+    })
+
+
+@admin_required
+def shipping_cost_edit(request, pk):
+    shipping_cost = get_object_or_404(ShippingCost, pk=pk)
+
+    if request.method == "POST":
+        cost = request.POST.get("cost")
+        tax = request.POST.get("tax")
+
+        shipping_cost.cost = cost
+        shipping_cost.tax = tax
+        shipping_cost.save()
+
+        messages.success(request, "Shipping cost updated successfully.")
+        return redirect("admin_shipping_cost_view")
+
+    return render(request, "dashboard/pages/shipping/shipping_edit.html", {
+        "shipping_cost": shipping_cost
+    })
+
+
 # Newsletter Management
 @admin_required
 def admin_newsletter_list(request):
@@ -1554,6 +1583,36 @@ def vendor_orders_delivered(request):
     })
     
 
+from django.utils.dateparse import parse_date
+
+@login_required
+def vendor_update_estimated_date(request, order_number):
+    """
+    JSON API to update estimated_delivery_date of an order
+    """
+    if request.method == "POST":
+        new_date_str = request.POST.get("estimated_date")
+        if not new_date_str:
+            return JsonResponse({"success": False, "message": "No date provided."})
+
+        order = Order.objects.filter(order_number=order_number).first()
+        if not order:
+            return JsonResponse({"success": False, "message": "Order not found."})
+
+        # Parse date from string
+        try:
+            new_date = parse_date(new_date_str)
+            if not new_date:
+                raise ValueError
+            order.estimated_delivery_date = new_date
+            order.save()
+            return JsonResponse({"success": True, "message": "Estimated delivery date updated."})
+        except ValueError:
+            return JsonResponse({"success": False, "message": "Invalid date format."})
+
+    return JsonResponse({"success": False, "message": "Invalid request method."})
+
+
 # Vendor Payouts
 @login_required
 def vendor_payouts_list(request):
@@ -1684,6 +1743,16 @@ def vendor_wallet_view(request):
     }
     
     return render(request, 'vendor/wallet/wallet.html', context)
+
+
+
+
+#  Vendor Product Review
+@login_required
+def vendor_reviews_list(request):
+    vendor=Vendor.objects.get(user=request.user)
+    reviews = Review.objects.filter(product__vendor=vendor).order_by('-created_at')
+    return render(request, 'vendor/review/reviews_list.html', {'reviews': reviews})
 
 
 # Vendor Profile

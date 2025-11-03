@@ -102,11 +102,15 @@
         </div>
         <div class="flex justify-between">
           <span class="text-[var(--text-secondary)]">Shipping</span>
-          <span class="font-semibold text-[var(--text-primary)]">Rs {{ order.shipping_cost|floatformat:2 }}</span>
+          {% if shipping_cost == 0 %}
+          <span class="font-semibold text-[var(--success)]">Free</span>
+          {% else %}
+          <span class="font-semibold text-[var(--text-primary)]">Rs {{ shipping_cost|floatformat:2 }}</span>
+          {% endif %}
         </div>
         <div class="flex justify-between">
-          <span class="text-[var(--text-secondary)]">Tax</span>
-          <span class="font-semibold text-[var(--text-primary)]">Rs {{ order.tax|floatformat:2 }}</span>
+          <span class="text-[var(--text-secondary)]">Tax ({{tax_rate}}%)</span>
+          <span class="font-semibold text-[var(--text-primary)]">Rs {{ tax_amount|floatformat:2 }}</span>
         </div>
         {% if order.discount > 0 %}
         <div class="flex justify-between">
@@ -126,14 +130,14 @@
         <h3 class="text-lg font-semibold text-[var(--text-primary)] mb-3">Order Items</h3>
         {% for item in order.items.all %}
         <div class="flex items-center gap-3 p-3 bg-white rounded">
-          <img src="{{ item.product_image.url }}" alt="{{ item.product_name }}" class="w-16 h-16 object-cover rounded">
+          <img src="{{ item.product.main_image.url }}" alt="{{ item.product_name }}" class="w-16 h-16 object-cover rounded">
           <div class="flex-1">
             <h4 class="font-medium text-[var(--text-primary)]">{{ item.product_name }}</h4>
             {% if item.variant_name %}
             <p class="text-sm text-[var(--text-secondary)]">{{ item.variant_name }}</p>
             {% endif %}
             <p class="text-sm font-semibold text-[var(--success)]">Rs {{ item.price|floatformat:2 }} x {{ item.quantity }}</p>
-            <p class="text-xs text-[var(--text-secondary)]">Fulfillment: {{ item.get_fulfillment_status_display }}</p>
+           
           </div>
         </div>
         {% endfor %}

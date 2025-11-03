@@ -126,11 +126,7 @@
           </div>
         </div>
 
-        <!-- Order Notes -->
-        <div>
-          <textarea name="notes" placeholder="Order Notes (Optional)" rows="3" 
-                    class="w-full p-3 border border-[var(--text-secondary)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"></textarea>
-        </div>
+     
 
         <!-- Terms -->
         <div class="flex items-start">
@@ -174,12 +170,19 @@
           </div>
           <div class="flex justify-between">
             <span class="text-[var(--text-secondary)]">Shipping</span>
-            <span class="font-semibold text-[var(--success)]">Rs {{ shipping_cost|floatformat:2 }}</span>
+        <span class="font-semibold text-[var(--success)]">
+        {% if shipping_cost == 0 %}
+            Free
+        {% else %}
+            Rs {{ shipping_cost|floatformat:2 }}
+        {% endif %}
+    </span>
           </div>
-          <div class="flex justify-between">
-            <span class="text-[var(--text-secondary)]">Tax</span>
-            <span class="font-semibold text-[var(--text-primary)]">Rs {{ tax|floatformat:2 }}</span>
-          </div>
+         <div class="flex justify-between">
+  <span class="text-[var(--text-secondary)]">Tax ({{ tax_rate }}%)</span>
+  <span class="font-semibold text-[var(--text-primary)]">Rs {{ tax|floatformat:2 }}</span>
+</div>
+
           {% if discount > 0 %}
           <div class="flex justify-between">
             <span class="text-[var(--text-secondary)]">Discount ({{ coupon.code }})</span>
@@ -222,13 +225,82 @@
 
 {% block extra_js %}
 <script>
-$(document).ready(function() {
-  // Form validation
-  $('#checkoutForm').on('submit', function(e) {
-    const terms = $('#terms').is(':checked');
-    if (!terms) {
+$(document).ready(function () {
+
+  // ========== APPLY COUPON ==========
+  $('#applyCoupon').on('click', function () {
+    const couponCode = $('#couponCode').val().trim();
+
+    if (!couponCode) {
+      toastr.error('Please enter a coupon code.');
+      return;
+    }
+
+    // Disable button and show loader
+    const $btn = $(this);
+    $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Applying...');
+
+    $.ajax({
+      url: '{% url "apply_coupon" %}',
+      type: 'POST',
+      data: {
+        coupon_code: couponCode,
+        action: 'apply',
+        csrfmiddlewaretoken: $('[name=csrfmiddlewaretoken]').val(),
+      },
+      success: function (response) {
+        if (response.success) {
+          toastr.success(response.message);
+          setTimeout(() => location.reload(), 800); // reload after short delay
+        } else {
+          toastr.warning(response.message);
+        }
+      },
+      error: function (xhr) {
+        const msg = xhr.responseJSON?.message || 'Something went wrong. Please try again.';
+        toastr.error(msg);
+      },
+      complete: function () {
+        $btn.prop('disabled', false).html('Apply');
+      }
+    });
+  });
+
+  // ========== REMOVE COUPON ==========
+  $('#removeCoupon').on('click', function () {
+    const $btn = $(this);
+    $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Removing...');
+
+    $.ajax({
+      url: '{% url "apply_coupon" %}',
+      type: 'POST',
+      data: {
+        action: 'remove',
+        csrfmiddlewaretoken: $('[name=csrfmiddlewaretoken]').val(),
+      },
+      success: function (response) {
+        if (response.success) {
+          toastr.success(response.message);
+          setTimeout(() => location.reload(), 800);
+        } else {
+          toastr.warning(response.message);
+        }
+      },
+      error: function (xhr) {
+        const msg = xhr.responseJSON?.message || 'An error occurred while removing the coupon.';
+        toastr.error(msg);
+      },
+      complete: function () {
+        $btn.prop('disabled', false).html('Remove');
+      }
+    });
+  });
+
+  // ========== FORM VALIDATION ==========
+  $('#checkoutForm').on('submit', function (e) {
+    if (!$('#terms').is(':checked')) {
       e.preventDefault();
-      toastr.error('Please agree to the terms and conditions');
+      toastr.error('Please agree to the terms and conditions before placing your order.');
       return false;
     }
 
@@ -237,63 +309,6 @@ $(document).ready(function() {
     return true;
   });
 
-  // Apply coupon
-  $('#applyCoupon').on('click', function() {
-    const couponCode = $('#couponCode').val().trim();
-    if (!couponCode) {
-      toastr.error('Please enter a coupon code');
-      return;
-    }
-
-    $.ajax({
-      url: '{% url "apply_coupon" %}',
-      method: 'POST',
-      headers: {
-        'X-CSRFToken': $('[name=csrfmiddlewaretoken]').val() || $('meta[name=csrf-token]').attr('content')
-      },
-      data: { coupon_code: couponCode, action: 'apply' },
-      success: function(response) {
-        if (response.success) {
-          toastr.success(response.message);
-          location.reload(); // Reload to update totals
-        } else {
-          toastr.error(response.message);
-        }
-      },
-      error: function() {
-        toastr.error('An error occurred while applying the coupon');
-      }
-    });
-  });
-
-  // Remove coupon
-  $('#removeCoupon').on('click', function() {
-    $.ajax({
-      url: '{% url "apply_coupon" %}',
-      method: 'POST',
-      headers: {
-        'X-CSRFToken': $('[name=csrfmiddlewaretoken]').val() || $('meta[name=csrf-token]').attr('content')
-      },
-      data: { action: 'remove' },
-      success: function(response) {
-        if (response.success) {
-          toastr.success(response.message);
-          location.reload(); // Reload to update totals
-        } else {
-          toastr.error(response.message);
-        }
-      },
-      error: function() {
-        toastr.error('An error occurred while removing the coupon');
-      }
-    });
-  });
-
-  // Payment method change
-  $('input[name="payment_method"]').on('change', function() {
-    const method = $(this).val();
-    console.log('Selected payment:', method);
-  });
 });
 </script>
 {% endblock %}

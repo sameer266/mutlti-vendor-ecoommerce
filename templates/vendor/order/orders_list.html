@@ -39,6 +39,8 @@
           <th class="px-4 py-3 text-left">Total</th>
           <th class="px-4 py-3 text-left">Payment</th>
           <th class="px-4 py-3 text-left">Status</th>
+          <th class="px-4 py-3 text-left">Estimated Delivery Date</th>
+          <th class="px-4 py-3 text-left">Delivered At</th>
           <th class="px-4 py-3 text-left">Created</th>
           <th class="px-4 py-3 text-center">Actions</th>
         </tr>
@@ -67,6 +69,13 @@
               {% endfor %}
             </select>
           </td>
+          <td class="px-4 py-3 flex items-center gap-2">
+    <input type="date" class="estimated-date border rounded p-1" value="{{ order.estimated_delivery_date|date:'Y-m-d' }}">
+    <button class="update-estimated-btn bg-blue-500 text-white px-2 py-1 rounded text-sm" data-id="{{ order.order_number }}">
+        Update
+    </button>
+</td>
+          <td class="px-4 py-3">{{ order.delivered_at|date:"Y-m-d H:i" }}</td>
           <td class="px-4 py-3">{{ order.created_at|date:"Y-m-d H:i" }}</td>
           <td class="px-4 py-3 text-center flex justify-center gap-3">
             <!-- View Items -->
@@ -135,9 +144,9 @@ $(document).on('change', '.status-select, .payment-select', function(){
         headers: { 'X-CSRFToken': getCookie('csrftoken') },
         success: function(resp){
             if (resp.success) location.reload();
-            else alert('Failed to update order');
+            else toastr.error('Failed to update order');
         },
-        error: function(){ alert('Server error updating order'); }
+        error: function(){ toastr.error('Server error updating order'); }
     });
 });
 
@@ -147,7 +156,7 @@ $(document).on('click', '.view-items-btn', function(e){
     const orderNumber = $(this).data('id');
 
     $.get(`{% url 'admin_order_items_json' 'ORD00000000000000' %}`.replace('ORD00000000000000', orderNumber), function(resp){
-        if (!resp.success) { alert('Failed to load items'); return; }
+        if (!resp.success) {toastr.error('Failed to load items'); return; }
 
         const rows = resp.items.map(it => {
             const variantsHtml = it.all_variants.length ? `
@@ -194,6 +203,30 @@ $(document).on('click', '.view-items-btn', function(e){
                 </div>
             </div>`;
         $('body').append(modal);
+    });
+});
+
+
+// Update Estimated Delivery Date
+$(document).on('click', '.update-estimated-btn', function(){
+    const button = $(this);
+    const row = button.closest('tr');
+    const orderNumber = button.data('id');
+    const estimatedDate = row.find('.estimated-date').val();
+
+    $.ajax({
+        url: `{% url 'vendor_update_estimated_date' 'ORD00000000000000' %}`.replace('ORD00000000000000', orderNumber),
+        type: 'POST',
+        data: { estimated_date: estimatedDate },
+        headers: { 'X-CSRFToken': getCookie('csrftoken') },
+        success: function(resp){
+            if (resp.success) {
+                toastr.success('Estimated delivery date updated successfully.');
+            } else {
+                toastr.error('Failed to update estimated delivery date.');
+            }
+        },
+        error: function(){ toastr.error('Server error updating estimated delivery date'); }
     });
 });
 

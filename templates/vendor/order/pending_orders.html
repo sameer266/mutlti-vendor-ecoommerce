@@ -92,9 +92,9 @@ $(document).on('change', '.status-select', function(){
     headers: { 'X-CSRFToken': getCookie('csrftoken') },
     success: function(resp){
       if(resp.success) location.reload();
-      else alert('Failed to update order status');
+      else toastr.error('Failed to update order status');
     },
-    error: function(){ alert('Server error updating order'); }
+    error: function(){ toastr.error('Server error updating order'); }
   });
 });
 </script>

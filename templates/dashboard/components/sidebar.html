@@ -247,6 +247,14 @@
         </a>
       </li>
 
+      <li>
+  <a href="{% url 'admin_shipping_cost' %}" 
+     class="sidebar-link flex items-center px-4 py-2 rounded-md text-gray-600 font-medium hover:bg-gray-100 transition-all duration-200">
+    <i class="fas fa-truck w-6 text-center text-gray-500 mr-3"></i>
+    <span>Shipping Cost</span>
+  </a>
+</li>
+
       <!-- Newsletter Management -->
       <li>
         <a href="{% url 'admin_newsletter_list' %}" class="sidebar-link flex items-center px-4 py-2 rounded-md text-gray-600 font-medium hover:bg-gray-100 transition-all duration-200">
@@ -408,6 +416,13 @@
         <a href="{% url 'vendor_wallet_view'%}" class="sidebar-link flex items-center px-4 py-2 rounded-md text-gray-600 font-medium hover:bg-gray-100 transition-all duration-200">
           <i class="fas fa-wallet w-6 text-center text-gray-500 mr-3"></i>
           <span>Wallets</span>
+        </a>
+      </li>
+
+        <li>
+        <a href="{% url 'vendor_reviews_list' %}" class="sidebar-link flex items-center px-4 py-2 rounded-md text-gray-600 font-medium hover:bg-gray-100 transition-all duration-200">
+          <i class="fas fa-star w-6 text-center text-gray-500 mr-3"></i>
+          <span>Review</span>
         </a>
       </li>
 

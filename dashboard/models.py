@@ -492,7 +492,7 @@ class Order(models.Model):
     total = models.DecimalField(max_digits=10, decimal_places=2)
     
     # Payment
-    payment_method = models.CharField(max_length=20, choices=PAYMENT_CHOICES)
+    payment_method = models.CharField(max_length=20, choices=PAYMENT_CHOICES,default="cod")
     payment_status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, default='unpaid')
     transaction_id = models.CharField(max_length=100, blank=True)
     
@@ -501,8 +501,11 @@ class Order(models.Model):
     
     # Order Status
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
-    notes = models.TextField(blank=True, help_text='Customer notes')
-    admin_notes = models.TextField(blank=True, help_text='Internal admin notes')
+
+    estimated_delivery_date = models.DateField(
+        null=True, blank=True,
+        help_text="Calculated expected delivery date"
+    )
     
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
@@ -618,33 +621,19 @@ class CouponUsage(models.Model):
         return f"{self.user.username} used {self.coupon.code}"
 
 
-# # -------------------------
-# # Shipping Zones
-# # -------------------------
-# class ShippingZone(models.Model):
-#     name = models.CharField(max_length=100)
+# -------------------------
+# Shipping Zones
+# -------------------------
+class ShippingCost(models.Model):
+
+    cost = models.DecimalField(max_digits=10, decimal_places=2)
+    tax = models.DecimalField(max_digits=5, decimal_places=2, default=0.00, help_text="Tax percentage (e.g. 13 for 13%)")
+
+    class Meta:
+        ordering = ['cost']
     
-#     PROVINCE_CHOICES = [
-#         ('province1', 'Koshi Province'),
-#         ('madhesh', 'Madhesh Province'),
-#         ('bagmati', 'Bagmati Province'),
-#         ('gandaki', 'Gandaki Province'),
-#         ('lumbini', 'Lumbini Province'),
-#         ('karnali', 'Karnali Province'),
-#         ('sudurpashchim', 'Sudurpashchim Province'),
-#     ]
-#     provinces = models.CharField(max_length=255, help_text='Comma-separated province codes')
-    
-#     cost = models.DecimalField(max_digits=10, decimal_places=2)
-#     free_shipping_threshold = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, help_text='Free shipping above this amount')
-#     estimated_days = models.CharField(max_length=50, blank=True)
-#     is_active = models.BooleanField(default=True)
-    
-#     class Meta:
-#         ordering = ['cost']
-    
-#     def __str__(self):
-#         return f"{self.name} - Rs. {self.cost}"
+    def __str__(self):
+        return f" Rs. {self.cost}"
 
 
 # -------------------------

@@ -20,11 +20,13 @@ admin.site.register(Newsletter)
 admin.site.register(Contact)
 admin.site.register(Notification)
 admin.site.register(VendorCommission)
+admin.site.register(ShippingCost)
 
 admin.site.register(VendorPayoutRequest)
 admin.site.register(VendorWallet)
 
 admin.site.register(Slider)
 admin.site.register(Banner)
+
 
 admin.site.register(OTPVerification)

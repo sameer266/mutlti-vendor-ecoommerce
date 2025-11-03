@@ -65,6 +65,11 @@ urlpatterns = [
     path('contacts/unread/',views.admin_contacts_unread,name="admin_contact_unread"),
     path('contacts/read/', views.admin_read_contact, name='admin_read_contacts'),
 
+    # Shipping Cost Management
+    path('shipping-cost/', views.shipping_cost_view,name="admin_shipping_cost"),
+    path('shipping-cost/edit/<int:pk>/',views.shipping_cost_edit,name="admin_shipping_update"),
+    
+    
     # Newsletter Management
     path('newsletter/', views.admin_newsletter_list, name='admin_newsletter_list'),
     path('newsletter/add/', views.admin_newsletter_add, name='admin_newsletter_add'),
@@ -123,14 +128,23 @@ urlpatterns = [
     path('vendor/orders/', views.vendor_orders_list, name='vendor_orders_list'),
     path('vendor/orders/pending/', views.vendor_orders_pending, name='vendor_orders_pending'),
     path('vendor/orders/delivered/', views.vendor_orders_delivered, name='vendor_orders_delivered'),
+    path('vendor/api/orders/<str:order_number>/update-estimated-date/', views.vendor_update_estimated_date, name='vendor_update_estimated_date'),
+    
     
     path('vendor/payout-lists/', views.vendor_payouts_list, name='vendor_payout_list'),
     path('vendor/payout-requests/add/', views.vendor_payout_request_add, name='vendor_payout_requests_add'),
     path('vendor/payouts/pending/', views.pending_payout_requests, name='vendor_pending_payout'),
     path('vendor/payouts/rejected/', views.rejected_payout_requests, name='vendor_rejected_payout'),
+    
+    
 
     path('vendor/wallet/', views.vendor_wallet_view, name='vendor_wallet_view'),
     
+    
+    # Review
+    path('vendor/reviews/', views.vendor_reviews_list, name='vendor_reviews_list'),
+
+    #Vendor Profile 
     path('vendor/profile/',views.vendor_profile_view,name='vendor_profile'),
     path('vendor/profile/edit/', views.vendor_profile_edit_view, name='vendor_edit_profile'),
 ]

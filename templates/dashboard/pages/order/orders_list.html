@@ -39,7 +39,12 @@
           <th class="px-4 py-3 text-left">Contact</th>
           <th class="px-4 py-3 text-left">Total</th>
           <th class="px-4 py-3 text-left">Payment</th>
+
           <th class="px-4 py-3 text-left">Status</th>
+          <th class="px-4 py-3 text-left">Estimated Delivery Date</th>
+
+          <th class="px-4 py-3 text-left">Delivered At</th>
+          
           <th class="px-4 py-3 text-left">Created</th>
           <th class="px-4 py-3 text-center">Actions</th>
         </tr>
@@ -68,6 +73,10 @@
               {% endfor %}
             </select>
           </td>
+<td class="px-4 py-3">{{ order.estimated_shipping_date|date:"Y-m-d"|default:"No Date" }}</td>
+
+
+          <td class="px-4 py-3">{{ order.delivered_at|date:"Y-m-d H:i" }}</td>
           <td class="px-4 py-3">{{ order.created_at|date:"Y-m-d H:i" }}</td>
           <td class="px-4 py-3 text-center flex justify-center gap-3">
             <!-- View Items -->

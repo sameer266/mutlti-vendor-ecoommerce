@@ -7,7 +7,7 @@ from dashboard.models import (
     Slider,
     Banner,
     Category,
-    Product,Cart,Vendor,ProductVariant,OTPVerification,Order,OrderItem,Coupon,CouponUsage,Contact,
+    Product,Cart,Vendor,ProductVariant,OTPVerification,Order,OrderItem,Coupon,CouponUsage,Contact,ShippingCost
 )
 from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
 from  django.contrib import messages
@@ -26,6 +26,8 @@ from django.conf import settings
 from django.core.mail import send_mail
 import random
 from django.contrib.auth.decorators import login_required
+from decimal import Decimal
+
 
 
 
@@ -195,28 +197,35 @@ def get_session_key(request):
 def carts(request):
     """Display cart page with user's cart items"""
     if request.user.is_authenticated:
-        # Show cart items for logged-in user
         cart_items = Cart.objects.filter(user=request.user).select_related('product', 'variant')
     else:
-        # Use session key for guest users
         session_key = request.session.session_key
         if not session_key:
-            # Create a session if it doesn't exist
             request.session.create()
             session_key = request.session.session_key
         cart_items = Cart.objects.filter(user__isnull=True, session_key=session_key).select_related('product', 'variant')
 
     total_items = sum(item.quantity for item in cart_items)
-    total_price = sum(item.get_total_price() for item in cart_items)
+    sub_total_price = sum(item.get_total_price() for item in cart_items)
+
+    shipping = ShippingCost.objects.first()
+    shipping_cost = shipping.cost if shipping else Decimal('0.00')
+    tax_rate = shipping.tax if shipping else Decimal('0.00')
+
+    tax_amount = (sub_total_price * tax_rate / Decimal('100')).quantize(Decimal('0.01'))
+    total_price = (sub_total_price + tax_amount + shipping_cost).quantize(Decimal('0.01'))
 
     context = {
         'cart_items': cart_items,
         'total_items': total_items,
+        'sub_total_price': sub_total_price,
+        'shipping_cost': shipping_cost,
+        'tax_amount': tax_amount,
+        'tax_rate': tax_rate,
         'total_price': total_price,
     }
-    
-    return render(request, "website/pages/cart.html", context)
 
+    return render(request, "website/pages/cart.html", context)
 
 
 @csrf_exempt
@@ -355,26 +364,30 @@ def remove_from_cart(request):
         return JsonResponse({'success': False, 'message': 'Error removing from cart'}, status=500)
 
 
-from decimal import Decimal
-
 
 @login_required
 def checkout(request):
     """Handle checkout process for authenticated users"""
     cart_items = Cart.objects.filter(user=request.user).select_related('product', 'variant')
-    
+
     if not cart_items:
         messages.error(request, "Your cart is empty. Please add items to proceed.")
         return redirect('all_collections')
 
-    # Calculate totals
+    # --- Shipping and Base Totals ---
+    shipping = ShippingCost.objects.first()
     subtotal = sum(item.get_total_price() for item in cart_items)
-    shipping_cost = Decimal('0.00')  # Hardcoded as free
-    tax = Decimal('0.00')  # Hardcoded as per template
     discount = Decimal('0.00')
+    shipping_cost = shipping.cost if shipping else Decimal('0.00')
+    tax_rate = shipping.tax if shipping else Decimal('0.00')
+
+    # 🔹 Convert tax percentage to actual amount
+    tax_amount = (subtotal * tax_rate) / Decimal('100')
+
     coupon = None
     coupon_code = request.session.get('coupon_code')
 
+    # --- Handle Coupon ---
     if coupon_code:
         try:
             coupon = Coupon.objects.get(code=coupon_code)
@@ -389,11 +402,12 @@ def checkout(request):
             messages.error(request, "Invalid or expired coupon code.")
             request.session.pop('coupon_code', None)
 
-    total = max(subtotal + shipping_cost + tax - discount, Decimal('0.00'))
+    # --- Calculate Final Total ---
+    total = max(subtotal + shipping_cost + tax_amount - discount, Decimal('0.00'))
 
+    # --- Handle Form Submission ---
     if request.method == "POST":
         try:
-            # Extract form data
             email = request.POST.get('email')
             phone = request.POST.get('phone')
             full_name = request.POST.get('full_name')
@@ -401,7 +415,6 @@ def checkout(request):
             city = request.POST.get('city')
             province = request.POST.get('province')
             postal_code = request.POST.get('postal_code', '')
-            notes = request.POST.get('notes', '')
             payment_method = request.POST.get('payment_method')
 
             # Validate required fields
@@ -411,7 +424,8 @@ def checkout(request):
                     'cart_items': cart_items,
                     'subtotal': subtotal,
                     'shipping_cost': shipping_cost,
-                    'tax': tax,
+                    'tax': tax_amount,
+                    'tax_rate': tax_rate,
                     'discount': discount,
                     'total': total,
                     'coupon': coupon,
@@ -425,7 +439,8 @@ def checkout(request):
                     'cart_items': cart_items,
                     'subtotal': subtotal,
                     'shipping_cost': shipping_cost,
-                    'tax': tax,
+                    'tax': tax_amount,
+                    'tax_rate': tax_rate,
                     'discount': discount,
                     'total': total,
                     'coupon': coupon,
@@ -439,7 +454,8 @@ def checkout(request):
                     'cart_items': cart_items,
                     'subtotal': subtotal,
                     'shipping_cost': shipping_cost,
-                    'tax': tax,
+                    'tax': tax_amount,
+                    'tax_rate': tax_rate,
                     'discount': discount,
                     'total': total,
                     'coupon': coupon,
@@ -453,7 +469,7 @@ def checkout(request):
                     request.session.pop('coupon_code', None)
                     coupon = None
                     discount = Decimal('0.00')
-                    total = subtotal + shipping_cost + tax
+                    total = subtotal + shipping_cost + tax_amount
 
             # Create or update UserProfile
             user_profile, created = UserProfile.objects.get_or_create(
@@ -474,7 +490,7 @@ def checkout(request):
                 user_profile.postal_code = postal_code
                 user_profile.save()
 
-            # Create Order
+            # --- Create Order ---
             order = Order.objects.create(
                 user=request.user,
                 order_number='',  # Auto-generated in save()
@@ -485,12 +501,12 @@ def checkout(request):
                 city=city,
                 province=province,
                 postal_code=postal_code,
-                notes=notes,
+        
                 payment_method=payment_method,
                 payment_status='unpaid' if payment_method != 'cod' else 'paid',
                 subtotal=subtotal,
                 shipping_cost=shipping_cost,
-                tax=tax,
+                tax=tax_amount,  # now the amount, not %
                 discount=discount,
                 total=total,
                 coupon=coupon,
@@ -498,22 +514,18 @@ def checkout(request):
                 created_at=timezone.now(),
             )
 
-            # Create OrderItems
+            # --- Create Order Items ---
             for item in cart_items:
                 OrderItem.objects.create(
                     order=order,
                     vendor=item.product.vendor,
                     product=item.product,
                     variant=item.variant,
-                    product_name=item.product.name,
-                    product_image=item.product.main_image,
-                    variant_name=item.variant.name if item.variant else '',
                     quantity=item.quantity,
                     price=item.get_item_price(),
-                    fulfillment_status='pending',
                 )
 
-            # Record CouponUsage if coupon is applied
+            # --- Record Coupon Usage ---
             if coupon:
                 CouponUsage.objects.create(
                     user=request.user,
@@ -524,21 +536,20 @@ def checkout(request):
                 coupon.used_count += 1
                 coupon.save()
 
-            # Handle payment method
+            # --- Handle Payment Method ---
             if payment_method == 'cod':
-                # Clear cart and session
                 cart_items.delete()
                 request.session.pop('coupon_code', None)
                 messages.success(request, f"Order {order.order_number} placed successfully! You will pay on delivery.")
                 return redirect('order_confirmation', order_id=order.id)
             else:
-                # Placeholder for online payment gateway integration
                 messages.info(request, f"Payment via {payment_method} is not yet implemented. Please use COD.")
                 return render(request, 'website/pages/checkout.html', {
                     'cart_items': cart_items,
                     'subtotal': subtotal,
                     'shipping_cost': shipping_cost,
-                    'tax': tax,
+                    'tax': tax_amount,
+                    'tax_rate': tax_rate,
                     'discount': discount,
                     'total': total,
                     'coupon': coupon,
@@ -546,27 +557,19 @@ def checkout(request):
 
         except Exception as e:
             messages.error(request, f"Error processing order: {str(e)}")
-            return render(request, 'website/pages/checkout.html', {
-                'cart_items': cart_items,
-                'subtotal': subtotal,
-                'shipping_cost': shipping_cost,
-                'tax': tax,
-                'discount': discount,
-                'total': total,
-                'coupon': coupon,
-            })
 
-    # GET request: Render checkout page
+    # --- Render Checkout Page ---
     return render(request, 'website/pages/checkout.html', {
         'cart_items': cart_items,
         'subtotal': subtotal,
         'shipping_cost': shipping_cost,
-        'tax': tax,
+        'tax': tax_amount,
+        'tax_rate': tax_rate,
         'discount': discount,
         'total': total,
         'coupon': coupon,
     })
-    
+
 
 
 
@@ -599,7 +602,12 @@ def apply_coupon(request):
 @login_required
 def order_confirmation(request, order_id):
     order = Order.objects.get(id=order_id,user=request.user)
-    return render(request, 'website/pages/order_confirmation.html', {'order': order})
+    shipping_cost=ShippingCost.objects.first()
+    cost=shipping_cost.cost
+    tax=shipping_cost.tax
+    tax_amount = order.subtotal * Decimal(tax) / Decimal('100')
+    total_price = order.subtotal + cost + tax_amount
+    return render(request, 'website/pages/order_confirmation.html', {'order': order, 'tax_amount': tax_amount, 'total_price': total_price,'tax_rate':tax,'shipping_cost':cost})
 
 
 
@@ -897,9 +905,22 @@ def customer_orders(request):
 @login_required
 def customer_order_detail(request, order_number):
     order = get_object_or_404(Order, order_number=order_number, user=request.user)
+    shipping_cost=ShippingCost.objects.first()
+    cost=shipping_cost.cost
+    tax=shipping_cost.tax
+    tax_amount = order.subtotal * Decimal(tax) / Decimal('100')
+    total_price = order.subtotal + cost + tax_amount
+    
     order_items = OrderItem.objects.filter(order=order)
 
     return render(request, 'website/pages/order_detail.html', {
         'order': order,
         'order_items': order_items,
+        'tax_amount': tax_amount,
+        'total_price': total_price,
+        'tax_rate':tax,
+        'shipping_cost':cost,
     })
+    
+
+

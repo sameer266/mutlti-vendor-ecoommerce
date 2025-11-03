@@ -123,15 +123,22 @@
         <div class="space-y-3 mb-6">
           <div class="flex justify-between">
             <span class="text-[var(--text-secondary)]">Items ({{ total_items }})</span>
-            <span class="font-semibold text-[var(--text-primary)]">Rs {{ total_price }}</span>
+            <span class="font-semibold text-[var(--text-primary)]">Rs {{ sub_total_price }}</span>
           </div>
+     <div class="flex justify-between">
+    <span class="text-[var(--text-secondary)]">Shipping</span>
+    <span class="font-semibold text-[var(--success)]">
+        {% if shipping_cost == 0 %}
+            Free
+        {% else %}
+            Rs {{ shipping_cost|floatformat:2 }}
+        {% endif %}
+    </span>
+</div>
+
           <div class="flex justify-between">
-            <span class="text-[var(--text-secondary)]">Shipping</span>
-            <span class="font-semibold text-[var(--success)]">Free</span>
-          </div>
-          <div class="flex justify-between">
-            <span class="text-[var(--text-secondary)]">Tax</span>
-            <span class="font-semibold text-[var(--text-primary)]">Rs 0.00</span>
+            <span class="text-[var(--text-secondary)]">Tax ({{tax_rate}}%)</span>
+            <span class="font-semibold text-[var(--text-primary)]">Rs {{tax_amount}}</span>
           </div>
           <hr class="my-3 border-[var(--text-secondary)]">
           <div class="flex justify-between text-lg font-bold">
