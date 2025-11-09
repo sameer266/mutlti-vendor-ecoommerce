@@ -149,8 +149,8 @@
   <div class="mt-8 text-center">
     <p class="text-[var(--text-secondary)] mb-4">You will receive an email confirmation shortly. We will notify you when your order ships.</p>
     <div class="flex flex-col sm:flex-row gap-4 justify-center">
-      <a href="{% url 'all_collections' %}" class="inline-block bg-[var(--primary)] hover:bg-[var(--primary-dark)] text-[var(--text-light)] px-8 py-3 rounded-lg font-semibold transition-colors btn btn-primary">
-        Continue Shopping
+      <a href="{% url 'customer_order_detail' order.order_number %}" class="inline-block bg-[var(--primary)] hover:bg-[var(--primary-dark)] text-[var(--text-light)] px-8 py-3 rounded-lg font-semibold transition-colors btn btn-primary">
+        My Order Details
       </a>
       <button onclick="window.print()" class="bg-gray-100 hover:bg-gray-200 text-[var(--text-primary)] px-8 py-3 rounded-lg font-semibold transition-colors">
         <i class="fas fa-print mr-2"></i>Print Order

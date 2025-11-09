@@ -30,72 +30,74 @@
     </div>
 
     <!-- Grid Container -->
-    <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 lg:gap-4">
-      {% for p in new_arrivals %}
-        <div class="product-card relative bg-gray-100 rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 w-full max-w-[250px] mx-auto cursor-pointer" data-product-id="{{ p.id }}">
-          <!-- Product Image -->
-          <div class="block relative group bg-white rounded-xl m-2">
-            {% if p.main_image %}
-              <img src="{{ p.main_image.url }}" alt="{{ p.name }}" class="w-full h-48 sm:h-56 md:h-60 object-contain rounded-xl transition-transform duration-300 group-hover:scale-105" loading="lazy">
-            {% else %}
-              <img src="https://via.placeholder.com/250x250" alt="{{ p.name }}" class="w-full h-48 sm:h-56 md:h-60 object-contain rounded-xl transition-transform duration-300 group-hover:scale-105" loading="lazy">
-            {% endif %}
-            <!-- Discount Badge -->
-            {% if p.discount_percentage %}
-              <div class="absolute top-2 left-2 flex flex-col items-center z-20">
-                <i class="fa-solid fa-bookmark text-5xl text-yellow-500"></i>
-                <span class="-mt-11 text-xs font-bold text-[var(--text-primary)] text-center leading-tight">
-                  {{ p.discount_percentage }}%<br>OFF
-                </span>
-              </div>
-            {% endif %}
-            <!-- Hover Overlay Buttons -->
-            <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-2 sm:gap-3 transition-opacity duration-300 rounded-xl">
-              <button class="wishlist-btn p-2 sm:p-3 bg-[var(--bg-brown)] text-white rounded-full shadow-md hover:bg-[var(--primary)] transition cursor-pointer">
-                <i class="fa-regular fa-heart text-sm sm:text-base"></i>
-              </button>
-              <a href="{% url 'product_details' p.slug %}" class="p-2 sm:p-3 bg-[var(--bg-brown)] text-white rounded-full shadow-md hover:bg-[var(--primary)] transition cursor-pointer">
-                <i class="fa-regular fa-eye text-sm sm:text-base"></i>
-              </a>
-            </div>
-          </div>
-          <!-- Product Info -->
-          <section class="p-2 sm:p-3 space-y-1 sm:space-y-2">
-            <div class="flex justify-between items-center">
-              <a href="{% url 'product_details' p.slug %}" class="text-sm text-[var(--text-primary)] line-clamp-2">{{ p.name }}</a>
-              <p class="text-xs font-medium {% if p.in_stock %}text-green-600{% else %}text-red-600{% endif %}">
-                {% if p.in_stock %}In Stock{% else %}Out of Stock{% endif %}
+ <div class="md:mx-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 lg:gap-4">
+    {% for product in new_arrivals %}
+    <div class="product-card relative bg-gray-100 rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 w-full max-w-[250px] mx-auto cursor-pointer"
+         data-product-id="{{ product.id }}"
+         data-in-stock="{{ product.in_stock|yesno:'true,false' }}">
+      
+      <!-- Product Image -->
+      <a href="{% url 'product_details' product.slug %}" class="block relative group bg-white rounded-xl m-2">
+        <img src="{{ product.main_image.url|default:'https://via.placeholder.com/250' }}"
+             alt="{{ product.name }}"
+             class="w-full h-48 sm:h-56 md:h-60 object-contain rounded-xl transition-transform duration-300 group-hover:scale-105" />
+        {% if product.discount_percentage > 0 %}
+        <div class="absolute top-2 left-2 flex flex-col items-center z-20">
+          <i class="fa-solid fa-bookmark text-5xl text-yellow-500"></i>
+          <span class="-mt-11 text-xs font-bold text-gray-900">{{ product.discount_percentage }}%<br>OFF</span>
+        </div>
+        {% endif %}
+        {% if not product.in_stock %}
+        <div class="absolute inset-0 bg-black/50 flex items-center justify-center rounded-xl">
+          <span class="bg-red-600 text-white px-4 py-2 rounded-lg font-semibold text-sm">Out of Stock</span>
+        </div>
+        {% endif %}
+      </a>
+
+      <!-- Product Info -->
+      <section class="p-3 space-y-2">
+        <div class="flex justify-between items-start gap-2">
+          <a href="{% url 'product_details' product.slug %}"
+             class="text-sm text-[var(--text-primary)] line-clamp-2 hover:underline">
+             {{ product.name }}
+          </a>
+        <p class="text-xs font-medium {% if product.in_stock %}text-green-600{% else %}text-red-600{% endif %}">
+                {% if product.in_stock %}In Stock{% else %}Out of Stock{% endif %}
               </p>
-            </div>
-            <!-- Price Row -->
-            <div class="flex items-center justify-start mt-1 space-x-2 sm:space-x-3">
-              {% if p.cost_price > p.price %}
-                <p class="text-xs sm:text-sm text-[var(--text-secondary)] line-through">Rs. {{ p.cost_price }}</p>
-              {% endif %}
-              <p class="font-bold text-green-600 text-sm sm:text-base">Rs. {{ p.price }}</p>
-            </div>
-            <!-- Quantity + Add to Cart -->
-            <div class="flex flex-wrap items-center justify-start gap-2 mt-2">
-              <div class="flex items-center border border-gray-300 rounded overflow-hidden">
-                <button class="decreaseQty px-2 py-1 bg-gray-200 hover:bg-gray-300 text-sm cursor-pointer">-</button>
-                <input type="number" value="1" min="1" class="qtyInput w-10 text-center text-sm border-l border-r border-gray-300 focus:outline-none">
-                <button class="increaseQty px-2 py-1 bg-gray-200 hover:bg-gray-300 text-sm cursor-pointer">+</button>
-              </div>
-              <button class="btn btn-primary add-to-cart flex items-center justify-center gap-1 text-xs sm:text-sm px-2 py-1 rounded hover:bg-[var(--primary-dark)] transition cursor-pointer">
-                <i class="fa-solid fa-cart-shopping text-xs sm:text-sm"></i>
-                Add
-              </button>
-            </div>
-          </section>
         </div>
-      {% empty %}
-        <div class="col-span-full text-center py-12">
-          <i class="fas fa-box-open text-6xl text-gray-300 mb-4"></i>
-          <h3 class="text-2xl font-bold text-[var(--text-primary)] mb-2">No New Arrivals Found</h3>
-          <p class="text-[var(--text-secondary)]">Check back soon for the latest products!</p>
+
+        <div class="flex items-center gap-2">
+          {% if product.cost_price > product.price %}
+          <p class="text-xs text-gray-400 line-through">Rs {{ product.cost_price|floatformat:0 }}</p>
+          {% endif %}
+          <p class="font-bold text-orange-600 text-sm sm:text-base">Rs {{ product.price|floatformat:0 }}</p>
         </div>
-      {% endfor %}
+
+        <!-- Add to Cart -->
+        <div class="flex items-center justify-between gap-2 mt-2">
+          <div class="flex items-center border-2 border-gray-300 rounded-lg overflow-hidden">
+            <button class="decreaseQty px-2 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm transition"
+                    {% if not product.in_stock %}disabled{% endif %}><i class="fas fa-minus text-xs"></i></button>
+            <input type="number" value="1" min="1" max="{% if product.in_stock %}{{ product.stock|default:10 }}{% else %}0{% endif %}"
+                   class="qtyInput w-12 text-center text-sm border-x-2 border-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-500 font-medium text-gray-900"
+                   {% if not product.in_stock %}disabled{% endif %}>
+            <button class="increaseQty px-2 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm transition"
+                    {% if not product.in_stock %}disabled{% endif %}><i class="fas fa-plus text-xs"></i></button>
+          </div>
+
+          <button class="add-to-cart flex-1 flex items-center justify-center gap-1 text-xs sm:text-sm px-3 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 active:bg-orange-700 transition shadow-sm cursor-pointer"
+                  data-product-id="{{ product.id }}"
+                  {% if not product.in_stock %}disabled{% endif %}>
+            <i class="fa-solid fa-cart-shopping text-xs"></i><span>Add</span>
+          </button>
+        </div>
+      </section>
     </div>
+    {% empty %}
+    <div class="col-span-full text-center py-12 text-gray-500">No featured products available.</div>
+    {% endfor %}
+  </div>
+
 
     <!-- Pagination -->
     {% if new_arrivals.has_other_pages %}

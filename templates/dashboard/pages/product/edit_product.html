@@ -8,7 +8,7 @@
     <a href="{% url 'vendor_products_list' %}" class="text-sm text-blue-600 hover:text-blue-800">Back to list</a>
   </div>
 
-  <form method="post" action="{% url 'vendor_product_update' product.id %}" enctype="multipart/form-data" class="space-y-6">
+  <form method="post" action="{% url 'admin_product_update' product.id %}" enctype="multipart/form-data" class="space-y-6">
     {% csrf_token %}
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">

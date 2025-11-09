@@ -56,7 +56,7 @@
                    class="w-full p-3 border border-[var(--text-secondary)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)]">
             <input type="tel" name="phone" placeholder="Phone Number" required 
                    class="w-full p-3 border border-[var(--text-secondary)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
-                   value="{% if request.user.userprofile %}{{ request.user.userprofile.phone }}{% endif %}">
+                   value="{{ request.user.profile.phone }}">
           </div>
         </div>
 
@@ -68,25 +68,24 @@
                    class="w-full p-3 border border-[var(--text-secondary)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
                    value="{{ request.user.get_full_name|default:'' }}">
             <textarea name="address" placeholder="Street Address" rows="3" required 
-                      class="w-full p-3 border border-[var(--text-secondary)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)]">{% if request.user.userprofile %}{{ request.user.userprofile.address }}{% endif %}</textarea>
+                      class="w-full p-3 border border-[var(--text-secondary)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)]">{{ request.user.profile.address }}</textarea>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <input type="text" name="city" placeholder="City" required 
                      class="p-3 border border-[var(--text-secondary)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
-                     value="{% if request.user.userprofile %}{{ request.user.userprofile.city }}{% endif %}">
+                     value="{{ request.user.profile.city }}">
             <select name="province" required class="p-3 border border-[var(--text-secondary)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)]">
                 <option value="">Select Province</option>
-                <option value="province1" {% if request.user.userprofile and request.user.userprofile.province == 'province1' %}selected{% endif %}>Koshi Province</option>
-                <option value="madhesh" {% if request.user.userprofile and request.user.userprofile.province == 'madhesh' %}selected{% endif %}>Madhesh Province</option>
-                <option value="bagmati" {% if request.user.userprofile and request.user.userprofile.province == 'bagmati' %}selected{% endif %}>Bagmati Province</option>
-                <option value="gandaki" {% if request.user.userprofile and request.user.userprofile.province == 'gandaki' %}selected{% endif %}>Gandaki Province</option>
-                <option value="lumbini" {% if request.user.userprofile and request.user.userprofile.province == 'lumbini' %}selected{% endif %}>Lumbini Province</option>
-                <option value="karnali" {% if request.user.userprofile and request.user.userprofile.province == 'karnali' %}selected{% endif %}>Karnali Province</option>
-                <option value="sudurpashchim" {% if request.user.userprofile and request.user.userprofile.province == 'sudurpashchim' %}selected{% endif %}>Sudurpashchim Province</option>
+                <option value="province1">Koshi Province</option>
+                <option value="madhesh" >Madhesh Province</option>
+                <option value="bagmati" >Bagmati Province</option>
+                <option value="gandaki">Gandaki Province</option>
+                <option value="lumbini" >Lumbini Province</option>
+                <option value="karnali" >Karnali Province</option>
+                <option value="sudurpashchim" >Sudurpashchim Province</option>
               </select>
             </div>
             <input type="text" name="postal_code" placeholder="Postal Code (Optional)" 
-                   class="w-full p-3 border border-[var(--text-secondary)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
-                   value="{% if request.user.userprofile %}{{ request.user.userprofile.postal_code }}{% endif %}">
+                   class="w-full p-3 border border-[var(--text-secondary)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"/>
           </div>
         </div>
 
@@ -128,13 +127,7 @@
 
      
 
-        <!-- Terms -->
-        <div class="flex items-start">
-          <input type="checkbox" id="terms" required class="mt-1 mr-2 focus:ring-[var(--primary)]">
-          <label for="terms" class="text-sm text-[var(--text-secondary)]">
-            I agree to the <a href="" class="text-[var(--primary)] hover:underline">terms and conditions</a>
-          </label>
-        </div>
+     
 
         <button type="submit" class="w-full bg-[var(--primary)] hover:bg-[var(--primary-dark)] text-[var(--text-light)] py-3 px-4 rounded-lg font-semibold transition-colors btn btn-primary">
           Place Order
@@ -222,22 +215,25 @@
 
 </div>
 {% endblock %}
-
 {% block extra_js %}
 <script>
 $(document).ready(function () {
 
-  // ========== APPLY COUPON ==========
+  // ---------- CSRF Helper ----------
+  function getCsrfToken() {
+    return $('[name=csrfmiddlewaretoken]').val();
+  }
+
+  // ---------- APPLY COUPON ----------
   $('#applyCoupon').on('click', function () {
     const couponCode = $('#couponCode').val().trim();
+    const $btn = $(this);
 
     if (!couponCode) {
       toastr.error('Please enter a coupon code.');
       return;
     }
 
-    // Disable button and show loader
-    const $btn = $(this);
     $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Applying...');
 
     $.ajax({
@@ -246,12 +242,12 @@ $(document).ready(function () {
       data: {
         coupon_code: couponCode,
         action: 'apply',
-        csrfmiddlewaretoken: $('[name=csrfmiddlewaretoken]').val(),
+        csrfmiddlewaretoken: getCsrfToken(),
       },
       success: function (response) {
         if (response.success) {
           toastr.success(response.message);
-          setTimeout(() => location.reload(), 800); // reload after short delay
+          setTimeout(() => location.reload(), 800);
         } else {
           toastr.warning(response.message);
         }
@@ -266,7 +262,7 @@ $(document).ready(function () {
     });
   });
 
-  // ========== REMOVE COUPON ==========
+  // ---------- REMOVE COUPON ----------
   $('#removeCoupon').on('click', function () {
     const $btn = $(this);
     $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Removing...');
@@ -276,7 +272,7 @@ $(document).ready(function () {
       type: 'POST',
       data: {
         action: 'remove',
-        csrfmiddlewaretoken: $('[name=csrfmiddlewaretoken]').val(),
+        csrfmiddlewaretoken: getCsrfToken(),
       },
       success: function (response) {
         if (response.success) {
@@ -287,7 +283,7 @@ $(document).ready(function () {
         }
       },
       error: function (xhr) {
-        const msg = xhr.responseJSON?.message || 'An error occurred while removing the coupon.';
+        const msg = xhr.responseJSON?.message || 'Error removing coupon.';
         toastr.error(msg);
       },
       complete: function () {
@@ -296,18 +292,6 @@ $(document).ready(function () {
     });
   });
 
-  // ========== FORM VALIDATION ==========
-  $('#checkoutForm').on('submit', function (e) {
-    if (!$('#terms').is(':checked')) {
-      e.preventDefault();
-      toastr.error('Please agree to the terms and conditions before placing your order.');
-      return false;
-    }
-
-    const $btn = $('button[type="submit"]');
-    $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Processing...');
-    return true;
-  });
 
 });
 </script>

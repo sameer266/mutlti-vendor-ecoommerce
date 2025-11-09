@@ -225,7 +225,10 @@
       <div class="flex items-center gap-2">
         <i class="far fa-circle text-xs text-gray-400 variant-icon"></i>
         <div>
-          <div class="text-sm font-medium text-gray-900">{{ variant.name }}</div>
+          <!-- ✅ Show type name and variant name -->
+          <div class="text-sm font-medium text-gray-900">
+            {{ variant.get_variant_type_display }}: {{ variant.name }}
+          </div>
           {% if variant.price_adjustment != 0 %}
           <div class="text-xs sm:text-sm text-[#FF7F00] font-semibold">
             {% if variant.price_adjustment > 0 %}+{% endif %}Rs {{ variant.price_adjustment }}
@@ -238,6 +241,7 @@
   </div>
 </div>
 {% endif %}
+
 
 <!-- Quantity & Actions -->
 <div class="space-y-4 pt-4">

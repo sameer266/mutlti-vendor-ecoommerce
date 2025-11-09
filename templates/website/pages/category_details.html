@@ -171,14 +171,9 @@ $(document).ready(function() {
   // ===================================
   $(document).on('click', '.increaseQty', function() {
     const $input = $(this).siblings('.qtyInput');
-    const max = parseInt($input.attr('max')) || 10;
     const current = parseInt($input.val()) || 1;
-    
-    if (current < max) {
-      $input.val(current + 1);
-    } else {
-      showToast('Maximum quantity reached', 'warning');
-    }
+    $input.val(current + 1);
+   
   });
 
   $(document).on('click', '.decreaseQty', function() {

@@ -10,13 +10,9 @@ from django.dispatch import receiver
 
 
 class OTPVerification(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE,null=True,blank=True)
     otp_code = models.CharField(max_length=6,null=True,blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    expires_at = models.DateTimeField(null=True,blank=True)
-
-    def is_expired(self):
-        return timezone.now() > self.expires_at
 
     def __str__(self):
         return f"OTP for {self.user.email}"
@@ -56,9 +52,9 @@ class UserProfile(models.Model):
     GENDER_CHOICES=( ('male','Male'),
                     ('female','Female'))
     user = models.OneToOneField(User, on_delete=models.CASCADE,related_name="profile")
-    phone = models.CharField(max_length=15)
+    phone = models.CharField(max_length=15,null=True,blank=True)
     avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)
-    gender=models.CharField(default="male",choices=GENDER_CHOICES)
+    gender=models.CharField(choices=GENDER_CHOICES,null=True,blank=True)
     # Address
     address = models.TextField(blank=True)
     city = models.CharField(max_length=100, blank=True)
@@ -560,6 +556,7 @@ class Review(models.Model):
 # -------------------------
 # Coupons & Discounts
 # -------------------------
+
 class Coupon(models.Model):
     code = models.CharField(max_length=50, unique=True)
     description = models.CharField(max_length=255, blank=True)
@@ -586,18 +583,38 @@ class Coupon(models.Model):
     is_active = models.BooleanField(default=True)
     
     # Restrictions
-    categories = models.ManyToManyField(Category, blank=True, help_text='Applicable categories')
-    vendors = models.ManyToManyField(Vendor, blank=True, help_text='Applicable vendors')
+    categories = models.ManyToManyField('Category', blank=True, help_text='Applicable categories')
+    vendors = models.ManyToManyField('Vendor', blank=True, help_text='Applicable vendors')
     
     created_at = models.DateTimeField(auto_now_add=True)
-    
-    def is_valid(self):
+
+    def is_valid(self, user=None, cart_items=None):
+        """Check if coupon is valid for the user and cart"""
         now = timezone.now()
-        return (self.is_active and 
-                self.valid_from <= now <= self.valid_to and
-                (self.usage_limit is None or self.used_count < self.usage_limit))
-    
+        # Basic checks: active and date
+        if not (self.is_active and self.valid_from <= now <= self.valid_to):
+            return False, "This coupon is not active or has expired."
+
+        # Check total usage limit
+        if self.usage_limit is not None and self.used_count >= self.usage_limit:
+            return False, "This coupon has reached its usage limit."
+
+        # Check per-user usage
+        if user and self.usage_limit_per_user is not None:
+            user_used_count = CouponUsage.objects.filter(user=user, coupon=self).count()
+            if user_used_count >= self.usage_limit_per_user:
+                return False, "You have already used this coupon the maximum number of times."
+
+        # Check minimum purchase
+        if cart_items is not None:
+            subtotal = sum(item.get_item_price() * item.quantity for item in cart_items)
+            if subtotal < self.min_purchase:
+                return False, f"Minimum order amount of Rs {self.min_purchase} required."
+
+        return True, "Coupon is valid."
+
     def get_discount_amount(self, subtotal):
+        """Calculate discount based on subtotal"""
         if self.discount_type == 'percent':
             discount = (self.discount_value / 100) * subtotal
             if self.max_discount is not None:
@@ -614,11 +631,11 @@ class CouponUsage(models.Model):
     """Track coupon usage per user"""
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     coupon = models.ForeignKey(Coupon, on_delete=models.CASCADE)
-    order = models.ForeignKey(Order, on_delete=models.CASCADE)
+    order = models.ForeignKey('Order', on_delete=models.CASCADE)
     used_at = models.DateTimeField(auto_now_add=True)
     
     def __str__(self):
-        return f"{self.user.username} used {self.coupon.code}"
+        return f"{self.user.first_name} used {self.coupon.code}"
 
 
 # -------------------------
@@ -739,7 +756,6 @@ class Slider(models.Model):
     title = models.CharField(max_length=200, blank=True, null=True)
     subtitle = models.CharField(max_length=300, blank=True, null=True)
     image = models.ImageField(upload_to='sliders/')
-    link = models.URLField(max_length=500, blank=True, null=True)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

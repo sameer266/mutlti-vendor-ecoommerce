@@ -27,6 +27,7 @@ from django.core.mail import send_mail
 import random
 from django.contrib.auth.decorators import login_required
 from decimal import Decimal
+from django.db.models import F
 
 
 
@@ -48,7 +49,10 @@ def home_page(request):
     featured_products_page = featured_paginator.get_page(featured_page_number)
     
     # Best Offers Pagination
-    best_offers = Product.objects.filter(is_active=True).order_by('-views_count', '-created_at')
+    best_offers = Product.objects.filter(
+                is_active=True,
+                price__lt=F('cost_price') * 0.75  # Price less than 75% of cost price = >25% discount
+            ).order_by('-created_at')[:20]
     best_offers_paginator = Paginator(best_offers, 18)  # 12 items per page
     best_offers_page_number = request.GET.get('best_offers_page', 1)
     best_offers_page = best_offers_paginator.get_page(best_offers_page_number)
@@ -106,11 +110,11 @@ def all_collections(request):
 
 
 def new_arrivals_page(request):
-    # Calculate the date 7 days ago
-    one_week_ago = timezone.now() - timedelta(days=7)
+    # Calculate the date 29 days ago
+    one_month_ago = timezone.now() - timedelta(days=29)
     new_arrivals = Product.objects.filter(
         is_active=True,
-        created_at__gte=one_week_ago
+        created_at__gte=one_month_ago
     ).order_by('-created_at')
     
     paginator = Paginator(new_arrivals, 12)  # 12 products per page
@@ -471,25 +475,6 @@ def checkout(request):
                     discount = Decimal('0.00')
                     total = subtotal + shipping_cost + tax_amount
 
-            # Create or update UserProfile
-            user_profile, created = UserProfile.objects.get_or_create(
-                user=request.user,
-                defaults={
-                    'phone': phone,
-                    'address': address,
-                    'city': city,
-                    'province': province,
-                    'postal_code': postal_code,
-                }
-            )
-            if not created:
-                user_profile.phone = phone
-                user_profile.address = address
-                user_profile.city = city
-                user_profile.province = province
-                user_profile.postal_code = postal_code
-                user_profile.save()
-
             # --- Create Order ---
             order = Order.objects.create(
                 user=request.user,
@@ -572,32 +557,34 @@ def checkout(request):
 
 
 
-
-
 @login_required
 def apply_coupon(request):
     """Apply or remove a coupon code via AJAX"""
     coupon_code = request.POST.get('coupon_code', '').strip()
-    action = request.POST.get('action', 'apply') 
+    action = request.POST.get('action', 'apply')
+
 
     if action == 'remove':
         request.session.pop('coupon_code', None)
         return JsonResponse({'success': True, 'message': 'Coupon removed successfully!'})
+
     try:
         coupon = Coupon.objects.get(code=coupon_code)
         cart_items = Cart.objects.filter(user=request.user).select_related('product', 'variant')
-        
+
+  
         is_valid, message = coupon.is_valid(user=request.user, cart_items=cart_items)
         if not is_valid:
             return JsonResponse({'success': False, 'message': message}, status=400)
 
         request.session['coupon_code'] = coupon_code
-        return JsonResponse({'success': True, 'message': f'Coupon {coupon_code} applied successfully!'})
+        return JsonResponse({'success': True, 'message': f'Coupon "{coupon_code}" applied successfully!'})
+
     except Coupon.DoesNotExist:
         return JsonResponse({'success': False, 'message': 'Invalid coupon code.'}, status=400)
     except Exception as e:
         return JsonResponse({'success': False, 'message': f'Error: {str(e)}'}, status=400)
-    
+
 
 @login_required
 def order_confirmation(request, order_id):
@@ -665,17 +652,20 @@ def login_page(request):
         email= request.POST.get('email')
         password = request.POST.get('password')
         try:
-            user=User.objects.get(email=email)
-            user.check_password(password)
-            if user.role.role =='admin':
+            user=User.objects.get(email=email,is_active=True)
+            if user.check_password(password):
                 auth_login(request, user)
                 messages.success(request,'Login Successfull')
-                return redirect('admin_dashboard')
-      
-            elif user.role.role == 'customer' or user.role.role == 'vendor':
-                auth_login(request, user)
-                messages.success(request,'Login Successfull')
-                return redirect('customer_profile')
+                
+                if user.role.role =='admin':
+                    return redirect('admin_dashboard')
+        
+                elif user.role.role == 'customer' or user.role.role == 'vendor':
+                    return redirect('customer_profile')
+                
+            else:
+                messages.error(request,'Invalid Username and Password')
+                return redirect('login_page')
         except User.DoesNotExist:
             messages.error(request,'Invalid Username and Password')
             return redirect('login_page')
@@ -687,36 +677,45 @@ def login_page(request):
 
 def signup_page(request):
     if request.method == "POST":
-        full_name = request.POST.get('full_name', '').strip()
+        first_name=request.POST.get('first_name')
+        last_name=request.POST.get('last_name')
         email = request.POST.get('email', '').strip()
         password1 = request.POST.get('password1', '')
         password2 = request.POST.get('password2', '')
         if password1 != password2:
             messages.error(request, "Passwords do not match.")
+            return redirect('signup_page')
+        
+        if User.objects.filter(email=email,is_active=True).exists():
+            messages.error(request,'User already exists')
+            return redirect('signup_page')
 
-        else:
+        if User.objects.filter(email=email,is_active=False).exists():
+            user=User.objects.get(email=email)
+            user.first_name=first_name
+            user.last_name=last_name
+            user.save()
+        else:            
             user = User.objects.create_user(
                 username=email,
                 email=email,
                 password=password1,
-                first_name=full_name,
+                first_name=first_name,
+                last_name=last_name,
                 is_active=False  
             )
 
             # Generate OTP
             otp = str(random.randint(100000, 999999))
-            expiry_time = timezone.now() + timezone.timedelta(minutes=5)
-
             otp_obj,_=OTPVerification.objects.get_or_create(
                 user=user,
     
             )
             otp_obj.otp_code=otp
-            otp_obj.expires_at=expiry_time
             otp_obj.save()
             send_mail(
                 subject="Your Hello Bajar OTP Verification Code",
-                message=f"Hello {full_name},\n\nYour OTP code is: {otp}\nIt expires in 5 minutes.",
+                message=f"Hello {first_name},\n\nYour OTP code is: {otp}",
                 from_email="hellobajar@gmail.com",
                 recipient_list=[email],
                 fail_silently=False,
@@ -735,21 +734,20 @@ def forget_password(request):
     if request.method == "POST":
         email=request.POST.get('email')
         try:
-            user=User.objects.get(email=email)
+            user=User.objects.get(email=email,is_active=True)
         except User.DoesNotExist:
             messages.error(request,'No account found with that email')
             return render(request,'website/pages/forget.html')
         otp=str(random.randint(100000,999999))
-        expiry_time=timezone.now() + timezone.timedelta(minutes=5)
+     
         otp_obj,_=OTPVerification.objects.get_or_create(
             user=user    
         )
         otp_obj.otp_code=otp
-        otp_obj.expires_at=expiry_time
         otp_obj.save()
         send_mail(
             subject="Your Password Reset OTP",
-            message=f"Your OTP for password reset is {otp} . It will expire in 5 minutes.",
+            message=f"Your OTP for password reset is {otp} .",
             from_email="hellobajar@gmail.com",
             recipient_list=[email],
             fail_silently=False
@@ -762,21 +760,13 @@ def forget_password(request):
 
 
 def set_password_view(request):
-    email=request.session.get('user_email')
-    if not email:
-        messages.error(request,'Session expired. Please try again ')
-        return redirect('forget_password')
+
     if request.method  == "POST":
         new_password=request.POST.get('new_password')
         try:
-            user=User.objects.get(email=email)
+            user=User.objects.get(email=request.user.email,is_active=True)
             user.set_password(new_password)
             user.save()
-            
-            del request.session['user_email']
-            otp=OTPVerification.objects.get(user=user)
-            otp.delete()
-            
             messages.success(request,'Password changed successfully. Please Login')
             return redirect('login_page')
         except User.DoesNotExist:
@@ -798,24 +788,25 @@ def verify_otp_page(request):
     if request.method == "POST":
         entered_otp = request.POST.get('otp', '').strip()
 
-        if otp_obj.is_expired():
-            otp_obj.delete()
-            messages.error(request, "OTP expired. Please sign up again.")
-            return redirect('signup_page')
-
         if entered_otp == otp_obj.otp_code:
-            user.is_active = True
-            user.save()
-            if User.objects.filter(email=email).exists():
-                messages.success(request,'Otp is verified')
-                return redirect('set_password')
-            else:
+            if not user.is_active:
+                user.is_active = True
+                user.save()
                 UserRole.objects.create(role="customer",user=user)
+                UserProfile.objects.create(user=user)
                 otp_obj.delete()
                 del request.session['user_email']
                 auth_login(request, user)
-            messages.success(request, "Your account has been verified successfully!")
-            return redirect('login_page')
+                messages.success(request, "Your account has been verified successfully!")
+                return redirect('login_page')
+            elif user.is_active:
+                otp_obj.delete()
+                del request.session['user_email']
+                auth_login(request, user)
+                messages.success(request, "Otp verified successfully! Please Reset New Password")
+                return redirect('set_password')
+                
+            
         else:
             messages.error(request, "Invalid OTP. Please try again.")
 
@@ -867,22 +858,18 @@ def edit_profile(request):
     profile, created = UserProfile.objects.get_or_create(user=user)
 
     if request.method == 'POST':
-        # Basic user info
         user.first_name = request.POST.get('first_name', '').strip()
         user.last_name = request.POST.get('last_name', '').strip()
         user.email = request.POST.get('email', '').strip()
 
-        # Profile info
         profile.phone = request.POST.get('phone', '').strip()
         profile.address = request.POST.get('address', '').strip()
         profile.city = request.POST.get('city', '').strip()
         profile.province = request.POST.get('province', '').strip()
 
-        # Avatar upload
         if request.FILES.get('avatar'):
             profile.avatar = request.FILES['avatar']
 
-        # Save changes
         user.save()
         profile.save()
 
@@ -891,26 +878,41 @@ def edit_profile(request):
     return render(request, 'website/pages/edit_profile.html', {
         'profile': profile,
     })
-
+    
+    
 
 @login_required
 def customer_orders(request):
-    orders = Order.objects.filter(user=request.user).order_by('-created_at')
-    return render(request, 'website/pages/orders.html', {
-        'orders': orders
-    })
+        user=request.user
+        orders_list = Order.objects.filter(user=user).order_by('-created_at')
+        total_orders=orders_list.count()
+        
+       
+        paginator = Paginator(orders_list, 10) 
+        
+        page_number = request.GET.get('page')
+        orders = paginator.get_page(page_number)
+        
+        return render(request, 'website/pages/orders.html', {
+            'orders': orders,
+            'total_orders':total_orders,
+            
+        })
 
 
 
 @login_required
 def customer_order_detail(request, order_number):
     order = get_object_or_404(Order, order_number=order_number, user=request.user)
-    shipping_cost=ShippingCost.objects.first()
-    cost=shipping_cost.cost
-    tax=shipping_cost.tax
-    tax_amount = order.subtotal * Decimal(tax) / Decimal('100')
-    total_price = order.subtotal + cost + tax_amount
-    
+    shipping_cost_obj = ShippingCost.objects.first()
+    shipping_cost = shipping_cost_obj.cost if shipping_cost_obj else Decimal('0.00')
+    tax_rate = shipping_cost_obj.tax if shipping_cost_obj else Decimal('0.00')
+
+    tax_amount = order.subtotal * Decimal(tax_rate) / Decimal('100')
+    total_price = order.subtotal + shipping_cost + tax_amount - (order.discount or Decimal('0.00'))
+
+    coupon_used=order.coupon if order.coupon else None
+
     order_items = OrderItem.objects.filter(order=order)
 
     return render(request, 'website/pages/order_detail.html', {
@@ -918,9 +920,8 @@ def customer_order_detail(request, order_number):
         'order_items': order_items,
         'tax_amount': tax_amount,
         'total_price': total_price,
-        'tax_rate':tax,
-        'shipping_cost':cost,
+        'tax_rate': tax_rate,
+        'coupon_used': coupon_used,
+        'discount_amount': order.discount,
+        'shipping_cost': shipping_cost,
     })
-    
-
-

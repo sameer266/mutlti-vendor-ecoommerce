@@ -1,10 +1,6 @@
 {% extends 'dashboard/components/base.html' %}
 {% load static %}
 
-{% block extra_css %}
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.min.css">
-{% endblock %}
-
 {% block content %}
 <section class="px-4 sm:px-6 lg:px-8 py-6">
 
@@ -14,7 +10,7 @@
   </h1>
 
   <!-- Summary Cards -->
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6 mb-8">
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
     
     <!-- Products Card -->
     <div class="bg-white p-5 sm:p-6 rounded-lg shadow border border-gray-200 hover:shadow-lg transition">
@@ -22,9 +18,9 @@
         <i class="fas fa-boxes text-2xl text-blue-500"></i>
         <h3 class="font-semibold text-gray-700">Products</h3>
       </div>
-      <p class="text-gray-600 text-sm">Total: {{ total_products }}</p>
-      <p class="text-gray-600 text-sm">Active: {{ active_products }}</p>
-      <p class="text-gray-600 text-sm">Low Stock: <span class="text-yellow-600 font-semibold">{{ low_stock_products }}</span></p>
+      <p class="text-gray-600 text-sm"><i class="fas fa-list-ul mr-1"></i> Total: {{ total_products }}</p>
+      <p class="text-gray-600 text-sm"><i class="fas fa-check-circle mr-1"></i> Active: {{ active_products }}</p>
+      <p class="text-gray-600 text-sm"><i class="fas fa-exclamation-triangle mr-1 text-yellow-600"></i> Low Stock: <span class="font-semibold">{{ low_stock_products }}</span></p>
     </div>
 
     <!-- Orders Card -->
@@ -33,10 +29,10 @@
         <i class="fas fa-shopping-cart text-2xl text-green-500"></i>
         <h3 class="font-semibold text-gray-700">Orders</h3>
       </div>
-      <p class="text-gray-600 text-sm">Total: {{ total_orders }}</p>
-      <p class="text-gray-600 text-sm">Pending: <span class="text-yellow-600 font-semibold">{{ pending_orders }}</span></p>
-      <p class="text-gray-600 text-sm">Delivered: <span class="text-green-600 font-semibold">{{ delivered_orders }}</span></p>
-      <p class="text-gray-600 text-sm">Revenue: Rs. <span class="font-semibold">{{ total_revenue }}</span></p>
+      <p class="text-gray-600 text-sm"><i class="fas fa-list-ul mr-1"></i> Total: {{ total_orders }}</p>
+      <p class="text-gray-600 text-sm"><i class="fas fa-clock mr-1 text-yellow-600"></i> Pending: <span class="font-semibold">{{ pending_orders }}</span></p>
+      <p class="text-gray-600 text-sm"><i class="fas fa-check mr-1 text-green-600"></i> Delivered: <span class="font-semibold">{{ delivered_orders }}</span></p>
+      <p class="text-gray-600 text-sm"><i class="fas fa-money-bill-wave mr-1"></i> Revenue: Rs. <span class="font-semibold">{{ total_revenue }}</span></p>
     </div>
 
     <!-- Profile Card -->
@@ -45,15 +41,15 @@
         <i class="fas fa-user-circle text-2xl text-purple-500"></i>
         <h3 class="font-semibold text-gray-700">Profile</h3>
       </div>
-      <p class="text-gray-600 text-sm">Name: {{ request.user.get_full_name }}</p>
-      <p class="text-gray-600 text-sm">Email: {{ request.user.email }}</p>
-      <p class="text-gray-600 text-sm">Shop: {{ request.user.vendor_profile.shop_name }}</p>
+      <p class="text-gray-600 text-sm"><i class="fas fa-user mr-1"></i> Name: {{ request.user.get_full_name }}</p>
+      <p class="text-gray-600 text-sm"><i class="fas fa-envelope mr-1"></i> Email: {{ request.user.email }}</p>
+      <p class="text-gray-600 text-sm"><i class="fas fa-store mr-1"></i> Shop: {{ request.user.vendor_profile.shop_name }}</p>
     </div>
 
   </div>
 
   <!-- Charts Section -->
-  <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 gap-6 mb-8">
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
     
     <!-- Orders Status Pie Chart -->
     <div class="bg-white p-5 sm:p-6 rounded-lg shadow border border-gray-200 hover:shadow-lg transition">
