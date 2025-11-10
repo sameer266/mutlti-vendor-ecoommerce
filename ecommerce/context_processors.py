@@ -26,7 +26,7 @@ def global_context(request):
     if request.user.is_authenticated and  request.user.role.role == 'vendor':
         vendor=Vendor.objects.get(user=request.user)
         total_vendor_pending_payouts=VendorPayoutRequest.objects.filter(vendor=vendor,status="pending").count()
-        total_vendor_pending_orders=Order.objects.filter(items__vendor=vendor,status='pending').count()
+        total_vendor_pending_orders=Order.objects.filter(items__product__vendor=vendor,status='pending').count()
     
 
     return {

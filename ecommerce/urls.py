@@ -60,9 +60,12 @@ urlpatterns = [
     
     # Customer Dashboard
     path("customer-profile/",views.customer_profile,name='customer_profile'),
-    path("dashboard/edit/profile/",views.edit_profile,name='edit_profile'),
-    path("dashboard/orders/",views.customer_orders,name='customer_orders'),
-    path("dashboard/order/<str:order_number>/",views.customer_order_detail,name='customer_order_detail'),
+    path("dashboard/customer/edit/profile/",views.edit_profile,name='edit_profile'),
+    path("dashboard/customer/orders/",views.customer_orders,name='customer_orders'),
+    path("dashboard/customer/order/<str:order_number>/",views.customer_order_detail,name='customer_order_detail'),
+    
+    path("dashboard/customer/invoices/",views.customer_invoices,name='customer_invoices'),
+    path('dashboard/customer/invoice/<str:invoice_number>/', views.customer_invoice_detail, name='customer_invoice_detail'),
 
     # Rich Text Editor
     path('ckeditor/', include('ckeditor_uploader.urls')),

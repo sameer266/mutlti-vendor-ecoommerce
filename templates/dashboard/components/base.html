@@ -135,66 +135,7 @@
         overflow-y: auto;
       }
 
-      /* Responsive Design */
-      @media (max-width: 1024px) {
-        .content {
-          margin-left: 0;
-          width: 100%;
-        }
-        .sidebar {
-          width: 14rem;
-        }
-      }
-
-      @media (max-width: 768px) {
-        .navbar {
-          padding: var(--spacing-xs) var(--spacing-sm);
-          height: 3.5rem;
-        }
-        .content {
-          margin-top: 3.5rem;
-          padding: var(--spacing-md);
-        }
-        .sidebar {
-          width: 12rem;
-          padding-top: var(--spacing-md);
-        }
-        .sidebar.active {
-          transform: translateX(0);
-        }
-      }
-
-      /* Overlay for mobile sidebar */
-      .overlay {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.5);
-        z-index: 30;
-      }
-
-      .overlay.active {
-        display: block;
-      }
-
-      /* Theme Toggle Button */
-      .theme-toggle {
-        background: none;
-        border: none;
-        cursor: pointer;
-        font-size: var(--text-lg);
-        color: var(--new-black-light);
-        transition: color 0.3s;
-        display: flex;
-        align-items: center;
-      }
-
-      .theme-toggle:hover {
-        color: var(--primary);
-      }
+ 
     </style>
     {% block extra_css %}{% endblock %}
   </head>
@@ -207,7 +148,10 @@
       {% include 'dashboard/components/sidebar.html' %}
 
       <!-- Main content -->
-      <main id="content" class="content max-w-5xl mx-auto p-6 lg:pl-8">
+      <main
+        id="content"
+        class="flex-1 ml-0 md:ml-64 mt-8  pt-16 px-4 md:px-8 overflow-y-auto min-h-screen transition-all duration-300"
+      >
         {% block content %}
         <!-- Content will be filled by child templates -->
         {% endblock %}

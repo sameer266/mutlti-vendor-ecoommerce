@@ -520,7 +520,6 @@ class Order(models.Model):
 
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')
-    vendor = models.ForeignKey(Vendor, on_delete=models.SET_NULL, null=True)
     product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True)
     variant = models.ForeignKey(ProductVariant, on_delete=models.SET_NULL, null=True, blank=True)
     
@@ -651,6 +650,40 @@ class ShippingCost(models.Model):
     
     def __str__(self):
         return f" Rs. {self.cost}"
+
+
+# -------------------------
+#  Invoice
+# -------------------------
+class Invoice(models.Model):
+    invoice_number = models.CharField(max_length=20,null=True, unique=True, editable=False)
+    order = models.ForeignKey('Order', on_delete=models.CASCADE, related_name='invoices')
+    vendor = models.ForeignKey('Vendor', on_delete=models.CASCADE, related_name='invoices')
+    customer = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    # Totals
+    subtotal = models.DecimalField(max_digits=12, decimal_places=2)
+    tax_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    discount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    total = models.DecimalField(max_digits=12, decimal_places=2)
+
+    payment_status = models.CharField(max_length=20, choices=[
+        ('paid', 'Paid'),
+        ('pending', 'Pending'),
+        ('failed', 'Failed')
+    ], default='pending')
+    
+    notes = models.TextField(blank=True, null=True)
+
+    def save(self, *args, **kwargs):
+        if not self.invoice_number:
+            self.invoice_number = f"INV{timezone.now().strftime('%Y%m%d%H%M%S')}"
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"Invoice {self.invoice_number} - {self.order.order_number}"
 
 
 # -------------------------
@@ -803,7 +836,7 @@ def credit_vendor_wallet_on_order_complete(sender, instance, **kwargs):
     """
     if instance.status == 'delivered':
         for item in instance.items.all():
-            vendor = item.vendor
+            vendor = item.product.vendor
             if vendor:
                 # Get vendor-specific commission rate, or default if not set
                 vc = VendorCommission.objects.first()
@@ -826,5 +859,30 @@ def process_vendor_payout_request(sender, instance, **kwargs):
     if instance.status == 'paid':
         wallet, _ = VendorWallet.objects.get_or_create(vendor=instance.vendor)
         wallet.debit(instance.requested_amount)
-    
+
+
+
+@receiver(post_save,sender=Order)
+def change_invoice_payment_status_with_order(sender,instance,**kwargs):
+    """
+    Sync payment status of invoices with the order's payment status.
+    Creates an invoice per vendor if not already created.
+
+    """
+    for item in instance.items.all():
+        vendor=item.product.vendor
+        customer=instance.user
+        
+        invoice=Invoice.objects.get(order=instance,vendor=vendor,customer=customer)
+        if instance.payment_status=="unpaid":
+            invoice.payment_status="pending"
+        elif instance.payment_status=="paid":
+            invoice.payment_status="paid"
+        elif instance.payment_status=="failed":
+            invoice.payment_status="failed"
+        instance.save()
+        
+            
+            
+        
         

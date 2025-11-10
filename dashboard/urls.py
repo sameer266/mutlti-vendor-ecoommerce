@@ -7,7 +7,7 @@ urlpatterns = [
 
     # User Management
     path('users/', views.admin_users_list, name='admin_users_list'),
-    path('users/add/', views.admin_user_add, name='admin_user_add'),
+    # path('users/add/', views.admin_user_add, name='admin_user_add'),
     path('users/<int:pk>/update/', views.admin_user_update, name='admin_user_update'),
     path('users/<int:pk>/delete/', views.admin_user_delete, name='admin_user_delete'),
 
@@ -144,6 +144,10 @@ urlpatterns = [
     # Review
     path('vendor/reviews/', views.vendor_reviews_list, name='vendor_reviews_list'),
 
+    # Invoice
+    path('vendor/invoice/',views.vendor_invoices,name="vendor_invoices_list"),
+    path('vendor/invoice-details/<str:invoice_number>/',views.vendor_invoice_detail,name='vendor_invoice_detail'),
+    
     #Vendor Profile 
     path('vendor/profile/',views.vendor_profile_view,name='vendor_profile'),
     path('vendor/profile/edit/', views.vendor_profile_edit_view, name='vendor_edit_profile'),

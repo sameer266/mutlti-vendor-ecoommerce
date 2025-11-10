@@ -7,7 +7,7 @@ from dashboard.models import (
     Slider,
     Banner,
     Category,
-    Product,Cart,Vendor,ProductVariant,OTPVerification,Order,OrderItem,Coupon,CouponUsage,Contact,ShippingCost
+    Product,Cart,Vendor,ProductVariant,OTPVerification,Order,OrderItem,Coupon,CouponUsage,Contact,ShippingCost,Invoice
 )
 from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
 from  django.contrib import messages
@@ -488,10 +488,10 @@ def checkout(request):
                 postal_code=postal_code,
         
                 payment_method=payment_method,
-                payment_status='unpaid' if payment_method != 'cod' else 'paid',
+                payment_status='unpaid' ,
                 subtotal=subtotal,
                 shipping_cost=shipping_cost,
-                tax=tax_amount,  # now the amount, not %
+                tax=tax_amount, 
                 discount=discount,
                 total=total,
                 coupon=coupon,
@@ -499,16 +499,27 @@ def checkout(request):
                 created_at=timezone.now(),
             )
 
-            # --- Create Order Items ---
+            # --- Create Order Items and Invoice ---
             for item in cart_items:
                 OrderItem.objects.create(
                     order=order,
-                    vendor=item.product.vendor,
                     product=item.product,
                     variant=item.variant,
                     quantity=item.quantity,
                     price=item.get_item_price(),
                 )
+                
+                Invoice.objects.create(customer=request.user,
+                                       vendor=item.product.vendor,
+                                       order=order,
+                                       subtotal=subtotal,
+                                       total=total,
+                                       tax_amount=tax_amount,
+                                       discount=discount
+                                       )
+
+                
+                
 
             # --- Record Coupon Usage ---
             if coupon:
@@ -520,6 +531,8 @@ def checkout(request):
                 )
                 coupon.used_count += 1
                 coupon.save()
+            
+        
 
             # --- Handle Payment Method ---
             if payment_method == 'cod':
@@ -539,6 +552,8 @@ def checkout(request):
                     'total': total,
                     'coupon': coupon,
                 })
+
+           
 
         except Exception as e:
             messages.error(request, f"Error processing order: {str(e)}")
@@ -613,17 +628,18 @@ def product_details(request, slug):
         recommended_df = get_recommendations(product.id, top_n=30)
 
         recommended_products = []
-        if not recommended_df.empty:
-            for _, row in recommended_df.iterrows():
+        if recommended_df:  
+            for row in recommended_df: 
                 recommended_products.append({
                     'id': row['id'],
                     'name': row['name'],
                     'slug': row['slug'],
                     'price': row['price'],
-                    'cost_price':row['cost_price'],
-                    
+                    'cost_price': row['cost_price'],
+        
                     # Build full image URL
-                    'main_image': row['main_image'] if row['main_image'].startswith('http') else settings.MEDIA_URL + str(row['main_image']),
+                    'main_image': row['main_image'] if row['main_image'] and row['main_image'].startswith('http') 
+                                   else settings.MEDIA_URL + str(row['main_image']),
                 })
 
         # Get latest 10 reviews
@@ -645,8 +661,8 @@ def product_details(request, slug):
 
 
 
-
 def login_page(request):
+    
     if request.method == 'POST':
         print(request.POST)
         email= request.POST.get('email')
@@ -669,6 +685,7 @@ def login_page(request):
         except User.DoesNotExist:
             messages.error(request,'Invalid Username and Password')
             return redirect('login_page')
+    
     
     return render(request,'website/pages/login.html')
 
@@ -925,3 +942,25 @@ def customer_order_detail(request, order_number):
         'discount_amount': order.discount,
         'shipping_cost': shipping_cost,
     })
+
+
+# =====================
+#  Invoice
+# ====================
+
+@login_required
+def customer_invoices(request):
+    invoice_list=Invoice.objects.filter(customer=request.user).order_by('-created_at')
+    paginator=Paginator(invoice_list,10)
+    page_number=request.GET.get('page')
+    page_obj=paginator.get_page(page_number)
+    return render(request,'website/pages/invoices.html',{'page_obj':page_obj})
+
+
+@login_required
+def customer_invoice_detail(request, invoice_number):
+    invoice = get_object_or_404(Invoice, invoice_number=invoice_number, customer=request.user)
+    shipping=ShippingCost.objects.first()
+    shipping_cost=shipping.cost
+    tax_rate=shipping.tax
+    return render(request, 'website/pages/invoice_detail.html', {'invoice': invoice,'tax_rate':tax_rate,'shipping_cost':shipping_cost})

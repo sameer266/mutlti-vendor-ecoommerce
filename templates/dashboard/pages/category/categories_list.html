@@ -20,7 +20,6 @@
           <th class="px-4 py-3 text-left">Image</th>
           <th class="px-4 py-3 text-left">Name</th>
           <th class="px-4 py-3 text-left">Featured</th>
-          <th class="px-4 py-3 text-left">Order</th>
           <th class="px-4 py-3 text-center">Actions</th>
         </tr>
       </thead>
@@ -43,7 +42,7 @@
               <span class="text-gray-400 text-xs">No</span>
             {% endif %}
           </td>
-          <td class="px-4 py-3">{{ category.order }}</td>
+
       <td class="px-4 py-3 text-center">
   <div class="inline-flex items-center space-x-3 justify-center">
     <a href="{% url 'admin_category_update' category.id %}" class="text-blue-600 hover:text-blue-800" title="Edit">

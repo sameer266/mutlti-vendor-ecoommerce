@@ -7,7 +7,7 @@ from django.contrib.auth.models import User
 from django.http import JsonResponse
 from django.contrib import messages
 from .models import (
-    UserRole,  Vendor, Category, Product, ProductImage, ProductVariant, Order, OrderItem, 
+    UserRole,  Vendor, Category, Product, ProductImage, ProductVariant, Order, OrderItem, Invoice,
     Review, Coupon,  Organization, Newsletter, Contact, 
     Notification, Slider, Banner, VendorCommission, VendorPayoutRequest,VendorWallet,VendorCommission,ShippingCost
 )
@@ -92,17 +92,17 @@ def admin_users_list(request):
         'users': users,
     })
 
-@admin_required
-def admin_user_add(request):
-    if request.method == 'POST':
-        username = request.POST.get('username')
-        email = request.POST.get('email')
-        password = request.POST.get('password')
-        role = request.POST.get('role')
-        user = User.objects.create_user(username=username, email=email, password=password)
-        UserRole.objects.create(user=user, role=role)
-        return redirect('admin_users_list')
-    return render(request, 'dashboard/pages/users/user_add.html')
+# @admin_required
+# def admin_user_add(request):
+#     if request.method == 'POST':
+#         username = request.POST.get('username')
+#         email = request.POST.get('email')
+#         password = request.POST.get('password')
+#         role = request.POST.get('role')
+#         user = User.objects.create_user(username=username, email=email, password=password)
+#         UserRole.objects.create(user=user, role=role)
+#         return redirect('admin_users_list')
+#     return render(request, 'dashboard/pages/users/user_add.html')
 
 @admin_required
 def admin_user_update(request, pk):
@@ -617,7 +617,7 @@ def admin_payments_overview(request):
         vendors = vendors.filter(shop_name__icontains=search)
 
     # --- Get All Delivered & Paid Orders ---
-    orders = OrderItem.objects.select_related('order', 'vendor').filter(
+    orders = OrderItem.objects.select_related('order', 'product__vendor').filter(
         order__status='delivered',
         order__payment_status='paid'
     )
@@ -643,7 +643,7 @@ def admin_payments_overview(request):
     # --- Compute Per-Vendor Aggregation ---
     for v in vendors:
         # All delivered + paid order items for this vendor
-        vendor_orders = orders.filter(vendor=v)
+        vendor_orders = orders.filter(product__vendor=v)
 
         gross_sales = Decimal('0.00')
         admin_commission_sum = Decimal('0.00')
@@ -706,7 +706,7 @@ def admin_vendor_payments_detail(request, vendor_id):
         commission_rate = commission_obj.rate if commission_obj else Decimal('0.10')
 
         order_items = (
-            OrderItem.objects.filter(vendor=vendor, order__status='delivered', order__payment_status='paid')
+            OrderItem.objects.filter(product__vendor=vendor, order__status='delivered', order__payment_status='paid')
             .select_related('order')
             .order_by('-order__created_at')
         )
@@ -1208,6 +1208,8 @@ def admin_organization_update(request):
         print(request.POST)
         organization.name = request.POST.get('name')
         organization.phone = request.POST.get('phone')
+        organization.email = request.POST.get('email')
+        
         organization.phone_secondary = request.POST.get('phone_secondary', '')
         organization.address = request.POST.get('address')
         organization.facebook = request.POST.get('facebook', '')
@@ -1304,7 +1306,7 @@ def vendor_dashboard(request):
     vendor_user=Vendor.objects.get(user=user)
     products = Product.objects.filter(vendor=vendor_user)
     orders = Order.objects.filter(
-    items__vendor=vendor_user).distinct()
+    items__product__vendor=vendor_user).distinct()
 
     context = {
         'total_products': products.count(),
@@ -1541,7 +1543,7 @@ def vendor_orders_list(request):
     payment_status = request.GET.get('payment_status', '')
     vendor=Vendor.objects.get(user=request.user)
     orders = Order.objects.filter(
-    items__vendor=vendor).distinct().order_by('-created_at')    
+    items__product__vendor=vendor).distinct().order_by('-created_at')    
 
     if search:
         orders = orders.filter(
@@ -1566,7 +1568,7 @@ def vendor_orders_list(request):
 def vendor_orders_pending(request):
     vendor=Vendor.objects.get(user=request.user)
     orders = Order.objects.filter(
-    items__vendor=vendor, status='pending').distinct().order_by('-created_at')
+    items__product__vendor=vendor, status='pending').distinct().order_by('-created_at')
     return render(request, 'vendor/order/pending_orders.html', {
         'orders': orders,
         'order_model': Order,
@@ -1576,7 +1578,7 @@ def vendor_orders_pending(request):
 def vendor_orders_delivered(request):
     vendor=Vendor.objects.get(user=request.user)
     orders = Order.objects.filter(
-    items__vendor=vendor, status='delivered').distinct().order_by('-created_at')
+    items__product__vendor=vendor, status='delivered').distinct().order_by('-created_at')
     return render(request, 'vendor/order/delivered_orders.html', {
         'orders': orders,
         'order_model': Order,
@@ -1731,7 +1733,7 @@ def vendor_wallet_view(request):
     
     wallet, _ = VendorWallet.objects.get_or_create(vendor=vendor)
     orders = OrderItem.objects.filter(
-        vendor=vendor,
+        product__vendor=vendor,
         order__status='delivered',
         order__payment_status='paid'
     ).select_related('order').order_by('-order__created_at')
@@ -1755,11 +1757,37 @@ def vendor_reviews_list(request):
     return render(request, 'vendor/review/reviews_list.html', {'reviews': reviews})
 
 
+
+
+
+# Invoice
+@login_required
+def vendor_invoices(request):
+    vendor=Vendor.objects.get(user=request.user)
+    invoices = Invoice.objects.filter(vendor=vendor).order_by('-created_at')
+    return render(request, 'vendor/invoice/invoices.html', {'invoices': invoices})
+
+
+@login_required
+def vendor_invoice_detail(request, invoice_number):
+    vendor=Vendor.objects.get(user=request.user)
+    invoice = get_object_or_404(Invoice, invoice_number=invoice_number, vendor=vendor)
+    shipping=ShippingCost.objects.first()
+    tax_rate=shipping.tax
+    shipping_cost=shipping.cost
+    return render(request, 'vendor/invoice/invoice_detail.html', {
+        'invoice': invoice,
+        'tax_rate':tax_rate,
+        'shipping_cost':shipping_cost
+    })
+
+
 # Vendor Profile
 @login_required
 def vendor_profile_view(request):
     vendor=Vendor.objects.get(user=request.user)
     return render(request,'vendor/profile/vendor_profile.html',{'vendor':vendor})
+
 
 
 
