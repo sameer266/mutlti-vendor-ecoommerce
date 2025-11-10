@@ -662,7 +662,6 @@ def product_details(request, slug):
 
 
 def login_page(request):
-    
     if request.method == 'POST':
         print(request.POST)
         email= request.POST.get('email')
@@ -866,6 +865,9 @@ def contact_view(request):
 
 @login_required
 def customer_profile(request):
+    if request.user.is_authenticated:
+        if request.user.role.role == 'admin':
+            return redirect('admin_dashboard')
     return render(request,'website/pages/profile.html')
 
 

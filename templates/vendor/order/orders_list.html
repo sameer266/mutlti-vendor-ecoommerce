@@ -75,8 +75,9 @@
         Update
     </button>
 </td>
-          <td class="px-4 py-3">{{ order.delivered_at|date:"Y-m-d H:i" }}</td>
-          <td class="px-4 py-3">{{ order.created_at|date:"Y-m-d H:i" }}</td>
+<td class="px-4 py-3">{{ order.delivered_at|date:"Y-m-d h:i A" }}</td>
+<td class="px-4 py-3">{{ order.created_at|date:"Y-m-d h:i A" }}</td>
+
           <td class="px-4 py-3 text-center flex justify-center gap-3">
             <!-- View Items -->
             <button 
@@ -86,6 +87,17 @@
             >
               <i class="fa-solid fa-eye"></i>
             </button>
+
+
+             <!-- View Invoices -->
+  <a 
+    href="{% url 'vendor_orders_invoice_list' order.order_number %}" 
+    class="flex items-center gap-2 text-green-600 hover:text-green-800 font-medium"
+    title="View Related Invoices"
+  >
+    <i class="fa-solid fa-file-invoice"></i>
+  </a>
+
 
             <!-- Delete -->
             <a 
@@ -117,19 +129,23 @@ function getCookie(name) {
     if (parts.length === 2) return parts.pop().split(';').shift();
 }
 
- $(document).ready(function() {
-    $('#orderTable').DataTable({
-      pageLength: 10,
-      lengthChange: true,
-      searching: false,
-      ordering: true,
-      responsive: true,
-     
-      columnDefs: [
-        { orderable: false, targets: [5] } // Actions column
-      ]
+$(document).ready(function() {
+    // Initialize DataTable
+    const table = $('#orderTable').DataTable({
+        pageLength: 10,
+        lengthChange: true,
+        searching: false, // Disable DataTables search
+        ordering: true,
+        responsive: true,
+        columnDefs: [
+            { orderable: false, targets: [5, 9] } // Status and Actions columns not sortable
+        ],
+        order: [[8, 'desc']] // Default sort by Created column
     });
-  });
+
+  
+});
+
 // Update status/payment
 $(document).on('change', '.status-select, .payment-select', function(){
     const row = $(this).closest('tr');
@@ -143,7 +159,7 @@ $(document).on('change', '.status-select, .payment-select', function(){
         data: { status, payment_status: paymentStatus },
         headers: { 'X-CSRFToken': getCookie('csrftoken') },
         success: function(resp){
-            if (resp.success) location.reload();
+            if (resp.success) toastr.success('Order updated successfully');
             else toastr.error('Failed to update order');
         },
         error: function(){ toastr.error('Server error updating order'); }
@@ -156,14 +172,13 @@ $(document).on('click', '.view-items-btn', function(e){
     const orderNumber = $(this).data('id');
 
     $.get(`{% url 'admin_order_items_json' 'ORD00000000000000' %}`.replace('ORD00000000000000', orderNumber), function(resp){
-        if (!resp.success) {toastr.error('Failed to load items'); return; }
+        if (!resp.success) { toastr.error('Failed to load items'); return; }
 
         const rows = resp.items.map(it => {
             const variantsHtml = it.all_variants.length ? `
                 <ul class="text-sm text-gray-600 mt-1">
                     ${it.all_variants.map(v => `<li>${v.variant_type}: ${v.name} (Rs ${v.price_adjustment})</li>`).join('')}
                 </ul>` : '';
-
             return `
                 <tr>
                     <td class="px-4 py-2">${it.image_url ? `<img src="${it.image_url}" class="h-10 w-10 object-cover rounded"/>` : ''}</td>
@@ -206,33 +221,10 @@ $(document).on('click', '.view-items-btn', function(e){
     });
 });
 
-
-// Update Estimated Delivery Date
-$(document).on('click', '.update-estimated-btn', function(){
-    const button = $(this);
-    const row = button.closest('tr');
-    const orderNumber = button.data('id');
-    const estimatedDate = row.find('.estimated-date').val();
-
-    $.ajax({
-        url: `{% url 'vendor_update_estimated_date' 'ORD00000000000000' %}`.replace('ORD00000000000000', orderNumber),
-        type: 'POST',
-        data: { estimated_date: estimatedDate },
-        headers: { 'X-CSRFToken': getCookie('csrftoken') },
-        success: function(resp){
-            if (resp.success) {
-                toastr.success('Estimated delivery date updated successfully.');
-            } else {
-                toastr.error('Failed to update estimated delivery date.');
-            }
-        },
-        error: function(){ toastr.error('Server error updating estimated delivery date'); }
-    });
-});
-
 // Close modal
 $(document).on('click', '#closeItemsModal, #closeItemsModal2', function(){
     $('#orderItemsModal').remove();
 });
 </script>
+
 {% endblock %}

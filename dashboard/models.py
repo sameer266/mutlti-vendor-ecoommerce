@@ -85,7 +85,7 @@ class UserProfile(models.Model):
 # Vendor Management with KYC
 # -------------------------
 class Vendor(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE,related_name='vendor')
     
     # Shop Info
     shop_name = models.CharField(max_length=200)

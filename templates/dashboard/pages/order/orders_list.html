@@ -1,6 +1,10 @@
 {% extends 'dashboard/components/base.html' %}
 {% load static %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+{% endblock %}
+
 {% block content %}
 <div class="bg-white rounded-xl shadow p-6">
   <div class="flex justify-between items-center mb-6">
@@ -31,77 +35,66 @@
   </form>
 
   <div class="overflow-x-auto">
-    <table class="w-full border border-gray-200 rounded-lg text-sm">
+    <table id="ordersTable" class="display w-full border border-gray-200 rounded-lg text-sm">
       <thead class="bg-gray-100">
         <tr>
-          <th class="px-4 py-3 text-left">Order #</th>
-          <th class="px-4 py-3 text-left">Customer</th>
-          <th class="px-4 py-3 text-left">Contact</th>
-          <th class="px-4 py-3 text-left">Total</th>
-          <th class="px-4 py-3 text-left">Payment</th>
-
-          <th class="px-4 py-3 text-left">Status</th>
-          <th class="px-4 py-3 text-left">Estimated Delivery Date</th>
-
-          <th class="px-4 py-3 text-left">Delivered At</th>
-          
-          <th class="px-4 py-3 text-left">Created</th>
-          <th class="px-4 py-3 text-center">Actions</th>
+          <th>Order #</th>
+          <th>Customer</th>
+          <th>Contact</th>
+          <th>Total</th>
+          <th>Payment</th>
+          <th>Status</th>
+          <th>Estimated Delivery Date</th>
+          <th>Delivered At</th>
+          <th>Created</th>
+          <th>Actions</th>
         </tr>
       </thead>
       <tbody>
         {% for order in orders %}
-        <tr class="hover:bg-gray-50">
-          <td class="px-4 py-3 font-medium">{{ order.order_number }}</td>
-          <td class="px-4 py-3">{{ order.full_name }}</td>
-          <td class="px-4 py-3">
+        <tr>
+          <td>{{ order.order_number }}</td>
+          <td>{{ order.full_name }}</td>
+          <td>
             {{ order.email }}<br>
             <span class="text-xs text-gray-500">{{ order.phone }}</span>
           </td>
-          <td class="px-4 py-3">Rs {{ order.total }}</td>
-          <td class="px-4 py-3">
-            {% for value, label in order_model.PAYMENT_STATUS_CHOICES %}
+          <td>Rs {{ order.total }}</td>
+          <td>
+            {% for value,label in order_model.PAYMENT_STATUS_CHOICES %}
               {% if order.payment_status == value %}
                 {{ label }}
               {% endif %}
             {% endfor %}
           </td>
-          <td class="px-4 py-3">
+          <td>
             <select class="status-select border rounded p-1" data-id="{{ order.order_number }}">
               {% for value,label in order_model.STATUS_CHOICES %}
                 <option value="{{ value }}" {% if order.status == value %}selected{% endif %}>{{ label }}</option>
               {% endfor %}
             </select>
           </td>
-<td class="px-4 py-3">{{ order.estimated_shipping_date|date:"Y-m-d"|default:"No Date" }}</td>
-
-
-          <td class="px-4 py-3">{{ order.delivered_at|date:"Y-m-d H:i" }}</td>
-          <td class="px-4 py-3">{{ order.created_at|date:"Y-m-d H:i" }}</td>
-          <td class="px-4 py-3 text-center flex justify-center gap-3">
+          <td>{{ order.estimated_shipping_date|date:"Y-m-d"|default:"No Date" }}</td>
+          <td>{{ order.delivered_at|date:"Y-m-d h:i A" }}</td>
+          <td>{{ order.created_at|date:"Y-m-d h:i A" }}</td>
+          <td class="text-center flex justify-center gap-3">
             <!-- View Items -->
-            <button 
-              class="view-items-btn flex items-center gap-2 text-blue-600 hover:text-blue-800 font-medium"
-              data-id="{{ order.order_number }}"
-              title="View Items"
-            >
-              <i class="fa-solid fa-eye"></i> 
+            <button class="view-items-btn flex items-center gap-2 text-blue-600 hover:text-blue-800 font-medium" data-id="{{ order.order_number }}">
+              <i class="fa-solid fa-eye"></i>
             </button>
-
+            <!-- View Invoices -->
+            <a href="{% url 'vendor_orders_invoice_list' order.order_number %}" class="flex items-center gap-2 text-green-600 hover:text-green-800 font-medium">
+              <i class="fa-solid fa-file-invoice"></i>
+            </a>
             <!-- Delete -->
-            <a 
-              href="{% url 'admin_order_delete' order.order_number %}" 
-              class="flex items-center gap-2 text-red-600 hover:text-red-800 font-medium"
-              title="Delete Order"
-              onclick="return confirm('Delete this order?')"
-            >
-              <i class="fa-solid fa-trash"></i> 
+            <a href="{% url 'admin_order_delete' order.order_number %}" class="flex items-center gap-2 text-red-600 hover:text-red-800 font-medium" onclick="return confirm('Delete this order?')">
+              <i class="fa-solid fa-trash"></i>
             </a>
           </td>
         </tr>
         {% empty %}
         <tr>
-          <td colspan="8" class="text-center text-gray-500 py-6">No orders found.</td>
+          <td colspan="10" class="text-center text-gray-500 py-6">No orders found.</td>
         </tr>
         {% endfor %}
       </tbody>
@@ -111,24 +104,39 @@
 {% endblock %}
 
 {% block extra_js %}
+
+
 <script>
+$(document).ready(function() {
+    $('#ordersTable').DataTable({
+        pageLength: 10,
+        lengthMenu: [5, 10, 25, 50],
+        ordering: true,
+        order: [[8, 'desc']], // Default sorting by Created date
+        columnDefs: [
+            { orderable: false, targets: 9 } // Actions column not sortable
+        ],
+        searching: false 
+    });
+});
+
+
+// AJAX for status/payment change
 function getCookie(name) {
     const value = `; ${document.cookie}`;
     const parts = value.split(`; ${name}=`);
     if (parts.length === 2) return parts.pop().split(';').shift();
 }
 
-// Reload page when status or payment changes
-$(document).on('change', '.status-select, .payment-select', function(){
+$(document).on('change', '.status-select', function(){
     const row = $(this).closest('tr');
     const orderNumber = $(this).data('id');
     const status = row.find('.status-select').val();
-    const paymentStatus = row.find('.payment-select').val();
 
     $.ajax({
         url: `{% url 'admin_order_change_status' 'ORD00000000000000' %}`.replace('ORD00000000000000', orderNumber),
         type: 'POST',
-        data: { status, payment_status: paymentStatus },
+        data: { status },
         headers: { 'X-CSRFToken': getCookie('csrftoken') },
         success: function(resp){
             if (resp.success) location.reload();
@@ -136,67 +144,6 @@ $(document).on('change', '.status-select, .payment-select', function(){
         },
         error: function(){ alert('Server error updating order'); }
     });
-});
-
-// View items modal
-$(document).on('click', '.view-items-btn', function(e){
-    e.preventDefault();
-    const orderNumber = $(this).data('id');
-
-    $.get(`{% url 'admin_order_items_json' 'ORD00000000000000' %}`.replace('ORD00000000000000', orderNumber), function(resp){
-        if (!resp.success) { alert('Failed to load items'); return; }
-
-        const rows = resp.items.map(it => {
-            const variantsHtml = it.all_variants.length ? `
-                <ul class="text-sm text-gray-600 mt-1">
-                    ${it.all_variants.map(v => `<li>${v.variant_type}: ${v.name} (Rs ${v.price_adjustment})</li>`).join('')}
-                </ul>` : '';
-
-            return `
-                <tr>
-                    <td class="px-4 py-2">${it.image_url ? `<img src="${it.image_url}" class="h-10 w-10 object-cover rounded"/>` : ''}</td>
-                    <td class="px-4 py-2">${it.product_name} ${variantsHtml}</td>
-                    <td class="px-4 py-2">${it.selected_variant}</td>
-                    <td class="px-4 py-2">${it.quantity}</td>
-                    <td class="px-4 py-2">Rs ${it.price}</td>
-                    <td class="px-4 py-2">Rs ${it.total}</td>
-                </tr>`;
-        }).join('');
-
-        const modal = `
-            <div id="orderItemsModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-                <div class="bg-white w-full max-w-4xl rounded-lg shadow-lg">
-                    <div class="flex items-center justify-between px-6 py-4 border-b">
-                        <h3 class="text-lg font-semibold">Order Items - ${orderNumber}</h3>
-                        <button id="closeItemsModal" class="text-gray-500 hover:text-gray-700">✕</button>
-                    </div>
-                    <div class="p-6 overflow-x-auto">
-                        <table class="w-full text-sm border border-gray-200">
-                            <thead class="bg-gray-100">
-                                <tr>
-                                    <th class="px-4 py-2 text-left">Image</th>
-                                    <th class="px-4 py-2 text-left">Product & Variants</th>
-                                    <th class="px-4 py-2 text-left">Selected Variant</th>
-                                    <th class="px-4 py-2 text-left">Qty</th>
-                                    <th class="px-4 py-2 text-left">Price</th>
-                                    <th class="px-4 py-2 text-left">Total</th>
-                                </tr>
-                            </thead>
-                            <tbody>${rows || `<tr><td colspan="6" class="text-center py-6 text-gray-500">No items</td></tr>`}</tbody>
-                        </table>
-                    </div>
-                    <div class="px-6 py-3 border-t text-right">
-                        <button id="closeItemsModal2" class="bg-gray-200 px-4 py-2 rounded">Close</button>
-                    </div>
-                </div>
-            </div>`;
-        $('body').append(modal);
-    });
-});
-
-// Close modal
-$(document).on('click', '#closeItemsModal, #closeItemsModal2', function(){
-    $('#orderItemsModal').remove();
 });
 </script>
 {% endblock %}

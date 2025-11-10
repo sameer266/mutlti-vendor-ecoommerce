@@ -1,8 +1,11 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from django.db.models import Q, Sum, F
+from django.db.models import Q, Sum, F,Count
 from django.utils import timezone
 from decimal import Decimal
+
+from datetime import timedelta
+from django.db.models.functions import TruncDate
 from django.contrib.auth.models import User
 from django.http import JsonResponse
 from django.contrib import messages
@@ -21,23 +24,62 @@ def admin_required(view_func):
         return view_func(request, *args, **kwargs)
     return wrapper
 
-# Admin Dashboard
+
+
+# Admin Dashboard (Last 30 Days)
 @admin_required
 def admin_dashboard(request):
+    # Date range
+    today = timezone.now().date()
+    last_30_days = today - timedelta(days=30)
+
+    # Users
     total_users = User.objects.count()
     customers_count = UserRole.objects.filter(role='customer').count()
     vendors_count = UserRole.objects.filter(role='vendor').count()
     admins_count = UserRole.objects.filter(role='admin').count()
+
+    # Vendors
     total_vendors = Vendor.objects.count()
     verified_vendors = Vendor.objects.filter(verification_status='verified').count()
     pending_vendors = Vendor.objects.filter(verification_status='pending').count()
+
+    # Products
     total_products = Product.objects.count()
     active_products = Product.objects.filter(is_active=True).count()
     low_stock_products = Product.objects.filter(stock__lte=5, stock__gt=0).count()
+
+    # Orders
     total_orders = Order.objects.count()
     pending_orders = Order.objects.filter(status='pending').count()
     delivered_orders = Order.objects.filter(status='delivered').count()
     total_revenue = Order.objects.filter(payment_status='paid').aggregate(Sum('total'))['total__sum'] or 0
+
+    # Last 30 days analytics
+    recent_orders = Order.objects.filter(payment_status='paid', created_at__date__gte=last_30_days)
+    recent_products = Product.objects.filter(created_at__date__gte=last_30_days)
+
+    # Daily revenue & orders
+    daily_orders = (recent_orders
+                    .annotate(date=TruncDate('created_at'))
+                    .values('date')
+                    .annotate(total_orders=Count('id'), revenue=Sum('total'))
+                    .order_by('date'))
+    
+    revenue_labels = [item['date'].strftime('%Y-%m-%d') for item in daily_orders]
+    revenue_data = [float(item['revenue'] or 0) for item in daily_orders]
+    orders_data = [item['total_orders'] for item in daily_orders]
+
+    # Daily new products
+    daily_products = (recent_products
+                      .annotate(date=TruncDate('created_at'))
+                      .values('date')
+                      .annotate(new_products=Count('id'))
+                      .order_by('date'))
+    product_labels = [item['date'].strftime('%Y-%m-%d') for item in daily_products]
+    new_products_data = [item['new_products'] for item in daily_products]
+
+    # Content / Others
     active_sliders = Slider.objects.filter(is_active=True).count()
     active_banners = Banner.objects.filter(is_active=True).count()
     active_home_categories = Category.objects.filter(is_featured=True).count()
@@ -68,8 +110,13 @@ def admin_dashboard(request):
         'unread_contacts': unread_contacts,
         'newsletter_subscribers': newsletter_subscribers,
         'unread_notifications': unread_notifications,
-      
+        'revenue_labels': revenue_labels,
+        'revenue_data': revenue_data,
+        'orders_data': orders_data,
+        'product_labels': product_labels,
+        'new_products_data': new_products_data,
     }
+
     return render(request, 'dashboard/pages/admin_dashboard.html', context)
 
 # User Management
@@ -839,6 +886,28 @@ def admin_order_delete(request, order_number):
     order.delete()
     return redirect('admin_orders_list')
 
+@admin_required
+def admin_order_invoice_view(request,order_number):
+    order=get_object_or_404(Order,order_number=order_number)
+    invoices=Invoice.objects.filter(order=order)
+    return render(request,'dashboard/pages/order/invoice_list.html',{'invoices':invoices,'order_number':order_number})
+    
+
+@admin_required
+def admin_invoice_detail(request, invoice_number):
+    invoice = get_object_or_404(Invoice, invoice_number=invoice_number)
+    shipping = ShippingCost.objects.first()
+    shipping_cost = shipping.cost if shipping else 0
+    tax_rate = shipping.tax if shipping else 0
+
+    return render(request, 'dashboard/pages/order/invoice_detail.html', {
+        'invoice': invoice,
+        'tax_rate': tax_rate,
+        'shipping_cost': shipping_cost,
+    })
+    
+    
+
 @login_required
 def admin_order_change_status(request, order_number):
     if request.method != 'POST':
@@ -1303,10 +1372,25 @@ def admin_profile_edit(request):
 @login_required
 def vendor_dashboard(request):
     user = request.user
-    vendor_user=Vendor.objects.get(user=user)
+    vendor_user = Vendor.objects.get(user=user)
+
     products = Product.objects.filter(vendor=vendor_user)
-    orders = Order.objects.filter(
-    items__product__vendor=vendor_user).distinct()
+    orders = Order.objects.filter(items__product__vendor=vendor_user).distinct()
+
+    # Last 30 days
+    last_30_days = timezone.now() - timedelta(days=30)
+    recent_orders = orders.filter(created_at__gte=last_30_days)
+
+    # Group revenue by day
+    daily_revenue = (
+        recent_orders.filter(status='delivered')
+        .values('created_at__date')
+        .annotate(total=Sum('total'))
+        .order_by('created_at__date')
+    )
+
+    labels = [str(item['created_at__date']) for item in daily_revenue]
+    data = [float(item['total']) for item in daily_revenue]
 
     context = {
         'total_products': products.count(),
@@ -1316,11 +1400,11 @@ def vendor_dashboard(request):
         'pending_orders': orders.filter(status='pending').count(),
         'delivered_orders': orders.filter(status='delivered').count(),
         'total_revenue': orders.filter(status='delivered').aggregate(total=Sum('total'))['total'] or 0,
+        'chart_labels': labels,
+        'chart_data': data,
     }
 
     return render(request, 'vendor/vendor_dashboard.html', context)
-
-
 
 
 
@@ -1615,6 +1699,14 @@ def vendor_update_estimated_date(request, order_number):
     return JsonResponse({"success": False, "message": "Invalid request method."})
 
 
+
+@login_required
+def vendor_order_invoice_view(request,order_number):
+    order=get_object_or_404(Order,order_number=order_number)
+    invoices=Invoice.objects.filter(order=order)
+    return render(request,'vendor/order/invoice_list.html',{'invoices':invoices,'order_number':order_number})
+    
+    
 # Vendor Payouts
 @login_required
 def vendor_payouts_list(request):

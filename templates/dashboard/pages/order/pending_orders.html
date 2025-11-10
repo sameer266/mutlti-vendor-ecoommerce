@@ -48,7 +48,9 @@
               {% endfor %}
             </select>
           </td>
-          <td class="px-4 py-3">{{ order.created_at|date:"Y-m-d H:i" }}</td>
+
+<td class="px-4 py-3">{{ order.created_at|date:"Y-m-d h:i A" }}</td>
+
         </tr>
         {% endfor %}
       </tbody>

@@ -97,29 +97,40 @@
   </div>
 </div>
 
-<!-- jQuery for filtering -->
+{%endblock%}
+{% block extra_js %}
 
 <script>
-  $(document).ready(function(){
-    $('#statusFilter, #dateFilter').on('change', function(){
-      var status = $('#statusFilter').val();
-      var date = $('#dateFilter').val();
+$(document).ready(function() {
+    function filterInvoices() {
+        var selectedStatus = $('#statusFilter').val().toLowerCase();
+        var selectedDate = $('#dateFilter').val();
 
-      $('#invoiceTable tbody tr').each(function(){
-        var rowStatus = $(this).data('status');
-        var rowDate = $(this).data('date');
-        var show = true;
+        $('#invoiceTable tbody tr').each(function() {
+            var rowStatus = ($(this).data('status') || '').toString().toLowerCase();
+            var rowDate = $(this).data('date') || '';
 
-        if(status && rowStatus !== status){
-          show = false;
-        }
-        if(date && rowDate !== date){
-          show = false;
-        }
+            var show = true;
 
-        $(this).toggle(show);
-      });
-    });
-  });
+            // Filter by status
+            if (selectedStatus && rowStatus !== selectedStatus) {
+                show = false;
+            }
+
+            // Filter by date
+            if (selectedDate && rowDate !== selectedDate) {
+                show = false;
+            }
+
+            $(this).toggle(show);
+        });
+    }
+
+    // Trigger filter when inputs change
+    $('#statusFilter, #dateFilter').on('change', filterInvoices);
+
+    // Optional: trigger filter on page load
+    filterInvoices();
+});
 </script>
 {% endblock %}
