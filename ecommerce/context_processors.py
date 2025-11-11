@@ -39,3 +39,17 @@ def global_context(request):
         'total_vendor_pending_payouts':total_vendor_pending_payouts,
        
     }
+
+
+
+import json
+import os
+from django.conf import settings
+
+def nepal_locations(request):
+    file_path = os.path.join(settings.BASE_DIR, 'static', 'data', 'nepal_provinces.json')
+    with open(file_path, 'r', encoding='utf-8') as f:
+        data = json.load(f)
+    return {
+        'nepal_locations': data
+    }

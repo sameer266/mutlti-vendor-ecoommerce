@@ -1,8 +1,6 @@
 {% extends 'dashboard/components/base.html' %}
 {% load static %}
 
-
-
 {% block content %}
 <div class="bg-white rounded-xl shadow p-6">
   <!-- Header -->
@@ -31,7 +29,6 @@
       <thead class="bg-gray-100">
         <tr>
           <th class="px-4 py-3 text-left">Invoice #</th>
-      
           <th class="px-4 py-3 text-left">Customer</th>
           <th class="px-4 py-3 text-left">Subtotal</th>
           <th class="px-4 py-3 text-left">Tax</th>
@@ -45,18 +42,13 @@
         {% for invoice in invoices %}
         <tr class="hover:bg-gray-50">
           <td class="px-4 py-3 font-medium">{{ invoice.invoice_number }}</td>
-          
-     
-
           <td class="px-4 py-3">
             {{ invoice.customer.get_full_name }}<br>
             <span class="text-xs text-gray-500">{{ invoice.customer.email }}</span>
           </td>
-
           <td class="px-4 py-3">Rs {{ invoice.subtotal }}</td>
           <td class="px-4 py-3">Rs {{ invoice.tax_amount }}</td>
           <td class="px-4 py-3 font-semibold text-green-700">Rs {{ invoice.total }}</td>
-
           <td class="px-4 py-3">
             <span class="px-2 py-1 rounded-full text-xs font-medium
               {% if invoice.payment_status == 'paid' %}bg-green-100 text-green-700
@@ -66,9 +58,7 @@
               {{ invoice.payment_status|capfirst }}
             </span>
           </td>
-
           <td class="px-4 py-3">{{ invoice.created_at|date:"Y-m-d h:i A" }}</td>
-
           <td class="px-4 py-3 text-center">
             <a href="{% url 'vendor_invoice_detail' invoice.invoice_number %}" 
               class="text-blue-600 hover:text-blue-800" title="View Invoice">
@@ -78,7 +68,7 @@
         </tr>
         {% empty %}
         <tr>
-          <td colspan="9" class="text-center text-gray-500 py-6">
+          <td colspan="8" class="text-center text-gray-500 py-6">
             No invoices found for this order.
           </td>
         </tr>
@@ -90,14 +80,12 @@
 {% endblock %}
 
 {% block extra_js %}
-
-
 <script>
   $(document).ready(function () {
     $('#invoiceTable').DataTable({
       responsive: true,
       pageLength: 10,
-      order: [[7, 'desc']], // sort by Date column
+      order: [[6, 'desc']], // sort by Date column (0-based index)
       language: {
         search: "_INPUT_",
         searchPlaceholder: "Search invoices...",
@@ -106,7 +94,7 @@
         zeroRecords: "No matching invoices found"
       },
       columnDefs: [
-        { orderable: false, targets: [8] } // disable sorting on Actions
+        { orderable: false, targets: [7] } // disable sorting on Actions column
       ]
     });
   });

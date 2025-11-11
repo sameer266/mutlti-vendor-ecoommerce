@@ -13,19 +13,15 @@
     {% csrf_token %}
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-    <div>
-      <label class="block text-sm font-medium text-gray-700" >First Name</label>
-      <input type="text" name="first_name" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5" required>
-    </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700">First Name</label>
+        <input type="text" name="first_name" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5" required>
+      </div>
 
-    <div>
-      <label class="block text-sm font-medium text-gray-700">Last Name</label>
-      <input type="text" name="last_name" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5" required>
-    </div>
-
-   
-
-    </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Last Name</label>
+        <input type="text" name="last_name" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5" required>
+      </div>
 
       <div>
         <label class="block text-sm font-medium text-gray-700">Shop Name</label>
@@ -47,17 +43,21 @@
         <input type="text" name="address" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5" required>
       </div>
 
+      <!-- Province & District -->
       <div>
-        <label class="block text-sm font-medium text-gray-700">City</label>
-        <input type="text" name="city" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5" required>
+        <label class="block text-sm font-medium text-gray-700">Province</label>
+        <select id="province" name="province" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5" required>
+          <option value="">Select Province</option>
+          {% for prov in nepal_locations %}
+            <option value="{{ prov.province }}">{{ prov.province }}</option>
+          {% endfor %}
+        </select>
       </div>
 
       <div>
-        <label class="block text-sm font-medium text-gray-700">Province</label>
-        <select name="province" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5" required>
-          {% for value, label in provinces %}
-            <option value="{{ value }}">{{ label }}</option>
-          {% endfor %}
+        <label class="block text-sm font-medium text-gray-700">District</label>
+        <select id="district" name="city" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5" required>
+          <option value="">Select District</option>
         </select>
       </div>
 
@@ -90,22 +90,27 @@
         <label class="block text-sm font-medium text-gray-700">Shop Logo</label>
         <input type="file" name="shop_logo" accept="image/*" class="mt-1 block w-full">
       </div>
+
       <div>
         <label class="block text-sm font-medium text-gray-700">Shop Banner</label>
         <input type="file" name="shop_banner" accept="image/*" class="mt-1 block w-full">
       </div>
+
       <div>
         <label class="block text-sm font-medium text-gray-700">PAN Document (pdf/jpg/jpeg/png)</label>
         <input type="file" name="pan_document" accept=".pdf,image/*" class="mt-1 block w-full" required>
       </div>
+
       <div>
         <label class="block text-sm font-medium text-gray-700">Citizenship Front</label>
         <input type="file" name="citizenship_front" accept="image/*" class="mt-1 block w-full">
       </div>
+
       <div>
         <label class="block text-sm font-medium text-gray-700">Citizenship Back</label>
         <input type="file" name="citizenship_back" accept="image/*" class="mt-1 block w-full">
       </div>
+
       <div>
         <label class="block text-sm font-medium text-gray-700">Company Registration</label>
         <input type="file" name="company_registration" class="mt-1 block w-full">
@@ -117,4 +122,28 @@
     </div>
   </form>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const locations = {{ nepal_locations|safe }};
+  const provinceSelect = document.getElementById('province');
+  const districtSelect = document.getElementById('district');
+
+  provinceSelect.addEventListener('change', function() {
+    const selectedProvince = this.value;
+    districtSelect.innerHTML = '<option value="">Select District</option>';
+    const prov = locations.find(p => p.province === selectedProvince);
+    if (prov) {
+      prov.districts.forEach(d => {
+        const opt = document.createElement('option');
+        opt.value = d;
+        opt.text = d;
+        districtSelect.appendChild(opt);
+      });
+    }
+  });
+});
+</script>
 {% endblock %}

@@ -64,7 +64,7 @@
       <!-- Submit Button -->
       <div>
         <button type="submit"
-                class="w-full py-2 px-4 bg-[var(--bg-brown)] text-white font-semibold rounded-lg hover:bg-[var(--primary-dark)] transition">
+                class="w-full py-2 px-4 bg-[var(--bg-brown)] text-white font-semibold rounded-lg hover:bg-[var(--primary-dark)] cursor-pointer transition">
           Sign Up
         </button>
       </div>
@@ -95,27 +95,32 @@
 <script>
 $(document).ready(function() {
   // Form validation
-  $('#signupForm').on('submit', function(e) {
-    let valid = true;
+$('#signupForm').on('submit', function(e) {
+  let valid = true;
 
-    // Reset error messages
-    $('#errorFullName, #errorEmail, #errorPassword1, #errorPassword2').hide();
+  // Reset error messages
+  $('#errorFullName, #errorEmail, #errorPassword1, #errorPassword2').hide();
 
-    // Email
-    const email = $('#email').val().trim();
-    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!email || !emailPattern.test(email)) { $('#errorEmail').show(); valid = false; }
+  // Email
+  const email = $('#email').val().trim();
+  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!email || !emailPattern.test(email)) { $('#errorEmail').show(); valid = false; }
 
-    // Password
-    const password1 = $('#password1').val();
-    if (!password1 || password1.length < 6) { $('#errorPassword1').show(); valid = false; }
+  // Password
+  const password1 = $('#password1').val();
+  if (!password1 || password1.length < 6) { $('#errorPassword1').show(); valid = false; }
 
-    // Confirm Password
-    const password2 = $('#password2').val();
-    if (password1 !== password2) { $('#errorPassword2').show(); valid = false; }
+  // Confirm Password
+  const password2 = $('#password2').val();
+  if (password1 !== password2) { $('#errorPassword2').show(); valid = false; }
 
-    if (!valid) e.preventDefault();
-  });
+  if (!valid) {
+    e.preventDefault();
+  } else {
+    // ✅ Disable the button to prevent multiple submissions
+    $('button[type="submit"]').prop('disabled', true).text('Please wait...');
+  }
+});
 
   // Toggle password visibility using Font Awesome
   $('#togglePassword1').on('click', function() {

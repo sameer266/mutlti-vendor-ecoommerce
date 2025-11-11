@@ -50,23 +50,36 @@
       <textarea name="address" rows="2" class="mt-1 w-full border rounded-lg p-2 focus:ring focus:ring-[var(--primary)]">{{ profile.address }}</textarea>
     </div>
 
-    <!-- City -->
-    <div>
-      <label class="block text-sm font-medium text-gray-600">City</label>
-      <input type="text" name="city" value="{{ profile.city }}" class="mt-1 w-full border rounded-lg p-2 focus:ring focus:ring-[var(--primary)]">
+    <!-- Province & District -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-600">Province</label>
+        <select id="province" name="province" class="mt-1 w-full border rounded-lg p-2 focus:ring focus:ring-[var(--primary)]">
+          <option value="">Select Province</option>
+          {% for prov in nepal_locations %}
+            <option value="{{ prov.province }}" {% if profile.province == prov.province %}selected{% endif %}>{{ prov.province }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-600">District / City</label>
+        <select id="district" name="city" class="mt-1 w-full border rounded-lg p-2 focus:ring focus:ring-[var(--primary)]">
+          <option value="{{prov.city}}">Select District</option>
+          {% if profile.province %}
+            {% for prov in nepal_locations %}
+              {% if prov.province == profile.province %}
+                {% for dist in prov.districts %}
+                  <option value="{{ dist }}" {% if profile.district == dist %}selected{% endif %}>{{ dist }}</option>
+                {% endfor %}
+              {% endif %}
+            {% endfor %}
+          {% endif %}
+        </select>
+      </div>
     </div>
 
-    <!-- Province -->
-    <div>
-      <label class="block text-sm font-medium text-gray-600">Province</label>
-      <select name="province" class="mt-1 w-full border rounded-lg p-2 focus:ring focus:ring-[var(--primary)]">
-        <option value="">Select Province</option>
-        {% for code, name in profile.PROVINCE_CHOICES %}
-          <option value="{{ code }}" {% if profile.province == code %}selected{% endif %}>{{ name }}</option>
-        {% endfor %}
-      </select>
-    </div>
-
+    
     <!-- Submit -->
     <div class="flex justify-end">
       <button type="submit" class="bg-[var(--primary)] text-white px-6 py-2 rounded-lg hover:bg-[var(--primary-dark)] transition">
@@ -76,4 +89,28 @@
   </form>
 
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const locations = {{ nepal_locations|safe }};
+  const provinceSelect = document.getElementById('province');
+  const districtSelect = document.getElementById('district');
+
+  provinceSelect.addEventListener('change', function() {
+    const selectedProvince = this.value;
+    districtSelect.innerHTML = '<option value="">Select District</option>';
+    const prov = locations.find(p => p.province === selectedProvince);
+    if (prov) {
+      prov.districts.forEach(d => {
+        const opt = document.createElement('option');
+        opt.value = d;
+        opt.text = d;
+        districtSelect.appendChild(opt);
+      });
+    }
+  });
+});
+</script>
 {% endblock %}

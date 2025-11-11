@@ -24,6 +24,9 @@ urlpatterns = [
     # Payment Management
     path('payments/', views.admin_payments_overview, name='admin_payments_overview'),
     path('payments/vendor/<int:vendor_id>/', views.admin_vendor_payments_detail, name='admin_vendor_payments_detail'),
+    
+    # Commission
+    path('admin/api/commission/update/', views.admin_update_commission, name='admin-update-commission'),
 
     # Payout Requests
     path('payout-requests/', views.admin_payout_requests_list, name='admin_payout_requests_list'),

@@ -203,69 +203,77 @@ def admin_vendors_verified_kyc(request):
 import random
 import string
 from django.core.mail import send_mail
-from django.conf import settings
+
 
 
 @admin_required
 def admin_vendor_add(request):
     if request.method == 'POST':
-        first_name=request.POST.get('first_name')
-        last_name=request.POST.get('last_name')
-        email=request.POST.get('email'),
-        user=User.objects.create(first_name=first_name,last_name=last_name,email=email)
-        # Generate random password (8–10 chars, mix of letters/numbers/symbols)
-        random_password = ''.join(random.choices(string.ascii_letters + string.digits + "!@#$%^&*", k=10))
-        user.set_password(random_password)
-        user.save()
-
-        vendor = Vendor.objects.create(
-            user=user,
-            shop_name=request.POST.get('shop_name'),
-            phone=request.POST.get('phone'),
-            address=request.POST.get('address'),
-            city=request.POST.get('city'),
-            province=request.POST.get('province'),
-            pan_number=request.POST.get('pan_number'),
-            citizenship_number=request.POST.get('citizenship_number', ''),
-            verification_status=request.POST.get('verification_status', 'pending')
-        )
-        if request.FILES.get('qr_image'):
-            vendor.qr_image = request.FILES['qr_image']
-
-        if request.FILES.get('shop_logo'):
-            vendor.shop_logo = request.FILES['shop_logo']
-
-        if request.FILES.get('shop_banner'):
-            vendor.shop_banner = request.FILES['shop_banner']
-
-        if request.FILES.get('pan_document'):
-            vendor.pan_document = request.FILES['pan_document']
-
-        if request.FILES.get('citizenship_front'):
-            vendor.citizenship_front = request.FILES['citizenship_front']
-
-        if request.FILES.get('citizenship_back'):
-            vendor.citizenship_back = request.FILES['citizenship_back']
-
-        if request.FILES.get('company_registration'):
-            vendor.company_registration = request.FILES['company_registration']
-
-        vendor.save()
-
         try:
-            send_mail(
-                subject='Your Vendor Account Has Been Created',
-                message=f'Hello {user.first_name},\n\nYour vendor account has been created successfully.\n'
-                        f'Password: {random_password}\n\n'
-                        f'Please change your password after logging in.',
-                from_email='hellobaja.com.np',
-                recipient_list=[user.email],
-                fail_silently=True,
-            )
-        except Exception as e:
-            print("Email sending failed:", e)
+            first_name = request.POST.get('first_name')
+            last_name = request.POST.get('last_name')
+            email = request.POST.get('email') 
 
-        return redirect('admin_vendors_list')
+            # Create user
+            user = User.objects.create(first_name=first_name, last_name=last_name, email=email)
+
+            # Generate random password
+            random_password = ''.join(random.choices(string.ascii_letters + string.digits + "!@#$%^&*", k=10))
+            user.set_password(random_password)
+            user.save()
+
+            # Create vendor
+            vendor = Vendor.objects.create(
+                user=user,
+                shop_name=request.POST.get('shop_name'),
+                phone=request.POST.get('phone'),
+                address=request.POST.get('address'),
+                city=request.POST.get('city'),
+                province=request.POST.get('province'),
+                pan_number=request.POST.get('pan_number'),
+                citizenship_number=request.POST.get('citizenship_number', ''),
+                verification_status=request.POST.get('verification_status', 'pending')
+            )
+
+            # File uploads
+            if request.FILES.get('qr_image'):
+                vendor.qr_image = request.FILES['qr_image']
+            if request.FILES.get('shop_logo'):
+                vendor.shop_logo = request.FILES['shop_logo']
+            if request.FILES.get('shop_banner'):
+                vendor.shop_banner = request.FILES['shop_banner']
+            if request.FILES.get('pan_document'):
+                vendor.pan_document = request.FILES['pan_document']
+            if request.FILES.get('citizenship_front'):
+                vendor.citizenship_front = request.FILES['citizenship_front']
+            if request.FILES.get('citizenship_back'):
+                vendor.citizenship_back = request.FILES['citizenship_back']
+            if request.FILES.get('company_registration'):
+                vendor.company_registration = request.FILES['company_registration']
+
+            vendor.save()
+
+            # Send email with credentials
+            try:
+                send_mail(
+                    subject='Your Vendor Account Has Been Created',
+                    message=f'Hello {user.first_name},\n\n'
+                            f'Your vendor account has been created successfully.\n'
+                            f'Password: {random_password}\n\n'
+                            f'Please change your password after logging in.',
+                    from_email='hellobajar@gmail.com',  # ✅ match your SMTP sender
+                    recipient_list=[user.email],
+                    fail_silently=False,  # ✅ for debugging
+                )
+            except Exception as e:
+                messages.warning(request, f"Vendor created, but email could not be sent: {e}")
+
+            messages.success(request, "Vendor created successfully.")
+            return redirect('admin_vendors_list')
+
+        except Exception as e:
+            messages.error(request, f"Error while creating vendor: {e}")
+            return redirect('admin_vendors_list')
 
     users = User.objects.all()
     provinces = Vendor.PROVINCE_CHOICES
@@ -273,7 +281,6 @@ def admin_vendor_add(request):
         'users': users,
         'provinces': provinces
     })
-
 
 
 @admin_required
@@ -801,9 +808,38 @@ def admin_vendor_payments_detail(request, vendor_id):
         return render(request, 'dashboard/pages/payment/payment_detail.html', context)
 
 
+
+# commission update api
+
+@admin_required
+def admin_update_commission(request):
+    commission = VendorCommission.objects.first()
+    if not commission:
+        commission = VendorCommission.objects.create(rate=Decimal('0.10'))   
+    new_rate = request.POST.get('rate')
+    if not new_rate:
+        return JsonResponse({'success': False, 'error': 'Rate is required'}, status=400)
+    try:
+        new_rate_decimal = Decimal(new_rate)
+        if new_rate_decimal < 0 or new_rate_decimal > 1:
+            return JsonResponse({'success': False, 'error': 'Rate must be between 0 and 1'}, status=400)
+    except:
+        return JsonResponse({'success': False, 'error': 'Invalid rate format'}, status=400)
+
+    commission.rate = new_rate_decimal
+    commission.updated_at = timezone.now()
+    commission.save()
+
+    return JsonResponse({
+        'success': True,
+        'rate': str(commission.rate),
+        'updated_at': commission.updated_at.strftime("%Y-%m-%d %H:%M:%S")
+    })
+    
 # Payout Requests
 @admin_required
 def admin_payout_requests_list(request):
+    VendorCommission
     status_filter = request.GET.get('status')
     requests_qs = VendorPayoutRequest.objects.select_related('vendor').all().order_by('-created_at')
     if status_filter in ['pending','rejected', 'paid']:

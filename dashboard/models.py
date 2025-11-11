@@ -468,16 +468,7 @@ class Order(models.Model):
     address = models.TextField()
     city = models.CharField(max_length=100)
     
-    PROVINCE_CHOICES = [
-        ('province1', 'Koshi Province'),
-        ('madhesh', 'Madhesh Province'),
-        ('bagmati', 'Bagmati Province'),
-        ('gandaki', 'Gandaki Province'),
-        ('lumbini', 'Lumbini Province'),
-        ('karnali', 'Karnali Province'),
-        ('sudurpashchim', 'Sudurpashchim Province'),
-    ]
-    province = models.CharField(max_length=20, choices=PROVINCE_CHOICES)
+    province = models.CharField(max_length=20,null=True,blank=True)
     postal_code = models.CharField(max_length=10, blank=True)
     
     # Order Pricing

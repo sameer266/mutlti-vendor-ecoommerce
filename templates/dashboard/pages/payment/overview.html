@@ -4,13 +4,18 @@
 {% block content %}
 <div class="space-y-6">
 
-  <!-- Header & Commission -->
-  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-    <h1 class="text-2xl font-semibold text-gray-800"><i class="fas fa-wallet"></i> Vendor Payments Overview</h1>
-    <div class="bg-blue-50 text-blue-700 px-4 py-2 rounded-lg text-sm font-medium border border-blue-200 shadow-sm">
-      Platform Commission Rate: <span class="font-semibold">{{ commission_rate_percent }}%</span>
-    </div>
+<!-- Header & Commission -->
+<div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+  <h1 class="text-2xl font-semibold text-gray-800"><i class="fas fa-wallet"></i> Vendor Payments Overview</h1>
+  
+  <!-- Commission Card with Update -->
+  <div class="bg-blue-50 text-blue-700 px-4 py-2 rounded-lg text-sm font-medium border border-blue-200 shadow-sm flex items-center gap-3">
+    Platform Commission Rate: 
+    <span id="commissionRate" class="font-semibold">{{ commission_rate_percent }}%</span>
+    <button id="updateCommissionBtn" class="bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 text-xs">Update</button>
   </div>
+</div>
+
 
   <!-- Summary Cards with Font Awesome Icons -->
   <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -113,5 +118,46 @@
       ]
     });
   });
+
+
+
+    $('#updateCommissionBtn').on('click', function(){
+      let currentRate = parseFloat($('#commissionRate').text());
+      let newRate = prompt("Enter new commission rate (%)", currentRate);
+
+      if(newRate === null) return; // User cancelled
+
+      newRate = parseFloat(newRate);
+      if(isNaN(newRate) || newRate < 0 || newRate > 100){
+        alert("Please enter a valid rate between 0 and 100.");
+        return;
+      }
+
+      $.ajax({
+        url: "{% url 'admin-update-commission' %}",
+        type: 'POST',
+        data: { rate: newRate / 100 }, // convert % to decimal
+        headers: { 'X-CSRFToken': getCookie('csrftoken') },
+        success: function(resp){
+          if(resp.success){
+            $('#commissionRate').text(newRate.toFixed(2) + "%");
+            toastr.success("Commission rate updated successfully.");
+          } else {
+            toastr.error(resp.error || "Failed to update commission.");
+          }
+        },
+        error: function(){
+          toastr.error("Server error while updating commission.");
+        }
+      });
+    });
+
+    // CSRF helper function
+    function getCookie(name) {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) return parts.pop().split(';').shift();
+    }
+    
 </script>
 {% endblock %}

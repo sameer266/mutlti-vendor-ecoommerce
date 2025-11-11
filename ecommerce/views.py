@@ -689,60 +689,65 @@ def login_page(request):
     return render(request,'website/pages/login.html')
 
 
-
-
 def signup_page(request):
     if request.method == "POST":
-        first_name=request.POST.get('first_name')
-        last_name=request.POST.get('last_name')
-        email = request.POST.get('email', '').strip()
-        password1 = request.POST.get('password1', '')
-        password2 = request.POST.get('password2', '')
-        if password1 != password2:
-            messages.error(request, "Passwords do not match.")
-            return redirect('signup_page')
-        
-        if User.objects.filter(email=email,is_active=True).exists():
-            messages.error(request,'User already exists')
-            return redirect('signup_page')
+        try:
+            first_name = request.POST.get('first_name')
+            last_name = request.POST.get('last_name')
+            email = request.POST.get('email', '').strip()
+            password1 = request.POST.get('password1', '')
+            password2 = request.POST.get('password2', '')
 
-        if User.objects.filter(email=email,is_active=False).exists():
-            user=User.objects.get(email=email)
-            user.first_name=first_name
-            user.last_name=last_name
-            user.save()
-        else:            
-            user = User.objects.create_user(
-                username=email,
-                email=email,
-                password=password1,
-                first_name=first_name,
-                last_name=last_name,
-                is_active=False  
-            )
+            if password1 != password2:
+                messages.error(request, "Passwords do not match.")
+                return redirect('signup_page')
 
-            # Generate OTP
+            if User.objects.filter(email=email, is_active=True).exists():
+                messages.error(request, 'User already exists')
+                return redirect('signup_page')
+
+            if User.objects.filter(email=email, is_active=False).exists():
+                user = User.objects.get(email=email)
+                user.first_name = first_name
+                user.last_name = last_name
+                user.save()
+            else:
+                user = User.objects.create_user(
+                    username=email,
+                    email=email,
+                    password=password1,
+                    first_name=first_name,
+                    last_name=last_name,
+                    is_active=False
+                )
+
             otp = str(random.randint(100000, 999999))
-            otp_obj,_=OTPVerification.objects.get_or_create(
-                user=user,
-    
-            )
-            otp_obj.otp_code=otp
+            otp_obj, _ = OTPVerification.objects.get_or_create(user=user)
+            otp_obj.otp_code = otp
             otp_obj.save()
-            send_mail(
-                subject="Your Hello Bajar OTP Verification Code",
-                message=f"Hello {first_name},\n\nYour OTP code is: {otp}",
-                from_email="hellobajar@gmail.com",
-                recipient_list=[email],
-                fail_silently=False,
-            )
 
-            # Redirect to OTP page
+            try:
+                send_mail(
+                    subject="Your Hello Bajar OTP Verification Code",
+                    message=f"Hello {first_name},\n\nYour OTP code is: {otp}",
+                    from_email="hellobajar@gmail.com",
+                    recipient_list=[email],
+                    fail_silently=False,
+                )
+            except Exception as mail_error:
+                messages.error(request, f"Error sending OTP email: {mail_error}")
+                return redirect('signup_page')
+
             request.session['user_email'] = email
             messages.info(request, "OTP has been sent to your email.")
             return redirect('verify_otp_page')
 
+        except Exception as e:
+            messages.error(request, f"Something went wrong: {e}")
+            return redirect('signup_page')
+
     return render(request, 'website/pages/signup.html')
+
 
 
 

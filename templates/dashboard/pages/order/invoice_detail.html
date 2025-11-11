@@ -6,7 +6,7 @@
 
   <!-- Header with Back & Print -->
   <div class="flex justify-between items-center mb-6 print:hidden">
-    <a href="{% url 'orders_invoice_list' invoice.order.order_number %}" 
+    <a href="{% url 'admin_orders_invoice_list' invoice.order.order_number %}" 
        class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-500 transition flex items-center gap-2">
       <i class="fa-solid fa-arrow-left"></i> Back
     </a>
