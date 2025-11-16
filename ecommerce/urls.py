@@ -21,16 +21,18 @@ from . import views
 from django.conf import settings
 from django.conf.urls.static import static
 
+
 urlpatterns = [
     # Admin URLs
     path('admin/', admin.site.urls),
     path('admin-dashboard/',include('dashboard.urls')),
-    
+
     # Main Pages
     path('',views.home_page,name="home"),
     path('search/',views.search_page,name='search'),
     path('all-collections/',views.all_collections,name="all_collections"),
     path("new-arrivals/",views.new_arrivals_page,name="new_arrivals"),
+    path("become-vendor/",views.become_vendor,name="become_vendor_page"),
 
     # Vendor & Product URLs
     path("vendors/",views.vendors,name="vendors"),
@@ -66,6 +68,7 @@ urlpatterns = [
     
     path("dashboard/customer/invoices/",views.customer_invoices,name='customer_invoices'),
     path('dashboard/customer/invoice/<str:invoice_number>/', views.customer_invoice_detail, name='customer_invoice_detail'),
+    path('dashboard/<int:product_id>/review/', views.write_review, name='write_review'),
 
     # Rich Text Editor
     path('ckeditor/', include('ckeditor_uploader.urls')),

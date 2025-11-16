@@ -80,13 +80,13 @@
 
           <td class="px-4 py-3 text-center flex justify-center gap-3">
             <!-- View Items -->
-            <button 
+            <a href="{% url 'vendor_order_details' order.order_number %}"
               class="view-items-btn flex items-center gap-2 text-blue-600 hover:text-blue-800 font-medium"
               data-id="{{ order.order_number }}"
               title="View Items"
             >
               <i class="fa-solid fa-eye"></i>
-            </button>
+          </a>
 
 
              <!-- View Invoices -->

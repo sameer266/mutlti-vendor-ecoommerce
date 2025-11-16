@@ -50,6 +50,7 @@ urlpatterns = [
 
     # Order Management
     path('orders/', views.admin_orders_list, name='admin_orders_list'),
+    path('odrer-details/<str:order_number>/',views.admin_order_details,name='admin_order_details'),
     path('orders/pending/', views.admin_orders_pending, name='admin_orders_pending'),
     path('orders/delivered/', views.admin_orders_delivered, name='admin_orders_delivered'),
     path('orders/<str:order_number>/status/', views.admin_order_change_status, name='admin_order_change_status'),
@@ -134,6 +135,7 @@ urlpatterns = [
     path('vendor/products/low-stock/', views.vendor_products_low_stock, name='vendor_products_low_stock'),
     
     path('vendor/orders/', views.vendor_orders_list, name='vendor_orders_list'),
+    path('vendor/order-details/<str:order_number>/',views.vendor_order_details,name="vendor_order_details"),
     path('vendor/orders/pending/', views.vendor_orders_pending, name='vendor_orders_pending'),
     path('vendor/orders/delivered/', views.vendor_orders_delivered, name='vendor_orders_delivered'),
     path('vendor/api/orders/<str:order_number>/update-estimated-date/', views.vendor_update_estimated_date, name='vendor_update_estimated_date'),

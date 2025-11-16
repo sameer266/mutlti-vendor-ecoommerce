@@ -21,7 +21,7 @@ admin.site.register(Contact)
 admin.site.register(Notification)
 admin.site.register(VendorCommission)
 admin.site.register(ShippingCost)
-
+admin.site.register(Invoice)
 admin.site.register(VendorPayoutRequest)
 admin.site.register(VendorWallet)
 

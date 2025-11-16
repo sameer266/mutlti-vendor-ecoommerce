@@ -3,11 +3,42 @@
   <div class="container mx-auto flex justify-between items-center px-4 py-2">
     <p>Welcome to Hello Bajar</p>
     <p>Need help? Call us:
-      <a href="tel:+{{organization.phone}} class="hover:text-[var(--primary)] font-semibold">
+      <a href="tel:+{{organization.phone}}" class="hover:text-[var(--primary)] font-semibold">
         +{{organization.phone}}
       </a>
     </p>
     <ul class="hidden md:flex space-x-4">
+
+
+
+
+          
+<!-- Language Selector -->
+<div id="language_selector" class="flex items-center gap-2 sm:justify-start text-sm">
+    <div class="flex items-center gap-2 bg-gray-100 px-3 py-2 rounded-md shadow-sm hover:shadow-md transition">
+       <i class="fa-solid fa-earth-americas text-blue-600 text-lg"></i>
+
+
+        <select id="custom_translate" class="bg-transparent text-gray-700 outline-none cursor-pointer font-medium">
+            <option value="en">🇺🇸 US</option>
+            <option value="ne">🇳🇵 NP</option>
+        </select>
+    </div>
+</div>
+
+
+      {% if organization.phone_secondary %}
+<a href="https://wa.me/{{ organization.phone_secondary }}" target="_blank" 
+   class="text-white hover:text-blue-800 transition text-xl">
+  <i class="fab fa-whatsapp"></i>
+</a>
+{% endif %}
+
+
+
+
+
+
     
   {% if organization.facebook %}
     <a href="{{ organization.facebook }}" target="_blank" class="text-white hover:text-blue-800 transition text-xl">
@@ -51,7 +82,7 @@
 
     <!-- Logo -->
     <a href="{% url 'home' %}" class="flex items-center">
-      <img src="../../../static/Hello_bajar_Logo_1.png" alt="Hello Bajar" class="h-12">
+      <img src="{{organization.logo.url}}" alt="Hello Bajar" class="h-12">
     </a>
 
     <!-- Category Dropdown -->
@@ -112,12 +143,31 @@
   </div>
 
   <!-- Desktop Nav Menu -->
-  <nav class="hidden lg:flex justify-center container mx-auto px-4 py-2 space-x-8 bg-[var(--bg-light)] shadow-inner text-sm font-medium">
-    <a href="{% url 'home' %}" class="{% if request.path == '/' %}text-[var(--primary)] font-bold border-b-2 border-[var(--primary)]{% else %}text-gray-600 hover:text-[var(--primary)]{% endif %} pb-1">Home</a>
-    <a href="{% url 'all_collections' %}" class="{% if request.path == '/all-collections/' %}text-[var(--primary)] font-bold border-b-2 border-[var(--primary)]{% else %}text-gray-600 hover:text-[var(--primary)]{% endif %} pb-1">All Collections</a>
-    <a href="{% url 'vendors' %}" class="{% if request.path == '/vendors/' %}text-[var(--primary)] font-bold border-b-2 border-[var(--primary)]{% else %}text-gray-600 hover:text-[var(--primary)]{% endif %} pb-1">Our Vendors</a>
-    <a href="{% url 'new_arrivals' %}" class="{% if request.path == '/new-arrivals/' %}text-[var(--primary)] font-bold border-b-2 border-[var(--primary)]{% else %}text-gray-600 hover:text-[var(--primary)]{% endif %} pb-1">New Arrivals</a>
-  </nav>
+<nav class="hidden lg:flex justify-center container mx-auto px-4 py-2 space-x-6 bg-[var(--bg-light)] shadow-inner text-sm font-medium items-center">
+  <a href="{% url 'home' %}" class="flex items-center gap-1 pb-1 {% if request.path == '/' %}text-[var(--primary)] font-bold border-b-2 border-[var(--primary)]{% else %}text-gray-600 hover:text-[var(--primary)]{% endif %}">
+    <i class="fa-solid fa-house"></i> Home
+  </a>
+
+  <a href="{% url 'all_collections' %}" class="flex items-center gap-1 pb-1 {% if request.path == '/all-collections/' %}text-[var(--primary)] font-bold border-b-2 border-[var(--primary)]{% else %}text-gray-600 hover:text-[var(--primary)]{% endif %}">
+    <i class="fa-solid fa-th-large"></i> All Collections
+  </a>
+
+  <a href="{% url 'vendors' %}" class="flex items-center gap-1 pb-1 {% if request.path == '/vendors/' %}text-[var(--primary)] font-bold border-b-2 border-[var(--primary)]{% else %}text-gray-600 hover:text-[var(--primary)]{% endif %}">
+    <i class="fa-solid fa-store"></i> Our Vendors
+  </a>
+
+  <a href="{% url 'new_arrivals' %}" class="flex items-center gap-1 pb-1 {% if request.path == '/new-arrivals/' %}text-[var(--primary)] font-bold border-b-2 border-[var(--primary)]{% else %}text-gray-600 hover:text-[var(--primary)]{% endif %}">
+    <i class="fa-solid fa-star"></i> New Arrivals
+  </a>
+
+  <!-- Join as Vendor Button -->
+   {% if not user.is_authenticated %}
+  <a href="{% url 'become_vendor_page'%}" class=" px-4 py-2 bg-[var(--primary)] text-white font-semibold rounded-lg hover:bg-opacity-90 transition flex items-center gap-2 shadow-md hover:shadow-lg">
+    <i class="fa-solid fa-user-plus"></i> Become a Vendor
+  </a>
+  {%endif%}
+</nav>
+
 </header>
 
 
@@ -128,7 +178,7 @@
   <div class="flex items-center justify-between px-4 py-2">
     <!-- Logo -->
     <a href="{% url 'home' %}" class="flex items-center">
-      <img src="../../../static/Hello_bajar_Logo_1.png" alt="Hello Bajar" class="h-9 w-auto">
+      <img src="{{organization.logo.url}}" alt="Hello Bajar" class="h-9 w-auto">
     </a>
 
     <!-- Search -->
@@ -141,6 +191,19 @@
         </button>
       </div>
     </form>
+
+    
+<!-- Language Selector -->
+<div id="language_selector" class="flex items-center gap-2 justify-end sm:justify-start text-sm">
+    <div class="flex items-center gap-2 bg-gray-100 px-3 py-2 rounded-md shadow-sm hover:shadow-md transition">
+        <i class="bi bi-globe-americas text-blue-600 text-lg"></i>
+        <select id="custom_translate" class="bg-transparent text-gray-700  outline-none cursor-pointer font-medium">
+            <option value="en">English</option>
+            <option value="ne">Nepali</option>
+        </select>
+    </div>
+</div>
+
 
     <!-- Cart -->
     <a href="{% url 'carts' %}" class="relative p-2 rounded-lg hover:bg-[var(--bg-brown)] hover:text-white transition duration-200">
@@ -160,6 +223,8 @@
       <i class="fa-solid fa-house text-lg"></i>
       <span>Home</span>
     </a>
+
+    
 
     <a href="{% url 'all_collections' %}" class="flex flex-col items-center gap-1 transition-all duration-200 {% if request.path == '/all-collections/' %}text-[var(--primary)] scale-110{% else %}hover:text-[var(--primary)]{% endif %}">
       <i class="fa-solid fa-layer-group text-lg"></i>

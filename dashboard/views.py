@@ -166,9 +166,39 @@ def admin_user_update(request, pk):
 @admin_required
 def admin_user_delete(request, pk):
     user = get_object_or_404(User, pk=pk)
-    if user.pk != request.user.pk:  # Prevent self-deletion
-        user.delete()
+    
+    if user.pk == request.user.pk:
+        messages.error(request, 'You cannot delete your own account.')
+        return redirect('admin_users_list')
+    
+    # Check if user is a vendor with incomplete orders
+    try:
+        vendor = Vendor.objects.get(user=user)
+        incomplete_orders = Order.objects.filter(
+            items__product__vendor=vendor
+        ).exclude(status='delivered').distinct()
+        
+        if incomplete_orders.exists():
+            messages.error(request, f"Cannot delete vendor user '{user.username}'. They have {incomplete_orders.count()} incomplete order(s).")
+            return redirect('admin_users_list')
+    except Vendor.DoesNotExist:
+        pass
+    
+    # Check if user is a customer with incomplete orders
+    incomplete_orders = Order.objects.filter(
+        user=user
+    ).exclude(status='delivered').distinct()
+    
+    if incomplete_orders.exists():
+        messages.error(request, f"Cannot delete customer user '{user.username}'. They have {incomplete_orders.count()} incomplete order(s).")
+        return redirect('admin_users_list')
+    
+    messages.success(request, f'User {user.first_name} deleted successfully.')
+    user.delete()
     return redirect('admin_users_list')
+
+
+
 
 # Vendor Management
 @admin_required
@@ -200,6 +230,8 @@ def admin_vendors_verified_kyc(request):
     vendors = Vendor.objects.filter(verification_status='verified').order_by('-created_at')
     return render(request, 'dashboard/pages/vendor/verified_vendors.html', {'vendors': vendors})
 
+
+
 import random
 import string
 from django.core.mail import send_mail
@@ -212,15 +244,24 @@ def admin_vendor_add(request):
         try:
             first_name = request.POST.get('first_name')
             last_name = request.POST.get('last_name')
-            email = request.POST.get('email') 
-
-            # Create user
-            user = User.objects.create(first_name=first_name, last_name=last_name, email=email)
-
-            # Generate random password
-            random_password = ''.join(random.choices(string.ascii_letters + string.digits + "!@#$%^&*", k=10))
+            email = request.POST.get('email')
+            
+            if User.objects.filter(email=email).exists():
+                messages.error(request, 'Email already exists')
+                return redirect('admin_vendor_add')
+            
+            user = User.objects.create_user(
+                username=email,
+                first_name=first_name,
+                last_name=last_name,
+                email=email
+            )
+            random_password = ''.join(random.choices(string.ascii_letters + string.digits + "@#$%&", k=10))
             user.set_password(random_password)
             user.save()
+            
+            # Create vendor role
+            UserRole.objects.create(user=user, role='vendor')
 
             # Create vendor
             vendor = Vendor.objects.create(
@@ -258,30 +299,30 @@ def admin_vendor_add(request):
                 send_mail(
                     subject='Your Vendor Account Has Been Created',
                     message=f'Hello {user.first_name},\n\n'
-                            f'Your vendor account has been created successfully.\n'
                             f'Password: {random_password}\n\n'
                             f'Please change your password after logging in.',
-                    from_email='hellobajar@gmail.com',  # ✅ match your SMTP sender
+                    from_email='hellobajar@gmail.com',
                     recipient_list=[user.email],
-                    fail_silently=False,  # ✅ for debugging
+                    fail_silently=False,
                 )
             except Exception as e:
                 messages.warning(request, f"Vendor created, but email could not be sent: {e}")
+                return redirect("admin_vendor_add")
 
             messages.success(request, "Vendor created successfully.")
             return redirect('admin_vendors_list')
 
         except Exception as e:
             messages.error(request, f"Error while creating vendor: {e}")
-            return redirect('admin_vendors_list')
+            return redirect('admin_vendor_add')
 
-    users = User.objects.all()
     provinces = Vendor.PROVINCE_CHOICES
     return render(request, 'dashboard/pages/vendor/add_vendor.html', {
-        'users': users,
         'provinces': provinces
     })
-
+    
+    
+    
 
 @admin_required
 def admin_vendor_update(request, pk):
@@ -322,7 +363,19 @@ def admin_vendor_update(request, pk):
 @admin_required
 def admin_vendor_delete(request, pk):
     vendor = get_object_or_404(Vendor, pk=pk)
-    vendor.delete()
+    
+    # Check if vendor has incomplete orders
+    incomplete_orders = Order.objects.filter(
+        items__product__vendor=vendor
+    ).exclude(status='delivered').distinct()
+    
+    if incomplete_orders.exists():
+        messages.error(request, f"Cannot delete vendor '{vendor.shop_name}'. They have {incomplete_orders.count()} incomplete order(s).")
+        return redirect('admin_vendors_list')
+    
+    messages.success(request, f"Vendor '{vendor.shop_name}' deleted successfully")
+    user = vendor.user
+    user.delete()
     return redirect('admin_vendors_list')
 
 @admin_required
@@ -491,7 +544,7 @@ def admin_product_add(request):
         return redirect('admin_products_list')
     categories = Category.objects.filter(is_active=True)
     vendors = Vendor.objects.filter(is_active=True)
-    return render(request, 'vendor/product/add_product.html', {'categories': categories, 'vendors': vendors})
+    return render(request, 'dashboard/pages/product/add_product.html', {'categories': categories, 'vendors': vendors})
 
 @admin_required
 def admin_product_update(request, pk):
@@ -652,6 +705,17 @@ def admin_orders_list(request):
     return render(request, 'dashboard/pages/order/orders_list.html', {
         'orders': orders,
         'order_model': Order,
+    })
+    
+
+@admin_required
+def admin_order_details(request, order_number):
+    order = get_object_or_404(Order, order_number=order_number)
+    order_items = order.items.all()
+
+    return render(request, 'dashboard/pages/order/order_details.html', {
+        'order': order,
+        'order_items': order_items,
     })
     
     
@@ -920,6 +984,7 @@ def admin_orders_delivered(request):
 def admin_order_delete(request, order_number):
     order = get_object_or_404(Order, order_number=order_number)
     order.delete()
+    messages.success(request,f"Order ${order_number} deleted successfuly  ")
     return redirect('admin_orders_list')
 
 @admin_required
@@ -1193,6 +1258,7 @@ def admin_slider_update(request, pk):
 def admin_slider_delete(request, pk):
     slider = get_object_or_404(Slider, pk=pk)
     slider.delete()
+    messages.success(request,'Sldier deleted successfully')
     return redirect('admin_sliders_list')
 
 # Banner Management
@@ -1237,6 +1303,7 @@ def admin_banner_update(request, pk):
 def admin_banner_delete(request, pk):
     banner = get_object_or_404(Banner, pk=pk)
     banner.delete()
+    messages.success(request,'Banner deleted successfully')
     return redirect('admin_banners_list')
 
 
@@ -1286,6 +1353,7 @@ def admin_coupon_update(request, pk):
 def admin_coupon_delete(request, pk):
     coupon = get_object_or_404(Coupon, pk=pk)
     coupon.delete()
+    messages.success(request,'Coupon deleted successfully')
     return redirect('admin_coupons_list')
 
 
@@ -1409,7 +1477,10 @@ def admin_profile_edit(request):
 def vendor_dashboard(request):
     user = request.user
     vendor_user = Vendor.objects.get(user=user)
-
+    
+    if vendor_user.verification_status in ['pending','rejected']:
+        return render(request,'vendor/kyc_unverified.html',{"vendor":vendor_user})
+        
     products = Product.objects.filter(vendor=vendor_user)
     orders = Order.objects.filter(items__product__vendor=vendor_user).distinct()
 
@@ -1651,6 +1722,7 @@ def vendor_product_delete(request, pk):
     
     product = get_object_or_404(Product, pk=pk)
     product.delete()
+    messages.success(request,"Product deleted successfully")
     return redirect('vendor_products_list')
 
 
@@ -1683,6 +1755,17 @@ def vendor_orders_list(request):
         'orders': orders,
         'order_model': Order,
     })
+    
+
+@login_required
+def vendor_order_details(request, order_number):
+    vendor=Vendor.objects.get(user=request.user)
+    order = get_object_or_404(Order, order_number=order_number, items__product__vendor=vendor)
+    
+    return render(request, 'vendor/order/order_details.html', {
+        'order': order
+    })
+    
     
 @login_required
 def vendor_orders_pending(request):

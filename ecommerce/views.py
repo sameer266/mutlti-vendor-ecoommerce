@@ -7,7 +7,7 @@ from dashboard.models import (
     Slider,
     Banner,
     Category,
-    Product,Cart,Vendor,ProductVariant,OTPVerification,Order,OrderItem,Coupon,CouponUsage,Contact,ShippingCost,Invoice
+    Product,Cart,Vendor,ProductVariant,OTPVerification,Order,OrderItem,Coupon,CouponUsage,Contact,ShippingCost,Invoice,Review
 )
 from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
 from  django.contrib import messages
@@ -34,7 +34,6 @@ from django.db.models import F
 
 
 from .recommender import get_recommendations
-
 
 
 def home_page(request):
@@ -74,7 +73,6 @@ def search_page(request):
   
 
     if query:
-        # Search products by name, description, or category name
         products = products.filter(
             Q(name__icontains=query) |
             Q(description__icontains=query) |
@@ -82,7 +80,7 @@ def search_page(request):
         ).distinct().order_by('-created_at')
 
     # Pagination
-    paginator = Paginator(products, 24)  # 12 products per page
+    paginator = Paginator(products, 24) 
     page_number = request.GET.get('page', 1)
     products_page = paginator.get_page(page_number)
 
@@ -117,7 +115,7 @@ def new_arrivals_page(request):
         created_at__gte=one_month_ago
     ).order_by('-created_at')
     
-    paginator = Paginator(new_arrivals, 12)  # 12 products per page
+    paginator = Paginator(new_arrivals, 12)  
     page_number = request.GET.get('page', 1)
     new_arrivals_page = paginator.get_page(page_number)
 
@@ -125,6 +123,101 @@ def new_arrivals_page(request):
         'new_arrivals': new_arrivals_page,
     }
     return render(request, 'website/pages/new_arrivals.html', context)
+
+
+
+
+import string
+
+def become_vendor(request):
+    if request.method == 'POST':
+        try:
+            print(request.POST)
+            first_name = request.POST.get('first_name')
+            last_name = request.POST.get('last_name')
+            email = request.POST.get('email')
+            if User.objects.filter(email=email,is_active=True).exists():
+                messages.error(request,'User already exists')
+                return redirect('become_vendor_page')
+
+            # Vendor info
+            shop_name = request.POST.get('shop_name')
+            description = request.POST.get('description')
+            phone = request.POST.get('phone')
+            address = request.POST.get('address')
+            city = request.POST.get('city')
+            province = request.POST.get('province')
+            pan_number = request.POST.get('pan_number')
+
+            # Files
+            shop_logo = request.FILES.get('shop_logo')
+            shop_banner = request.FILES.get('shop_banner')
+            pan_document = request.FILES.get('pan_document')
+            citizenship_front = request.FILES.get('citizenship_front')
+            citizenship_back = request.FILES.get('citizenship_back')
+            company_registration = request.FILES.get('company_registration')
+
+     
+            # Update user info
+            user,_=User.objects.get_or_create(email=email)
+            user.first_name=first_name
+            user.last_name=last_name
+            user.email=email
+            user.save()
+        
+            # Create vendor
+            vendor = Vendor.objects.create(
+                user=user,
+                shop_name=shop_name,
+                shop_banner=shop_banner,
+                description=description or "",
+                phone=phone,
+                address=address,
+                city=city or "",
+                province=province or "",
+                pan_number=pan_number,
+                shop_logo=shop_logo,
+                pan_document=pan_document,
+                citizenship_front=citizenship_front,
+                citizenship_back=citizenship_back,
+                company_registration=company_registration
+            )
+            random_password = ''.join(random.choices(string.ascii_letters + string.digits + "@#$%&", k=10))
+            user.set_password(random_password)
+            user.save()
+
+            # Generate OTP
+            otp_code = str(random.randint(100000, 999999))
+            otp_obj,_=OTPVerification.objects.update_or_create(user=user)
+            otp_obj.otp_code=otp_code
+            otp_obj.save()
+            
+            # Send email
+            try:
+                send_mail(
+                    subject="Your OTP Code - HelloBajar Vendor Verification",
+                    message=f"Hello {first_name},\n\nYour OTP for vendor registration is: {otp_code}\n\nThank you for joining HelloBajar!",
+                    from_email="hellobajar@gmail.com",
+                    recipient_list=[email],
+                    fail_silently=False
+                )
+                
+            except Exception:
+                messages.error(request, "Failed to send OTP. Please check your email address.")
+                return redirect('become_vendor_page')
+            
+            request.session['user_email']=email
+            messages.success(request, "Vendor registration submitted! Please verify OTP sent to your email.")
+            return redirect('verify_otp_page')
+
+        except Exception as e:
+            messages.error(request, f"Something went wrong: {str(e)}")
+            return redirect('become_vendor_page')
+
+    return render(request, 'website/pages/become_vendor.html')
+
+
+
 
 def vendors(request):
     # Fetch all active and verified vendors
@@ -371,114 +464,93 @@ def remove_from_cart(request):
 
 @login_required
 def checkout(request):
-    """Handle checkout process for authenticated users"""
+    """Handle checkout process and create separate orders per vendor"""
     cart_items = Cart.objects.filter(user=request.user).select_related('product', 'variant')
 
     if not cart_items:
         messages.error(request, "Your cart is empty. Please add items to proceed.")
         return redirect('all_collections')
 
-    # --- Shipping and Base Totals ---
+    # --- Shipping & Tax ---
     shipping = ShippingCost.objects.first()
-    subtotal = sum(item.get_total_price() for item in cart_items)
-    discount = Decimal('0.00')
     shipping_cost = shipping.cost if shipping else Decimal('0.00')
     tax_rate = shipping.tax if shipping else Decimal('0.00')
-
-    # 🔹 Convert tax percentage to actual amount
-    tax_amount = (subtotal * tax_rate) / Decimal('100')
 
     coupon = None
     coupon_code = request.session.get('coupon_code')
 
-    # --- Handle Coupon ---
     if coupon_code:
         try:
             coupon = Coupon.objects.get(code=coupon_code)
-            is_valid, message = coupon.is_valid(user=request.user, cart_items=cart_items)
-            if is_valid:
-                discount = coupon.get_discount_amount(subtotal)
-            else:
-                messages.error(request, message)
-                request.session.pop('coupon_code', None)
-                coupon = None
         except Coupon.DoesNotExist:
-            messages.error(request, "Invalid or expired coupon code.")
+            coupon = None
             request.session.pop('coupon_code', None)
-
-    # --- Calculate Final Total ---
-    total = max(subtotal + shipping_cost + tax_amount - discount, Decimal('0.00'))
 
     # --- Handle Form Submission ---
     if request.method == "POST":
-        try:
-            email = request.POST.get('email')
-            phone = request.POST.get('phone')
-            full_name = request.POST.get('full_name')
-            address = request.POST.get('address')
-            city = request.POST.get('city')
-            province = request.POST.get('province')
-            postal_code = request.POST.get('postal_code', '')
-            payment_method = request.POST.get('payment_method')
+        email = request.POST.get('email')
+        phone = request.POST.get('phone')
+        full_name = request.POST.get('full_name')
+        address = request.POST.get('address')
+        city = request.POST.get('city')
+        province = request.POST.get('province')
+        postal_code = request.POST.get('postal_code', '')
+        payment_method = request.POST.get('payment_method')
 
-            # Validate required fields
-            if not all([email, phone, full_name, address, city, province, payment_method]):
-                messages.error(request, "Please fill in all required fields.")
-                return render(request, 'website/pages/checkout.html', {
-                    'cart_items': cart_items,
-                    'subtotal': subtotal,
-                    'shipping_cost': shipping_cost,
-                    'tax': tax_amount,
-                    'tax_rate': tax_rate,
-                    'discount': discount,
-                    'total': total,
-                    'coupon': coupon,
-                })
+        # Validate required fields
+        if not all([email, phone, full_name, address, city, province, payment_method]):
+            messages.error(request, "Please fill in all required fields.")
+            return render(request, 'website/pages/checkout.html', {
+                'cart_items': cart_items,
+            })
 
-            # Validate province
-            valid_provinces = [choice[0] for choice in Order.PROVINCE_CHOICES]
-            if province not in valid_provinces:
-                messages.error(request, "Please select a valid province.")
-                return render(request, 'website/pages/checkout.html', {
-                    'cart_items': cart_items,
-                    'subtotal': subtotal,
-                    'shipping_cost': shipping_cost,
-                    'tax': tax_amount,
-                    'tax_rate': tax_rate,
-                    'discount': discount,
-                    'total': total,
-                    'coupon': coupon,
-                })
+        # Validate province
+        valid_provinces = [choice[0] for choice in Order.PROVINCE_CHOICES]
+        if province not in valid_provinces:
+            messages.error(request, "Please select a valid province.")
+            return render(request, 'website/pages/checkout.html', {
+                'cart_items': cart_items,
+            })
 
-            # Validate payment method
-            valid_payment_methods = [choice[0] for choice in Order.PAYMENT_CHOICES]
-            if payment_method not in valid_payment_methods:
-                messages.error(request, "Please select a valid payment method.")
-                return render(request, 'website/pages/checkout.html', {
-                    'cart_items': cart_items,
-                    'subtotal': subtotal,
-                    'shipping_cost': shipping_cost,
-                    'tax': tax_amount,
-                    'tax_rate': tax_rate,
-                    'discount': discount,
-                    'total': total,
-                    'coupon': coupon,
-                })
+        # Validate payment method
+        valid_payment_methods = [choice[0] for choice in Order.PAYMENT_CHOICES]
+        if payment_method not in valid_payment_methods:
+            messages.error(request, "Please select a valid payment method.")
+            return render(request, 'website/pages/checkout.html', {
+                'cart_items': cart_items,
+            })
 
-            # Re-validate coupon if present
+        # --- Group cart items by vendor ---
+        vendor_items = {}
+        for item in cart_items:
+            vendor = item.product.vendor
+            if vendor not in vendor_items:
+                vendor_items[vendor] = []
+            vendor_items[vendor].append(item)
+
+        created_orders = []
+
+        for vendor, items in vendor_items.items():
+            # Calculate subtotal, tax, discount per vendor
+            subtotal = sum(item.get_total_price() for item in items)
+            tax_amount = (subtotal * tax_rate) / Decimal('100')
+            discount = Decimal('0.00')
+
+            # Apply coupon if applicable
             if coupon:
-                is_valid, message = coupon.is_valid(user=request.user, cart_items=cart_items)
-                if not is_valid:
-                    messages.error(request, message)
-                    request.session.pop('coupon_code', None)
-                    coupon = None
+                is_valid, message = coupon.is_valid(user=request.user, cart_items=items)
+                if is_valid:
+                    discount = coupon.get_discount_amount(subtotal)
+                else:
+                    messages.warning(request, f"Coupon not valid for vendor {vendor.shop_name}.")
                     discount = Decimal('0.00')
-                    total = subtotal + shipping_cost + tax_amount
 
-            # --- Create Order ---
+            total = max(subtotal + shipping_cost + tax_amount - discount, Decimal('0.00'))
+
+            # Create Order for this vendor
             order = Order.objects.create(
                 user=request.user,
-                order_number='',  # Auto-generated in save()
+                order_number='',  # auto-generated
                 email=email,
                 phone=phone,
                 full_name=full_name,
@@ -486,21 +558,21 @@ def checkout(request):
                 city=city,
                 province=province,
                 postal_code=postal_code,
-        
                 payment_method=payment_method,
-                payment_status='unpaid' ,
+                payment_status='unpaid',
                 subtotal=subtotal,
                 shipping_cost=shipping_cost,
-                tax=tax_amount, 
+                tax=tax_amount,
                 discount=discount,
                 total=total,
                 coupon=coupon,
                 status='pending',
                 created_at=timezone.now(),
             )
+            created_orders.append(order)
 
-            # --- Create Order Items and Invoice ---
-            for item in cart_items:
+            # Create Order Items and Invoice
+            for item in items:
                 OrderItem.objects.create(
                     order=order,
                     product=item.product,
@@ -508,21 +580,18 @@ def checkout(request):
                     quantity=item.quantity,
                     price=item.get_item_price(),
                 )
-                
-                Invoice.objects.create(customer=request.user,
-                                       vendor=item.product.vendor,
-                                       order=order,
-                                       subtotal=subtotal,
-                                       total=total,
-                                       tax_amount=tax_amount,
-                                       discount=discount
-                                       )
+                Invoice.objects.create(
+                    customer=request.user,
+                    vendor=vendor,
+                    order=order,
+                    subtotal=subtotal,
+                    total=total,
+                    tax_amount=tax_amount,
+                    discount=discount
+                )
 
-                
-                
-
-            # --- Record Coupon Usage ---
-            if coupon:
+            # Record coupon usage per order
+            if coupon and discount > 0:
                 CouponUsage.objects.create(
                     user=request.user,
                     coupon=coupon,
@@ -531,45 +600,27 @@ def checkout(request):
                 )
                 coupon.used_count += 1
                 coupon.save()
-            
-        
 
-            # --- Handle Payment Method ---
-            if payment_method == 'cod':
-                cart_items.delete()
-                request.session.pop('coupon_code', None)
-                messages.success(request, f"Order {order.order_number} placed successfully! You will pay on delivery.")
-                return redirect('order_confirmation', order_id=order.id)
-            else:
-                messages.info(request, f"Payment via {payment_method} is not yet implemented. Please use COD.")
-                return render(request, 'website/pages/checkout.html', {
-                    'cart_items': cart_items,
-                    'subtotal': subtotal,
-                    'shipping_cost': shipping_cost,
-                    'tax': tax_amount,
-                    'tax_rate': tax_rate,
-                    'discount': discount,
-                    'total': total,
-                    'coupon': coupon,
-                })
+        # --- Clear cart and session ---
+        cart_items.delete()
+        request.session.pop('coupon_code', None)
 
-           
+        messages.success(request, f"{len(created_orders)} order(s) placed successfully!")
+        return redirect('order_confirmation', order_id=order.id)  # or redirect to a summary page
 
-        except Exception as e:
-            messages.error(request, f"Error processing order: {str(e)}")
+    # --- GET Request: Render Checkout Page ---
+    subtotal = sum(item.get_total_price() for item in cart_items)
+    tax_amount = (subtotal * tax_rate) / Decimal('100')
+    total = subtotal + shipping_cost + tax_amount
 
-    # --- Render Checkout Page ---
     return render(request, 'website/pages/checkout.html', {
         'cart_items': cart_items,
         'subtotal': subtotal,
         'shipping_cost': shipping_cost,
         'tax': tax_amount,
-        'tax_rate': tax_rate,
-        'discount': discount,
         'total': total,
         'coupon': coupon,
     })
-
 
 
 @login_required
@@ -813,7 +864,12 @@ def verify_otp_page(request):
             if not user.is_active:
                 user.is_active = True
                 user.save()
-                UserRole.objects.create(role="customer",user=user)
+                if Vendor.objects.filter(user=user).exists():
+                    UserRole.objects.create(role="vendor",user=user)
+                else:
+                    UserRole.objects.create(role="customer",user=user)
+                    
+               
                 UserProfile.objects.create(user=user)
                 otp_obj.delete()
                 del request.session['user_email']
@@ -971,3 +1027,50 @@ def customer_invoice_detail(request, invoice_number):
     shipping_cost=shipping.cost
     tax_rate=shipping.tax
     return render(request, 'website/pages/invoice_detail.html', {'invoice': invoice,'tax_rate':tax_rate,'shipping_cost':shipping_cost})
+
+
+@login_required
+def write_review(request, product_id):
+    product = get_object_or_404(Product, id=product_id)
+    order_id = request.GET.get('order')
+    order = Order.objects.filter(id=order_id).first()  # Safe get
+
+    existing_review = Review.objects.filter(product=product, user=request.user).first()
+
+    if request.method == 'POST':
+        rating = request.POST.get('rating')
+        comment = request.POST.get('comment', '').strip()
+
+        try:
+            rating = int(rating)
+            if rating < 1 or rating > 5:
+                raise ValueError
+        except (ValueError, TypeError):
+            messages.error(request, "Please select a valid rating between 1 and 5 stars.")
+            return render(request, 'website/pages/write_review.html', {
+                'product': product, 'comment': comment, 'rating': rating
+            })
+
+        if existing_review:
+            existing_review.rating = rating
+            existing_review.comment = comment
+            existing_review.save()
+            messages.success(request, "Your review has been updated!")
+        else:
+            Review.objects.create(product=product, user=request.user, rating=rating, comment=comment)
+            messages.success(request, "Thank you for your review!")
+
+        # Redirect to order or product page
+        return redirect('customer_order_detail', order_number=order.order_number) if order else redirect('product_detail', product_id=product.id)
+
+    # GET request - show form
+    existing_reviews = Review.objects.filter(product=product).exclude(user=request.user).order_by('-created_at')[:5]
+
+    return render(request, 'website/pages/write_review.html', {
+        'product': product,
+        'order_number': order.order_number if order else None,
+        'existing_review': existing_review,
+        'existing_reviews': existing_reviews,
+        'comment': existing_review.comment if existing_review else '',
+        'rating': existing_review.rating if existing_review else None,
+    })

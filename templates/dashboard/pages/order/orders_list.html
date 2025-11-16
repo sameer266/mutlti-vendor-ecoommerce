@@ -79,9 +79,9 @@
           <td>{{ order.created_at|date:"Y-m-d h:i A" }}</td>
           <td class="text-center flex justify-center gap-3">
             <!-- View Items -->
-            <button class="view-items-btn flex items-center gap-2 text-blue-600 hover:text-blue-800 font-medium" data-id="{{ order.order_number }}">
+            <a href="{% url 'admin_order_details' order.order_number%}" class="view-items-btn flex items-center gap-2 text-blue-600 hover:text-blue-800 font-medium" data-id="{{ order.order_number }}">
               <i class="fa-solid fa-eye"></i>
-            </button>
+            </a>
             <!-- View Invoices -->
             <a href="{% url 'admin_orders_invoice_list' order.order_number %}" class="flex items-center gap-2 text-green-600 hover:text-green-800 font-medium">
               <i class="fa-solid fa-file-invoice"></i>

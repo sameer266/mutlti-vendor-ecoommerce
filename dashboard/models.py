@@ -8,6 +8,8 @@ from ckeditor.fields import RichTextField
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
+import uuid
+
 
 class OTPVerification(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE,null=True,blank=True)
@@ -60,15 +62,16 @@ class UserProfile(models.Model):
     city = models.CharField(max_length=100, blank=True)
     
     PROVINCE_CHOICES = [
-        ('province1', 'Koshi Province'),
-        ('madhesh', 'Madhesh Province'),
-        ('bagmati', 'Bagmati Province'),
-        ('gandaki', 'Gandaki Province'),
-        ('lumbini', 'Lumbini Province'),
-        ('karnali', 'Karnali Province'),
-        ('sudurpashchim', 'Sudurpashchim Province'),
-    ]
-    province = models.CharField(max_length=20, choices=PROVINCE_CHOICES, blank=True)
+    ('Koshi Province', 'Koshi Province'),
+    ('Madhesh Province', 'Madhesh Province'),
+    ('Bagmati Province', 'Bagmati Province'),
+    ('Gandaki Province', 'Gandaki Province'),
+    ('Lumbini Province', 'Lumbini Province'),
+    ('Karnali Province', 'Karnali Province'),
+    ('Sudurpashchim Province', 'Sudurpashchim Province'),
+        ]
+
+    province = models.CharField(max_length=50, choices=PROVINCE_CHOICES, blank=True)
     
     def __str__(self):
         return f"{self.user.username}'s Profile"
@@ -284,7 +287,7 @@ class Product(models.Model):
     # Basic Info
     name = models.CharField(max_length=255)
     slug = models.SlugField(unique=True, blank=True)
-    description = RichTextField() 
+    description = models.TextField()
     
     # Pricing
     price = models.DecimalField(max_digits=10, decimal_places=2)
@@ -433,6 +436,16 @@ class Cart(models.Model):
 # Order Management
 # -------------------------
 class Order(models.Model):
+    
+    PROVINCE_CHOICES = [
+        ("Koshi Province", "Koshi Province"),
+        ("Madhesh Province", "Madhesh Province"),
+        ("Bagmati Province", "Bagmati Province"),
+        ("Gandaki Province", "Gandaki Province"),
+        ("Lumbini Province", "Lumbini Province"),
+        ("Karnali Province", "Karnali Province"),
+        ("Sudurpashchim Province", "Sudurpashchim Province"),
+    ]
     STATUS_CHOICES = [
         ('pending', 'Pending'),
         ('processing', 'Processing'),
@@ -468,7 +481,7 @@ class Order(models.Model):
     address = models.TextField()
     city = models.CharField(max_length=100)
     
-    province = models.CharField(max_length=20,null=True,blank=True)
+    province = models.CharField(max_length=50,choices=PROVINCE_CHOICES,null=True,blank=True)
     postal_code = models.CharField(max_length=10, blank=True)
     
     # Order Pricing
@@ -501,9 +514,9 @@ class Order(models.Model):
     
     def save(self, *args, **kwargs):
         if not self.order_number:
-            # Format: ORD20250113123456
-            self.order_number = f"ORD{timezone.now().strftime('%Y%m%d%H%M%S')}"
+            self.order_number = f"ORD{timezone.now().strftime('%Y%m%d%H%M%S')}{uuid.uuid4().hex[:4].upper()}"
         super().save(*args, **kwargs)
+
     
     def __str__(self):
         return f"Order {self.order_number}"
@@ -670,7 +683,8 @@ class Invoice(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.invoice_number:
-            self.invoice_number = f"INV{timezone.now().strftime('%Y%m%d%H%M%S')}"
+            # Use a short UUID to guarantee uniqueness
+            self.invoice_number = f"INV{uuid.uuid4().hex[:12].upper()}"
         super().save(*args, **kwargs)
 
     def __str__(self):
@@ -853,27 +867,25 @@ def process_vendor_payout_request(sender, instance, **kwargs):
 
 
 
-@receiver(post_save,sender=Order)
-def change_invoice_payment_status_with_order(sender,instance,**kwargs):
+
+@receiver(post_save, sender=Order)
+def change_invoice_payment_status_with_order(sender, instance, **kwargs):
     """
     Sync payment status of invoices with the order's payment status.
-    Creates an invoice per vendor if not already created.
-
+    Only updates existing invoices, does NOT create new ones.
     """
-    for item in instance.items.all():
-        vendor=item.product.vendor
-        customer=instance.user
-        
-        invoice=Invoice.objects.get(order=instance,vendor=vendor,customer=customer)
-        if instance.payment_status=="unpaid":
-            invoice.payment_status="pending"
-        elif instance.payment_status=="paid":
-            invoice.payment_status="paid"
-        elif instance.payment_status=="failed":
-            invoice.payment_status="failed"
-        instance.save()
-        
-            
-            
-        
-        
+    # Get all invoices for this order
+    invoices = Invoice.objects.filter(order=instance)
+
+    for invoice in invoices:
+        # Update invoice payment status based on order
+        if instance.payment_status == "unpaid":
+            invoice.payment_status = "pending"
+        elif instance.payment_status == "paid":
+            invoice.payment_status = "paid"
+        elif instance.payment_status == "failed":
+            invoice.payment_status = "failed"
+        else:
+            invoice.payment_status = "pending"
+
+        invoice.save()  # Save the updated invoice

@@ -5,7 +5,7 @@
 <div class="bg-white rounded-xl shadow p-6">
   <div class="flex justify-between items-center mb-6">
     <h1 class="text-2xl font-semibold text-gray-800">Edit Product</h1>
-    <a href="{% url 'vendor_products_list' %}" class="text-sm text-blue-600 hover:text-blue-800">Back to list</a>
+    <a href="{% url 'admin_products_list' %}" class="text-sm text-blue-600 hover:text-blue-800">Back to list</a>
   </div>
 
   <form method="post" action="{% url 'admin_product_update' product.id %}" enctype="multipart/form-data" class="space-y-6">
@@ -164,33 +164,42 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://cdn.ckeditor.com/4.21.0/standard/ckeditor.js"></script>
+<script src="https://cdn.ckeditor.com/4.21.0/full/ckeditor.js"></script>
+
+<script src="https://cdn.ckeditor.com/4.21.0/full/ckeditor.js"></script>
 
 <script>
-  document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', function () {
     const textarea = document.querySelector('textarea[name="description"]');
-    if (textarea) {
-      CKEDITOR.replace('description', {
+    if (!textarea) return;
+
+    CKEDITOR.replace('description', {
         height: 300,
-        toolbar: [
-          { name: 'basicstyles', items: ['Bold', 'Italic', 'Underline', 'Strike'] },
-          { name: 'paragraph', items: [
-              'NumberedList', 'BulletedList', '-', 
-              'JustifyLeft', 'JustifyCenter', 'JustifyRight', 'JustifyBlock'
-          ]},
-          { name: 'styles', items: ['Font', 'FontSize'] },
-          { name: 'colors', items: ['TextColor', 'BGColor'] },
-          { name: 'insert', items: ['Link', 'Unlink', 'Image'] },
-          { name: 'tools', items: ['RemoveFormat', 'Source'] } // optional tools
-        ],
-        removePlugins: 'elementspath', // hide element path at bottom
+        removePlugins: 'elementspath,image', // remove image and element path
         resize_enabled: false,
+        contentsCss: 'body{line-height:1.7; margin:0; padding:0; font-family:Arial, sans-serif; font-size:14px;}',
+
         font_names: 'Arial;Comic Sans MS;Courier New;Georgia;Tahoma;Times New Roman;Verdana',
-        fontSize_sizes: '12/12px;14/14px;16/16px;18/18px;20/20px;24/24px;28/28px'
-      });
-    }
-  });
+        fontSize_sizes: '12/12px;14/14px;16/16px;18/18px;20/20px;22/22px;24/24px;28/28px',
+
+        toolbar: [
+            { name: 'styles', items: ['Font', 'FontSize', 'Format', 'Styles'] },
+            { name: 'basicstyles', items: ['Bold', 'Italic', 'Underline', 'Strike','RemoveFormat'] },
+            { name: 'paragraph', items: [
+                'NumberedList','BulletedList','-',
+                'Outdent','Indent','-',
+                'Blockquote','JustifyLeft','JustifyCenter','JustifyRight','JustifyBlock'
+            ]},
+            { name: 'links', items: ['Link','Unlink'] },
+            { name: 'insert', items: ['Table','HorizontalRule','SpecialChar'] },
+            { name: 'tools', items: ['Maximize','Source'] }
+        ]
+    });
+});
 </script>
+
+
+
 
 
 <script>
