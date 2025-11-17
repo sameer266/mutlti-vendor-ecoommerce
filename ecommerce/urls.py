@@ -70,8 +70,6 @@ urlpatterns = [
     path('dashboard/customer/invoice/<str:invoice_number>/', views.customer_invoice_detail, name='customer_invoice_detail'),
     path('dashboard/<int:product_id>/review/', views.write_review, name='write_review'),
 
-    # Rich Text Editor
-    path('ckeditor/', include('ckeditor_uploader.urls')),
     
     
     # API URLs

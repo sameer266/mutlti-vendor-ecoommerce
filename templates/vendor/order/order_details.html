@@ -72,8 +72,8 @@
     {% if order.discount > 0 %}
     <p><strong>Discount:</strong> Rs {{ order.discount }}</p>
     {% endif %}
-    {% if order.tax > 0 %}
-    <p><strong>Tax:</strong> Rs {{ order.tax }}</p>
+    {% if order.tax_percentage > 0 %}
+    <p><strong>Tax({{order.tax_percentage}}):</strong> Rs {{ order.tax_amount }}</p>
     {% endif %}
     <p class="text-lg font-bold"><strong>Total:</strong> Rs {{ order.total }}</p>
   </div>

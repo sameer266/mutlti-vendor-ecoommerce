@@ -284,15 +284,18 @@
         </a>
       </li>
 
-      <!-- Shipping Cost -->
-      <li>
-        <a href="{% url 'admin_shipping_cost' %}"
-           class="sidebar-link flex items-center px-4 py-2 rounded-md font-medium transition-all duration-200
-                  {% if request.path == '/admin-dashboard/shipping-cost/' %}bg-blue-50 text-blue-600 font-semibold{% else %}text-gray-600 hover:bg-gray-100{% endif %}">
-          <i class="fas fa-truck w-6 text-center text-gray-500 mr-3"></i>
-          <span>Shipping Cost</span>
-        </a>
-      </li>
+      <!-- Tax Rate -->
+<li>
+  <a href="{% url 'admin_tax_rate' %}"
+     class="sidebar-link flex items-center px-4 py-2 rounded-md font-medium transition-all duration-200
+            {% if request.path == '/admin-dashboard/tax-rate/' %}bg-blue-50 text-blue-600 font-semibold{% else %}text-gray-600 hover:bg-gray-100{% endif %}">
+    <i class="fas fa-percentage w-6 text-center text-gray-500 mr-3"></i>
+    <span>Tax Rate</span>
+  </a>
+</li>
+
+
+
 
       <!-- Newsletter -->
       <li>
@@ -466,6 +469,8 @@
           </li>
         </ul>
       </li>
+
+
 
       <!-- Wallets -->
       <li>

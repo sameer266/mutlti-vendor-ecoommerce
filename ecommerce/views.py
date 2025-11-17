@@ -7,7 +7,7 @@ from dashboard.models import (
     Slider,
     Banner,
     Category,
-    Product,Cart,Vendor,ProductVariant,OTPVerification,Order,OrderItem,Coupon,CouponUsage,Contact,ShippingCost,Invoice,Review
+    Product,Cart,Vendor,ProductVariant,OTPVerification,Order,OrderItem,Coupon,CouponUsage,Contact,Invoice,Review,TaxRate
 )
 from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
 from  django.contrib import messages
@@ -139,6 +139,8 @@ def become_vendor(request):
             if User.objects.filter(email=email,is_active=True).exists():
                 messages.error(request,'User already exists')
                 return redirect('become_vendor_page')
+            
+            
 
             # Vendor info
             shop_name = request.POST.get('shop_name')
@@ -148,7 +150,7 @@ def become_vendor(request):
             city = request.POST.get('city')
             province = request.POST.get('province')
             pan_number = request.POST.get('pan_number')
-
+            citizenship_number=request.POST.get('citizenship_number')
             # Files
             shop_logo = request.FILES.get('shop_logo')
             shop_banner = request.FILES.get('shop_banner')
@@ -156,13 +158,16 @@ def become_vendor(request):
             citizenship_front = request.FILES.get('citizenship_front')
             citizenship_back = request.FILES.get('citizenship_back')
             company_registration = request.FILES.get('company_registration')
+            qr_image=request.FILES.get('qr_image')
 
      
             # Update user info
             user,_=User.objects.get_or_create(email=email)
+            user.username=email,
             user.first_name=first_name
             user.last_name=last_name
             user.email=email
+            user.is_active=False
             user.save()
         
             # Create vendor
@@ -178,9 +183,11 @@ def become_vendor(request):
                 pan_number=pan_number,
                 shop_logo=shop_logo,
                 pan_document=pan_document,
+                citizenship_number=citizenship_number,
                 citizenship_front=citizenship_front,
                 citizenship_back=citizenship_back,
-                company_registration=company_registration
+                company_registration=company_registration,
+                qr_image=qr_image
             )
             random_password = ''.join(random.choices(string.ascii_letters + string.digits + "@#$%&", k=10))
             user.set_password(random_password)
@@ -290,9 +297,10 @@ def get_session_key(request):
 
 
 
-
 def carts(request):
     """Display cart page with user's cart items"""
+    
+    # --- Get user's cart items ---
     if request.user.is_authenticated:
         cart_items = Cart.objects.filter(user=request.user).select_related('product', 'variant')
     else:
@@ -302,28 +310,35 @@ def carts(request):
             session_key = request.session.session_key
         cart_items = Cart.objects.filter(user__isnull=True, session_key=session_key).select_related('product', 'variant')
 
+    # --- Calculate totals ---
     total_items = sum(item.quantity for item in cart_items)
     sub_total_price = sum(item.get_total_price() for item in cart_items)
 
-    shipping = ShippingCost.objects.first()
-    shipping_cost = shipping.cost if shipping else Decimal('0.00')
-    tax_rate = shipping.tax if shipping else Decimal('0.00')
+    # --- Calculate shipping dynamically per product ---
+    total_shipping = sum(item.product.shipping_cost * item.quantity for item in cart_items)
 
-    tax_amount = (sub_total_price * tax_rate / Decimal('100')).quantize(Decimal('0.01'))
-    total_price = (sub_total_price + tax_amount + shipping_cost).quantize(Decimal('0.01'))
+    # --- Get tax rate ---
+    tax_obj = TaxRate.objects.first()
+    tax_rate = tax_obj.tax if tax_obj else Decimal('0.00')
+
+    # --- Calculate tax on subtotal + shipping ---
+    tax_amount = (sub_total_price + total_shipping) * (tax_rate / Decimal('100'))
+    tax_amount = tax_amount.quantize(Decimal('0.01'))
+
+    # --- Total price ---
+    total_price = (sub_total_price + total_shipping + tax_amount).quantize(Decimal('0.01'))
 
     context = {
         'cart_items': cart_items,
         'total_items': total_items,
         'sub_total_price': sub_total_price,
-        'shipping_cost': shipping_cost,
+        'shipping_cost': total_shipping,
         'tax_amount': tax_amount,
         'tax_rate': tax_rate,
         'total_price': total_price,
     }
 
     return render(request, "website/pages/cart.html", context)
-
 
 @csrf_exempt
 @require_http_methods(["POST"])
@@ -461,29 +476,26 @@ def remove_from_cart(request):
         return JsonResponse({'success': False, 'message': 'Error removing from cart'}, status=500)
 
 
-
 @login_required
 def checkout(request):
     """Handle checkout process and create separate orders per vendor"""
     cart_items = Cart.objects.filter(user=request.user).select_related('product', 'variant')
 
-    if not cart_items:
+    if not cart_items.exists():
         messages.error(request, "Your cart is empty. Please add items to proceed.")
         return redirect('all_collections')
 
-    # --- Shipping & Tax ---
-    shipping = ShippingCost.objects.first()
-    shipping_cost = shipping.cost if shipping else Decimal('0.00')
-    tax_rate = shipping.tax if shipping else Decimal('0.00')
+    # --- Tax Rate ---
+    tax_obj = TaxRate.objects.first()
+    tax_rate = tax_obj.tax if tax_obj else Decimal('0.00')
 
-    coupon = None
+    # --- Coupon ---
     coupon_code = request.session.get('coupon_code')
-
+    coupon = None
     if coupon_code:
         try:
             coupon = Coupon.objects.get(code=coupon_code)
         except Coupon.DoesNotExist:
-            coupon = None
             request.session.pop('coupon_code', None)
 
     # --- Handle Form Submission ---
@@ -500,57 +512,54 @@ def checkout(request):
         # Validate required fields
         if not all([email, phone, full_name, address, city, province, payment_method]):
             messages.error(request, "Please fill in all required fields.")
-            return render(request, 'website/pages/checkout.html', {
-                'cart_items': cart_items,
-            })
+            return render(request, 'website/pages/checkout.html', {'cart_items': cart_items})
 
         # Validate province
         valid_provinces = [choice[0] for choice in Order.PROVINCE_CHOICES]
         if province not in valid_provinces:
             messages.error(request, "Please select a valid province.")
-            return render(request, 'website/pages/checkout.html', {
-                'cart_items': cart_items,
-            })
+            return render(request, 'website/pages/checkout.html', {'cart_items': cart_items})
 
         # Validate payment method
         valid_payment_methods = [choice[0] for choice in Order.PAYMENT_CHOICES]
         if payment_method not in valid_payment_methods:
             messages.error(request, "Please select a valid payment method.")
-            return render(request, 'website/pages/checkout.html', {
-                'cart_items': cart_items,
-            })
+            return render(request, 'website/pages/checkout.html', {'cart_items': cart_items})
 
         # --- Group cart items by vendor ---
         vendor_items = {}
         for item in cart_items:
             vendor = item.product.vendor
-            if vendor not in vendor_items:
-                vendor_items[vendor] = []
-            vendor_items[vendor].append(item)
+            vendor_items.setdefault(vendor, []).append(item)
 
         created_orders = []
 
         for vendor, items in vendor_items.items():
-            # Calculate subtotal, tax, discount per vendor
+            # Subtotal: sum of product price × quantity
             subtotal = sum(item.get_total_price() for item in items)
-            tax_amount = (subtotal * tax_rate) / Decimal('100')
-            discount = Decimal('0.00')
 
-            # Apply coupon if applicable
+            # Total shipping: sum of product shipping × quantity
+            total_shipping = sum(item.product.shipping_cost * item.quantity for item in items)
+
+            # Tax
+            tax_amount = (subtotal + total_shipping) * (tax_rate / Decimal('100'))
+
+            # Discount (if coupon applies)
+            discount = Decimal('0.00')
             if coupon:
                 is_valid, message = coupon.is_valid(user=request.user, cart_items=items)
                 if is_valid:
                     discount = coupon.get_discount_amount(subtotal)
                 else:
                     messages.warning(request, f"Coupon not valid for vendor {vendor.shop_name}.")
-                    discount = Decimal('0.00')
 
-            total = max(subtotal + shipping_cost + tax_amount - discount, Decimal('0.00'))
+            # Total
+            total = max(subtotal + total_shipping + tax_amount - discount, Decimal('0.00'))
 
-            # Create Order for this vendor
+            # Create Order
             order = Order.objects.create(
                 user=request.user,
-                order_number='',  # auto-generated
+                order_number='',  # your auto-generation logic
                 email=email,
                 phone=phone,
                 full_name=full_name,
@@ -561,8 +570,9 @@ def checkout(request):
                 payment_method=payment_method,
                 payment_status='unpaid',
                 subtotal=subtotal,
-                shipping_cost=shipping_cost,
-                tax=tax_amount,
+                shipping_cost=total_shipping,
+                tax_percentage=tax_rate,
+                tax_amount=tax_amount,
                 discount=discount,
                 total=total,
                 coupon=coupon,
@@ -571,7 +581,7 @@ def checkout(request):
             )
             created_orders.append(order)
 
-            # Create Order Items and Invoice
+            # Create Order Items & Invoice
             for item in items:
                 OrderItem.objects.create(
                     order=order,
@@ -580,17 +590,19 @@ def checkout(request):
                     quantity=item.quantity,
                     price=item.get_item_price(),
                 )
-                Invoice.objects.create(
-                    customer=request.user,
-                    vendor=vendor,
-                    order=order,
-                    subtotal=subtotal,
-                    total=total,
-                    tax_amount=tax_amount,
-                    discount=discount
-                )
+            Invoice.objects.create(
+                customer=request.user,
+                vendor=vendor,
+                order=order,
+                subtotal=subtotal,
+                total=total,
+                tax_percentage=tax_rate,
+                tax_amount=tax_amount,
+                discount=discount,
+                shipping_cost=total_shipping,
+            )
 
-            # Record coupon usage per order
+            # Record coupon usage
             if coupon and discount > 0:
                 CouponUsage.objects.create(
                     user=request.user,
@@ -601,22 +613,23 @@ def checkout(request):
                 coupon.used_count += 1
                 coupon.save()
 
-        # --- Clear cart and session ---
+        # Clear cart and session
         cart_items.delete()
         request.session.pop('coupon_code', None)
 
         messages.success(request, f"{len(created_orders)} order(s) placed successfully!")
-        return redirect('order_confirmation', order_id=order.id)  # or redirect to a summary page
+        return redirect('order_confirmation', order_id=created_orders[-1].id)
 
     # --- GET Request: Render Checkout Page ---
     subtotal = sum(item.get_total_price() for item in cart_items)
-    tax_amount = (subtotal * tax_rate) / Decimal('100')
-    total = subtotal + shipping_cost + tax_amount
+    total_shipping = sum(item.product.shipping_cost * item.quantity for item in cart_items)
+    tax_amount = (subtotal + total_shipping) * (tax_rate / Decimal('100'))
+    total = subtotal + total_shipping + tax_amount
 
     return render(request, 'website/pages/checkout.html', {
         'cart_items': cart_items,
         'subtotal': subtotal,
-        'shipping_cost': shipping_cost,
+        'shipping_cost': total_shipping,
         'tax': tax_amount,
         'total': total,
         'coupon': coupon,
@@ -654,14 +667,12 @@ def apply_coupon(request):
 
 @login_required
 def order_confirmation(request, order_id):
-    order = Order.objects.get(id=order_id,user=request.user)
-    shipping_cost=ShippingCost.objects.first()
-    cost=shipping_cost.cost
-    tax=shipping_cost.tax
-    tax_amount = order.subtotal * Decimal(tax) / Decimal('100')
-    total_price = order.subtotal + cost + tax_amount
-    return render(request, 'website/pages/order_confirmation.html', {'order': order, 'tax_amount': tax_amount, 'total_price': total_price,'tax_rate':tax,'shipping_cost':cost})
+    order = get_object_or_404(Order, id=order_id, user=request.user)
 
+    return render(request, 'website/pages/order_confirmation.html', {
+        'order': order,
+     
+    })
 
 
 def product_details(request, slug):
@@ -980,30 +991,18 @@ def customer_orders(request):
         })
 
 
-
 @login_required
 def customer_order_detail(request, order_number):
+
     order = get_object_or_404(Order, order_number=order_number, user=request.user)
-    shipping_cost_obj = ShippingCost.objects.first()
-    shipping_cost = shipping_cost_obj.cost if shipping_cost_obj else Decimal('0.00')
-    tax_rate = shipping_cost_obj.tax if shipping_cost_obj else Decimal('0.00')
-
-    tax_amount = order.subtotal * Decimal(tax_rate) / Decimal('100')
-    total_price = order.subtotal + shipping_cost + tax_amount - (order.discount or Decimal('0.00'))
-
-    coupon_used=order.coupon if order.coupon else None
-
     order_items = OrderItem.objects.filter(order=order)
+    coupon_used = order.coupon if order.coupon else None
 
     return render(request, 'website/pages/order_detail.html', {
         'order': order,
         'order_items': order_items,
-        'tax_amount': tax_amount,
-        'total_price': total_price,
-        'tax_rate': tax_rate,
         'coupon_used': coupon_used,
-        'discount_amount': order.discount,
-        'shipping_cost': shipping_cost,
+       
     })
 
 
@@ -1023,10 +1022,7 @@ def customer_invoices(request):
 @login_required
 def customer_invoice_detail(request, invoice_number):
     invoice = get_object_or_404(Invoice, invoice_number=invoice_number, customer=request.user)
-    shipping=ShippingCost.objects.first()
-    shipping_cost=shipping.cost
-    tax_rate=shipping.tax
-    return render(request, 'website/pages/invoice_detail.html', {'invoice': invoice,'tax_rate':tax_rate,'shipping_cost':shipping_cost})
+    return render(request, 'website/pages/invoice_detail.html', {'invoice': invoice})
 
 
 @login_required

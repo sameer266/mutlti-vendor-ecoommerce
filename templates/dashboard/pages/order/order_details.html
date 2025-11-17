@@ -78,7 +78,7 @@
     <p><strong>Subtotal:</strong> Rs {{ order.subtotal }}</p>
     <p><strong>Shipping:</strong> Rs {{ order.shipping_cost }}</p>
     <p><strong>Discount:</strong> Rs {{ order.discount }}</p>
-    <p><strong>Tax:</strong> Rs {{ order.tax }}</p>
+    <p><strong>Tax({{order.tax_percentage}}):</strong> Rs {{ order.tax_amount }}</p>
     <p class="text-lg font-semibold"><strong>Total:</strong> Rs {{ order.total }}</p>
   </div>
 

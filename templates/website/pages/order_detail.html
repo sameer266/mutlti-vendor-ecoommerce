@@ -324,17 +324,17 @@
             <!-- Shipping -->
             <div class="flex justify-between py-2">
               <span class="text-gray-600">Shipping</span>
-              {% if shipping_cost == 0 %}
+              {% if order.shipping_cost == 0 %}
               <span class="font-semibold text-[var(--success)]">Free</span>
               {% else %}
-              <span class="font-semibold text-gray-900">+  Rs {{ shipping_cost | floatformat:2 }}</span>
+              <span class="font-semibold text-gray-900">+  Rs {{ order.shipping_cost | floatformat:2 }}</span>
               {% endif %}
             </div>
 
             <!-- Tax -->
             <div class="flex justify-between py-2">
-              <span class="text-gray-600">Tax ({{ tax_rate }}%)</span>
-              <span class="font-semibold text-gray-900">+  Rs {{ tax_amount | floatformat:2 }}</span>
+              <span class="text-gray-600">Tax ({{ order.tax_percentage }}%)</span>
+              <span class="font-semibold text-gray-900">+  Rs {{ order.tax_amount | floatformat:2 }}</span>
             </div>
 
             <!-- Coupon -->
@@ -347,7 +347,7 @@
                 </div>
               </div>
               {% if discount_amount %}
-              <span class="font-semibold text-green-800">- Rs {{ discount_amount | floatformat:2 }}</span>
+              <span class="font-semibold text-green-800">- Rs {{order.discount_amount | floatformat:2 }}</span>
               {% endif %}
             </div>
             {% endif %}
@@ -356,7 +356,7 @@
             <div class="border-t-2 border-gray-200 pt-3 mt-3">
               <div class="flex justify-between items-center">
                 <span class="font-semibold text-gray-900">Total</span>
-                <span class="text-xl font-bold text-[var(--primary)]">Rs {{ total_price | floatformat:2 }}</span>
+                <span class="text-xl font-bold text-[var(--primary)]">Rs {{ order.total| floatformat:2 }}</span>
               </div>
             </div>
 

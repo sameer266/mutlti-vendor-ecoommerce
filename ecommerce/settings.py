@@ -46,8 +46,7 @@ INSTALLED_APPS = [
    
     'dashboard',
     'api',
-    'ckeditor',               
-    'ckeditor_uploader',  
+   
 ]
 
 MIDDLEWARE = [
@@ -203,8 +202,8 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'  # SMTP server host
 EMAIL_PORT = 587  # SMTP server port (587 for TLS, 465 for SSL)
 EMAIL_USE_TLS = True  # True for TLS, False for SSL
-EMAIL_HOST_USER = 'sameerbaiju792@gmail.com'  # SMTP server username
-EMAIL_HOST_PASSWORD = 'dhbd ltho bnmd pvzf'
+EMAIL_HOST_USER = 'hellobajar82@gmail.com'  # SMTP server username
+EMAIL_HOST_PASSWORD = 'wbnk prbv bhoc dfkf'
 
 
 CKEDITOR_UPLOAD_PATH = "uploads/"  

@@ -5,16 +5,16 @@
 <div class="bg-white rounded-xl shadow p-6">
   <div class="flex justify-between items-center mb-6">
     <h1 class="text-2xl font-semibold text-gray-800">Add Product</h1>
-    <a href="{% url 'admin_products_list' %}" class="text-sm text-blue-600 hover:text-blue-800">Back to list</a>
+    <a href="{% url 'vendor_products_list' %}" class="text-sm text-blue-600 hover:text-blue-800">Back to list</a>
   </div>
 
-  <form method="post" action="{% url 'admin_product_add' %}" enctype="multipart/form-data" class="space-y-6">
+  <form method="post" action="{% url 'vendor_product_add' %}" enctype="multipart/form-data" class="space-y-6">
     {% csrf_token %}
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
     
       <div>
-        <label class="block text-sm font-medium text-gray-700">Category</label>
+        <label class="block text-sm font-medium text-gray-700">Category<span class="text-red-600">*</span></label>
         <select name="category" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5" required>
           {% for c in categories %}
             <option value="{{ c.id }}">{{ c.name }}</option>
@@ -23,12 +23,12 @@
       </div>
 
       <div class="md:col-span-2">
-        <label class="block text-sm font-medium text-gray-700">Name</label>
+        <label class="block text-sm font-medium text-gray-700">Name<span class="text-red-600">*</span></label>
         <input type="text" name="name" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5" required>
       </div>
 
       <div class="md:col-span-2">
-        <label class="block text-sm font-medium text-gray-700">Description</label>
+        <label class="block text-sm font-medium text-gray-700">Description<span class="text-red-600">*</span></label>
         <textarea id="description" name="description" rows="4" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5" required></textarea>
 
       </div>
@@ -36,7 +36,7 @@
       
 
       <div>
-        <label class="block text-sm font-medium text-gray-700">Price</label>
+        <label class="block text-sm font-medium text-gray-700">Price<span class="text-red-600">*</span></label>
         <input type="number" step="0.01" name="price" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5" required>
       </div>
 
@@ -49,7 +49,7 @@
 
 
       <div>
-        <label class="block text-sm font-medium text-gray-700">Stock</label>
+        <label class="block text-sm font-medium text-gray-700">Stock<span class="text-red-600">*</span></label>
         <input type="number" name="stock" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5" value="0" required>
       </div>
 
@@ -68,6 +68,18 @@
         <input type="number" step="0.01" name="weight" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5">
       </div>
 
+
+      <div>
+  <label class="block text-sm font-medium text-gray-700">Shipping Cost (Rs) <span class="text-red-600">*</span></label>
+  <input type="number" step="0.01" name="shipping_cost" value="0"
+         class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5" required>
+  <p class="text-xs text-gray-500 mt-1">
+    If you enter 0, it will show "Free Shipping" to the customer.
+  </p>
+</div>
+
+      
+
       <div class="md:col-span-2 pt-2">
         <label class="inline-flex items-center text-sm text-gray-700">
           <input type="checkbox" name="is_featured" class="mr-2">
@@ -75,16 +87,21 @@
         </label>
       </div>
 
-      <div>
-        <label class="block text-sm font-medium text-gray-700">Main Image</label>
-        <input type="file" name="main_image" accept="image/*" class="mt-1 block w-full">
-      </div>
+  <div>
+  <label class="block text-sm font-medium text-gray-700">
+    Main Image <span class="text-red-600">*</span>
+  </label>
+  <input type="file" name="main_image" id="main_image" accept=".jpg,.jpeg,.png,.gif" class="mt-1 block w-full">
+  <p class="text-xs text-gray-500 mt-1">Allowed formats: .jpg, .jpeg, .png, .gif</p>
+  <p id="main_image_error" class="text-xs text-red-600 mt-1 hidden">Invalid file format!</p>
+</div>
 
-      <div class="md:col-span-2">
-        <label class="block text-sm font-medium text-gray-700">Gallery Images</label>
-        <input type="file" name="gallery_images" accept="image/*" class="mt-1 block w-full" multiple>
-        <p class="text-xs text-gray-500 mt-1">You can select multiple images.</p>
-      </div>
+<div class="md:col-span-2">
+  <label class="block text-sm font-medium text-gray-700">Gallery Images</label>
+  <input type="file" name="gallery_images" id="gallery_images" accept=".jpg,.jpeg,.png,.gif" class="mt-1 block w-full" multiple>
+  <p class="text-xs text-gray-500 mt-1">You can select multiple images. Allowed formats: .jpg, .jpeg, .png, .gif</p>
+  <p id="gallery_images_error" class="text-xs text-red-600 mt-1 hidden">One or more files have invalid formats!</p>
+</div>
 
      
 

@@ -32,7 +32,7 @@
       <p class="text-gray-600 text-sm"><i class="fas fa-list-ul mr-1"></i> Total: {{ total_orders }}</p>
       <p class="text-gray-600 text-sm"><i class="fas fa-clock mr-1 text-yellow-600"></i> Pending: <span class="font-semibold">{{ pending_orders }}</span></p>
       <p class="text-gray-600 text-sm"><i class="fas fa-check mr-1 text-green-600"></i> Delivered: <span class="font-semibold">{{ delivered_orders }}</span></p>
-      <p class="text-gray-600 text-sm"><i class="fas fa-money-bill-wave mr-1"></i> Revenue: Rs. <span class="font-semibold">{{ total_revenue }}</span></p>
+      <p class="text-gray-600 text-sm"><i class="fas fa-money-bill-wave mr-1"></i> Revenue: Rs. <span class="font-semibold">{{ total_revenue  |floatformat:2  }}</span></p>
     </div>
 
     <!-- Profile Card -->

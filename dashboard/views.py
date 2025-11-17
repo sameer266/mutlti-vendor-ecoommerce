@@ -12,7 +12,7 @@ from django.contrib import messages
 from .models import (
     UserRole,  Vendor, Category, Product, ProductImage, ProductVariant, Order, OrderItem, Invoice,
     Review, Coupon,  Organization, Newsletter, Contact, 
-    Notification, Slider, Banner, VendorCommission, VendorPayoutRequest,VendorWallet,VendorCommission,ShippingCost
+    Notification, Slider, Banner, VendorCommission, VendorPayoutRequest,VendorWallet,VendorCommission,TaxRate
 )
 
 # Helper decorator to check admin access
@@ -511,6 +511,7 @@ def admin_product_add(request):
             stock=int(request.POST.get('stock', 0)),
             low_stock_alert=int(request.POST.get('low_stock_alert', 5)),
             brand=request.POST.get('brand', ''),
+            shipping_cost=Decimal(request.POST.get('shipping_cost', '0.00')) ,
             weight=Decimal(request.POST.get('weight')) if request.POST.get('weight') else None,
             is_featured=True if request.POST.get('is_featured') == 'on' else False,
         )
@@ -555,6 +556,7 @@ def admin_product_update(request, pk):
         product.vendor = get_object_or_404(Vendor, pk=vendor_id)
         product.category = get_object_or_404(Category, pk=category_id)
         product.name = request.POST.get('name')
+        product.shipping_cost=Decimal(request.POST.get('shipping_cost', '0.00')) 
         product.description = request.POST.get('description')
         product.price = Decimal(request.POST.get('price'))
         product.cost_price = Decimal(request.POST.get('cost_price')) if request.POST.get('cost_price') else None
@@ -997,15 +999,14 @@ def admin_order_invoice_view(request,order_number):
 @admin_required
 def admin_invoice_detail(request, invoice_number):
     invoice = get_object_or_404(Invoice, invoice_number=invoice_number)
-    shipping = ShippingCost.objects.first()
-    shipping_cost = shipping.cost if shipping else 0
-    tax_rate = shipping.tax if shipping else 0
-
+    order_items = invoice.order.items.all()
+  
     return render(request, 'dashboard/pages/order/invoice_detail.html', {
         'invoice': invoice,
-        'tax_rate': tax_rate,
-        'shipping_cost': shipping_cost,
+        'order_items': order_items,
     })
+        
+
     
     
 
@@ -1136,7 +1137,7 @@ def admin_read_contact(request):
 
 @admin_required
 def admin_contact_delete(request, pk):
-    contact = get_object_or_404(Contact, pk=pk)
+    contact = get_object_or_404(Contact, id=id)
     contact.delete()
     return redirect('admin_contacts_list')
 
@@ -1144,31 +1145,27 @@ def admin_contact_delete(request, pk):
 
 # Shipping Cost Management
 @admin_required
-def shipping_cost_view(request):
-    shipping_cost = ShippingCost.objects.first()  # get the only record
-    return render(request, 'dashboard/pages/shipping/shipping_list.html', {
-        'shipping_cost': shipping_cost
+def admin_tax_rate_view(request):
+    tax_rate=TaxRate.objects.first()  # get the only record
+    return render(request, 'dashboard/pages/tax/tax_rate.html', {
+        'tax_rate': tax_rate
     })
 
 
 @admin_required
-def shipping_cost_edit(request, pk):
-    shipping_cost = get_object_or_404(ShippingCost, pk=pk)
+def admin_tax_rate_edit(request, id):
+    tax_obj = get_object_or_404(TaxRate, id=id)
 
     if request.method == "POST":
-        cost = request.POST.get("cost")
         tax = request.POST.get("tax")
-
-        shipping_cost.cost = cost
-        shipping_cost.tax = tax
-        shipping_cost.save()
-
-        messages.success(request, "Shipping cost updated successfully.")
-        return redirect("admin_shipping_cost_view")
-
-    return render(request, "dashboard/pages/shipping/shipping_edit.html", {
-        "shipping_cost": shipping_cost
+        tax_obj.tax = tax
+        tax_obj.save()
+        messages.success(request, "Tax rate updated successfully.")
+        return redirect('admin_tax_rate')  
+    return render(request, "dashboard/pages/tax/tax_rate_edit.html", {
+        "tax_obj": tax_obj  # Pass full object, not just number
     })
+
 
 
 # Newsletter Management
@@ -1214,9 +1211,6 @@ def admin_sliders_list(request):
 @admin_required
 def admin_slider_add(request):
     if request.method == 'POST':
-        title = request.POST.get('title', '')
-        subtitle = request.POST.get('subtitle', '')
-        link = request.POST.get('link', '')
         image = request.FILES.get('image')  
 
         # Create the slider
@@ -1238,9 +1232,6 @@ def admin_slider_update(request, pk):
     slider = get_object_or_404(Slider, pk=pk)
 
     if request.method == 'POST':
-        title = request.POST.get('title', '')
-        subtitle = request.POST.get('subtitle', '')
-        link = request.POST.get('link', '')
         slider.title = title
         slider.subtitle = subtitle
         slider.link = link
@@ -1549,55 +1540,61 @@ def vendor_products_list(request):
 @login_required
 def vendor_product_add(request):
     if request.method == 'POST':
-        category_id = request.POST.get('category')
-        vendor=Vendor.objects.get(user=request.user)
-        category = get_object_or_404(Category, pk=category_id)
-        product = Product.objects.create(
-            vendor=vendor,
-            category=category,
-            name=request.POST.get('name'),
-            description=request.POST.get('description'),
-            price=Decimal(request.POST.get('price')),
-            cost_price=Decimal(request.POST.get('cost_price')) if request.POST.get('cost_price') else None,
-            stock=int(request.POST.get('stock', 0)),
-            low_stock_alert=int(request.POST.get('low_stock_alert', 5)),
-            brand=request.POST.get('brand', ''),
-            weight=Decimal(request.POST.get('weight')) if request.POST.get('weight') else None,
-            is_featured=True if request.POST.get('is_featured') == 'on' else False,
-        )
-        if request.FILES.get('main_image'):
-            product.main_image = request.FILES['main_image']
-            product.save()
-        else:
-            product.save()
+        try:
+            category_id = request.POST.get('category')
+            vendor = Vendor.objects.get(user=request.user)
+            category = get_object_or_404(Category, pk=category_id)
 
-        # Handle gallery images (multiple)
-        for img in request.FILES.getlist('gallery_images'):
-            ProductImage.objects.create(product=product, image=img)
-
-        # Handle variants: expect arrays variant_type[], variant_name[], variant_price_adjustment[], variant_stock[], variant_sku[]
-        variant_types = request.POST.getlist('variant_type[]')
-        variant_names = request.POST.getlist('variant_name[]')
-        variant_price_adjustments = request.POST.getlist('variant_price_adjustment[]')
-        
-
-        for i in range(len(variant_names)):
-            name = variant_names[i].strip()
-            if not name:
-                continue
-            ProductVariant.objects.create(
-                product=product,
-                variant_type=variant_types[i] if i < len(variant_types) and variant_types[i] else 'other',
-                name=name,
-                price_adjustment=Decimal(variant_price_adjustments[i]) if i < len(variant_price_adjustments) and variant_price_adjustments[i] else 0,
+            product = Product.objects.create(
+                vendor=vendor,
+                category=category,
+                name=request.POST.get('name'),
+                description=request.POST.get('description'),
+                price=Decimal(request.POST.get('price')),
+                cost_price=Decimal(request.POST.get('cost_price')) if request.POST.get('cost_price') else None,
+                stock=int(request.POST.get('stock', 0)),
+                low_stock_alert=int(request.POST.get('low_stock_alert', 5)),
+                brand=request.POST.get('brand', ''),
+                shipping_cost=Decimal(request.POST.get('shipping_cost', '0.00')),
+                weight=Decimal(request.POST.get('weight')) if request.POST.get('weight') else None,
+                is_featured=True if request.POST.get('is_featured') == 'on' else False,
             )
 
-        return redirect('admin_products_list')
+            # Handle main image
+            if request.FILES.get('main_image'):
+                product.main_image = request.FILES['main_image']
+            product.save()
+
+            # Handle gallery images
+            for img in request.FILES.getlist('gallery_images'):
+                ProductImage.objects.create(product=product, image=img)
+
+            # Handle variants
+            variant_types = request.POST.getlist('variant_type[]')
+            variant_names = request.POST.getlist('variant_name[]')
+            variant_price_adjustments = request.POST.getlist('variant_price_adjustment[]')
+
+            for i in range(len(variant_names)):
+                name = variant_names[i].strip()
+                if not name:
+                    continue
+                ProductVariant.objects.create(
+                    product=product,
+                    variant_type=variant_types[i] if i < len(variant_types) and variant_types[i] else 'other',
+                    name=name,
+                    price_adjustment=Decimal(variant_price_adjustments[i]) if i < len(variant_price_adjustments) and variant_price_adjustments[i] else 0,
+                )
+
+            messages.success(request, "Product added successfully.")
+            return redirect('vendor_products_list')
+
+        except Exception as e:
+            messages.error(request, f"An error occurred while adding the product: {str(e)}")
+            return redirect('vendor_product_add')
+
     categories = Category.objects.filter(is_active=True)
     vendors = Vendor.objects.filter(is_active=True)
     return render(request, 'vendor/product/add_product.html', {'categories': categories, 'vendors': vendors})
-
-
 
 
 
@@ -1615,6 +1612,7 @@ def vendor_product_update(request, pk):
         product.stock = int(request.POST.get('stock', 0))
         product.low_stock_alert = int(request.POST.get('low_stock_alert', 5))
         product.brand = request.POST.get('brand', '')
+        product.shipping_cost=Decimal(request.POST.get('shipping_cost', '0.00')) 
         product.weight = Decimal(request.POST.get('weight')) if request.POST.get('weight') else None
         product.is_featured = True if request.POST.get('is_featured') == 'on' else False
 
@@ -1726,8 +1724,9 @@ def vendor_product_delete(request, pk):
     return redirect('vendor_products_list')
 
 
-
+# =====================
 # Order Management
+# ====================
 @login_required
 def vendor_orders_list(request):
     search = request.GET.get('search', '')
@@ -1826,7 +1825,9 @@ def vendor_order_invoice_view(request,order_number):
     return render(request,'vendor/order/invoice_list.html',{'invoices':invoices,'order_number':order_number})
     
     
+# =============================
 # Vendor Payouts
+# =============================
 @login_required
 def vendor_payouts_list(request):
     user = request.user
@@ -1959,8 +1960,9 @@ def vendor_wallet_view(request):
 
 
 
-
+# ========================
 #  Vendor Product Review
+# ========================
 @login_required
 def vendor_reviews_list(request):
     vendor=Vendor.objects.get(user=request.user)
@@ -1970,8 +1972,9 @@ def vendor_reviews_list(request):
 
 
 
-
+# ===========================
 # Invoice
+# =========================
 @login_required
 def vendor_invoices(request):
     vendor=Vendor.objects.get(user=request.user)
@@ -1981,27 +1984,35 @@ def vendor_invoices(request):
 
 @login_required
 def vendor_invoice_detail(request, invoice_number):
-    vendor=Vendor.objects.get(user=request.user)
+    vendor = Vendor.objects.get(user=request.user)
     invoice = get_object_or_404(Invoice, invoice_number=invoice_number, vendor=vendor)
-    shipping=ShippingCost.objects.first()
-    tax_rate=shipping.tax
-    shipping_cost=shipping.cost
+    
+    order_items = invoice.order.items.all()
+    total_shipping_cost = sum(item.product.shipping_cost * item.quantity for item in order_items)
+
+    tax_obj = TaxRate.objects.first()
+    tax_rate = tax_obj.tax if tax_obj else 0
+    tax_amount = (invoice.subtotal + total_shipping_cost) * (tax_rate / 100)
+
+    total_price = invoice.subtotal + total_shipping_cost + tax_amount - (invoice.discount or 0)
+
     return render(request, 'vendor/invoice/invoice_detail.html', {
         'invoice': invoice,
-        'tax_rate':tax_rate,
-        'shipping_cost':shipping_cost
+        'order_items': order_items,
+        'shipping_cost': total_shipping_cost,
+        'tax_rate': tax_rate,
+        'tax_amount': tax_amount,
+        'total_price': total_price,
     })
 
 
+# ====================
 # Vendor Profile
+# ======================
 @login_required
 def vendor_profile_view(request):
     vendor=Vendor.objects.get(user=request.user)
     return render(request,'vendor/profile/vendor_profile.html',{'vendor':vendor})
-
-
-
-
 
 
 @login_required
@@ -2062,3 +2073,43 @@ def change_password_view(request):
                 return redirect('customer_profile')
 
     return render(request, 'dashboard/pages/change_password.html')
+
+
+
+# ========================
+#  Vendor Kyc Resubmit
+# =======================
+@login_required
+def vendor_resubmit_kyc(request):
+    vendor=Vendor.objects.get(user=request.user)
+    if request.method == "POST":
+        try:
+            pan_number = request.POST.get("pan_number")
+            pan_document = request.FILES.get("pan_document")
+            citizenship_front = request.FILES.get("citizenship_front")
+            citizenship_back = request.FILES.get("citizenship_back")
+            company_registration = request.FILES.get("company_registration")
+            vendor.pan_number = pan_number
+            vendor.pan_document = pan_document
+            if citizenship_front:
+                vendor.citizenship_front = citizenship_front
+
+            if citizenship_back:
+                vendor.citizenship_back = citizenship_back
+
+            if company_registration:
+                vendor.company_registration = company_registration
+
+            # Reset verification status
+            vendor.verification_status = "pending"
+            vendor.rejection_reason = ""
+            vendor.verified_at = None
+            vendor.save()
+        except Exception as e:
+            messages.success(request,"Something went wrong")
+            return render(request,'vendor/resubmit_kyc.html')
+
+        messages.success(request, "Your KYC documents were resubmitted successfully.")
+        return redirect("vendor_dashboard")
+
+    return render(request, "vendor/resubmit_kyc.html", {"vendor": vendor})

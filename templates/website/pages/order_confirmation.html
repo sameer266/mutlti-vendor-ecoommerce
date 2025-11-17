@@ -102,15 +102,15 @@
         </div>
         <div class="flex justify-between">
           <span class="text-[var(--text-secondary)]">Shipping</span>
-          {% if shipping_cost == 0 %}
+          {% if order.shipping_cost == 0 %}
           <span class="font-semibold text-[var(--success)]">Free</span>
           {% else %}
-          <span class="font-semibold text-[var(--text-primary)]">Rs {{ shipping_cost|floatformat:2 }}</span>
+          <span class="font-semibold text-[var(--text-primary)]">Rs {{ order.shipping_cost|floatformat:2 }}</span>
           {% endif %}
         </div>
         <div class="flex justify-between">
-          <span class="text-[var(--text-secondary)]">Tax ({{tax_rate}}%)</span>
-          <span class="font-semibold text-[var(--text-primary)]">Rs {{ tax_amount|floatformat:2 }}</span>
+          <span class="text-[var(--text-secondary)]">Tax ({{order.tax_percentage}}%)</span>
+          <span class="font-semibold text-[var(--text-primary)]">Rs {{ order.tax_amount|floatformat:2 }}</span>
         </div>
         {% if order.discount > 0 %}
         <div class="flex justify-between">

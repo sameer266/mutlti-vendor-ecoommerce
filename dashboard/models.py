@@ -4,7 +4,7 @@ from django.utils.text import slugify
 from django.utils import timezone
 from django.core.validators import FileExtensionValidator
 from decimal import Decimal
-from ckeditor.fields import RichTextField    
+  
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
@@ -126,7 +126,7 @@ class Vendor(models.Model):
     citizenship_front = models.FileField(
         upload_to='kyc/citizenship/',
         blank=True,
-        validators=[FileExtensionValidator(['jpg', 'jpeg', 'png'])],
+      
         help_text='Front side of citizenship'
     )
     citizenship_back = models.FileField(
@@ -140,7 +140,7 @@ class Vendor(models.Model):
     company_registration = models.FileField(
         upload_to='kyc/company/',
         blank=True,
-        validators=[FileExtensionValidator(['pdf'])],
+        validators=[FileExtensionValidator(['jpg', 'jpeg', 'png'])],
         help_text='For companies: Company registration certificate'
     )
     
@@ -304,6 +304,9 @@ class Product(models.Model):
     
     # Images
     main_image = models.ImageField(upload_to='products/')
+    
+    # shippiing Cost
+    shipping_cost=models.DecimalField(max_digits=10, decimal_places=2, default=0.00, )
     
     # Status & Stats
     is_active = models.BooleanField(default=True)
@@ -488,7 +491,11 @@ class Order(models.Model):
     subtotal = models.DecimalField(max_digits=10, decimal_places=2)
     shipping_cost = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     discount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    tax = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    tax_percentage = models.DecimalField(
+        max_digits=5, decimal_places=2, default=0,
+        help_text="Tax percentage (e.g., 13 for 13%)"
+    )
+    tax_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0,help_text="Calculated tax amount")
     total = models.DecimalField(max_digits=10, decimal_places=2)
     
     # Payment
@@ -642,19 +649,13 @@ class CouponUsage(models.Model):
 
 
 # -------------------------
-# Shipping Zones
+# Tax rate
 # -------------------------
-class ShippingCost(models.Model):
+class TaxRate(models.Model):
+    tax = models.DecimalField(max_digits=5, decimal_places=2, default=13, help_text="Tax percentage (e.g. 13 for 13%)")
 
-    cost = models.DecimalField(max_digits=10, decimal_places=2)
-    tax = models.DecimalField(max_digits=5, decimal_places=2, default=0.00, help_text="Tax percentage (e.g. 13 for 13%)")
-
-    class Meta:
-        ordering = ['cost']
-    
     def __str__(self):
-        return f" Rs. {self.cost}"
-
+        return f"{self.tax}"
 
 # -------------------------
 #  Invoice
@@ -669,9 +670,11 @@ class Invoice(models.Model):
     
     # Totals
     subtotal = models.DecimalField(max_digits=12, decimal_places=2)
+    tax_percentage = models.DecimalField(max_digits=5, decimal_places=2, default=13)
     tax_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     discount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     total = models.DecimalField(max_digits=12, decimal_places=2)
+    shipping_cost = models.DecimalField(max_digits=12, decimal_places=2, default=0)
 
     payment_status = models.CharField(max_length=20, choices=[
         ('paid', 'Paid'),
@@ -791,8 +794,7 @@ class Notification(models.Model):
 
 # Slider model
 class Slider(models.Model):
-    title = models.CharField(max_length=200, blank=True, null=True)
-    subtitle = models.CharField(max_length=300, blank=True, null=True)
+
     image = models.ImageField(upload_to='sliders/')
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)

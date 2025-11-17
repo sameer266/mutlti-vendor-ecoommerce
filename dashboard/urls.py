@@ -75,8 +75,8 @@ urlpatterns = [
     path('contacts/read/', views.admin_read_contact, name='admin_read_contacts'),
 
     # Shipping Cost Management
-    path('shipping-cost/', views.shipping_cost_view,name="admin_shipping_cost"),
-    path('shipping-cost/edit/<int:pk>/',views.shipping_cost_edit,name="admin_shipping_update"),
+    path('tax-rate/', views.admin_tax_rate_view,name="admin_tax_rate"),
+    path('tax-rate/edit/<int:id>/',views.admin_tax_rate_edit,name="admin_tax_rate_update"),
     
     
     # Newsletter Management
@@ -142,8 +142,6 @@ urlpatterns = [
     path('vendor/orders/<str:order_number>/invoice/',views.vendor_order_invoice_view,name="vendor_orders_invoice_list"),
     
     
-    
-    
     path('vendor/payout-lists/', views.vendor_payouts_list, name='vendor_payout_list'),
     path('vendor/payout-requests/add/', views.vendor_payout_request_add, name='vendor_payout_requests_add'),
     path('vendor/payouts/pending/', views.pending_payout_requests, name='vendor_pending_payout'),
@@ -164,6 +162,9 @@ urlpatterns = [
     #Vendor Profile 
     path('vendor/profile/',views.vendor_profile_view,name='vendor_profile'),
     path('vendor/profile/edit/', views.vendor_profile_edit_view, name='vendor_edit_profile'),
+    
+    # Resubmit Kyc
+    path('vendor/kyc/resubmit/',views.vendor_resubmit_kyc,name="vendor_kyc_resubmit"),
 ]
     
     

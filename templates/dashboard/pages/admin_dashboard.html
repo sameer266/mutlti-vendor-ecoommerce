@@ -47,7 +47,7 @@
       <p class="text-gray-600 text-sm">Total: <span class="font-bold">{{ total_orders }}</span></p>
       <p class="text-gray-600 text-sm">Pending: <span class="font-bold text-yellow-600">{{ pending_orders }}</span></p>
       <p class="text-gray-600 text-sm">Delivered: <span class="font-bold text-green-600">{{ delivered_orders }}</span></p>
-      <p class="text-gray-600 text-sm">Revenue: <span class="font-bold text-blue-600">Rs. {{ total_revenue }}</span></p>
+      <p class="text-gray-600 text-sm">Revenue: <span class="font-bold text-blue-600">Rs. {{ total_revenue |floatformat:2  }}</span></p>
     </div>
 
   </div>

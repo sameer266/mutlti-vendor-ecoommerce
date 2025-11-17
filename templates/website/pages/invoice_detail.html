@@ -85,12 +85,19 @@
               <span>Rs {{ invoice.subtotal }}</span>
             </div>
             <div class="flex justify-between py-1 text-gray-700">
-              <span>Tax ({{ tax_rate }}%):</span>
+              <span>Tax ({{ invoice.tax_percentage }}%):</span>
               <span>Rs {{ invoice.tax_amount }}</span>
             </div>
             <div class="flex justify-between py-1 text-gray-700">
               <span>Shipping:</span>
-              <span>Rs {{ shipping_cost }}</span>
+         <span>
+  {% if invoice.shipping_cost == 0 %}
+    Free
+  {% else %}
+    Rs {{ invoice.shipping_cost }}
+  {% endif %}
+</span>
+
             </div>
             <div class="flex justify-between py-1 text-gray-700">
               <span>Discount:</span>

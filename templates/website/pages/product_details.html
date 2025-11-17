@@ -175,6 +175,18 @@
     {% endif %}
   </div>
 
+
+  <!-- Shipping Cost -->
+<div class="mt-2 text-sm text-gray-700">
+  Shipping: 
+  {% if product.shipping_cost|default:0 == 0 %}
+    <span class="text-green-600 font-semibold">Free</span>
+  {% else %}
+    Rs {{ product.shipping_cost|floatformat:0 }}
+  {% endif %}
+</div>
+
+
   <!-- Stock Status -->
   <div>
     {% if product.in_stock %}
@@ -257,34 +269,34 @@
   <!-- Tab Navigation -->
   <div class="border-b border-gray-200 bg-gray-50">
     <nav class="flex overflow-x-auto" aria-label="Product tabs">
-      <button class="product-tab active flex-shrink-0 px-6 py-4 text-sm font-semibold border-b-3 border-transparent hover:text-[#FF7F00] hover:border-[#FF7F00] transition-all whitespace-nowrap" data-tab="description">
-        <i class="fas fa-align-left mr-2"></i>Description
+      <button class="product-tab active flex-shrink-0 px-4 py-3 text-xs sm:text-sm font-semibold border-b-2 border-transparent hover:text-[#FF7F00] hover:border-[#FF7F00] transition-all whitespace-nowrap cursor-pointer" data-tab="description">
+        <i class="fas fa-align-left mr-1 sm:mr-2"></i>Description
       </button>
       
-      <button class="product-tab flex-shrink-0 px-6 py-4 text-sm font-semibold border-b-3 border-transparent hover:text-[#FF7F00] hover:border-[#FF7F00] transition-all whitespace-nowrap" data-tab="specifications">
-        <i class="fas fa-list-ul mr-2"></i>Specifications
+      <button class="product-tab flex-shrink-0 px-4 py-3 text-xs sm:text-sm font-semibold border-b-2 border-transparent hover:text-[#FF7F00] hover:border-[#FF7F00] transition-all whitespace-nowrap cursor-pointer" data-tab="specifications">
+        <i class="fas fa-list-ul mr-1 sm:mr-2"></i>Specifications
       </button>
       
       {% if reviews %}
-      <button class="product-tab flex-shrink-0 px-6 py-4 text-sm font-semibold border-b-3 border-transparent hover:text-[#FF7F00] hover:border-[#FF7F00] transition-all whitespace-nowrap" data-tab="reviews">
-        <i class="fas fa-star mr-2"></i>Reviews <span class="ml-1 bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full text-xs">({{ reviews|length }})</span>
+      <button class="product-tab flex-shrink-0 px-4 py-3 text-xs sm:text-sm font-semibold border-b-2 border-transparent hover:text-[#FF7F00] hover:border-[#FF7F00] transition-all whitespace-nowrap cursor-pointer" data-tab="reviews">
+        <i class="fas fa-star mr-1 sm:mr-2"></i>Reviews <span class="ml-1 bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full text-xs">({{ reviews|length }})</span>
       </button>
       {% endif %}
     </nav>
   </div>
 
   <!-- Tab Content -->
-  <div class="p-8">
+  <div class="p-6 sm:p-8">
     
     <!-- Description Tab -->
     <div class="tab-content active" id="description-tab">
       <div class="max-w-5xl">
-        <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-          <span class="w-1 h-8 bg-[#FF7F00] rounded-full"></span>
+        <h2 class="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6 flex items-center gap-2">
+          <span class="w-1 h-6 sm:h-8 bg-[#FF7F00] rounded-full"></span>
           Product Description
         </h2>
         
-        <div class="product-description prose prose-sm max-w-none text-gray-700 leading-relaxed">
+        <div class="product-description prose prose-xs sm:prose-sm max-w-none text-gray-700 leading-relaxed">
           {{ product.description|safe }}
         </div>
       </div>
@@ -293,81 +305,81 @@
     <!-- Specifications Tab -->
     <div class="tab-content hidden" id="specifications-tab">
       <div class="max-w-4xl">
-        <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-          <span class="w-1 h-8 bg-[#FF7F00] rounded-full"></span>
+        <h2 class="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6 flex items-center gap-2">
+          <span class="w-1 h-6 sm:h-8 bg-[#FF7F00] rounded-full"></span>
           Product Specifications
         </h2>
         
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
           
           <!-- Left Column -->
-          <div class="space-y-4">
-            <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
-              <div class="flex justify-between items-center mb-2">
-                <span class="text-sm font-medium text-gray-600">
-                  <i class="fas fa-barcode mr-2 text-[#FF7F00]"></i>SKU
+          <div class="space-y-3 sm:space-y-4">
+            <div class="bg-gray-50 rounded-lg p-3 sm:p-4 border border-gray-200">
+              <div class="flex justify-between items-center">
+                <span class="text-xs sm:text-sm font-medium text-gray-600">
+                  <i class="fas fa-barcode mr-1 sm:mr-2 text-[#FF7F00]"></i>SKU
                 </span>
-                <span class="text-sm font-bold text-gray-900">{{ product.sku }}</span>
+                <span class="text-sm sm:text-base font-bold text-gray-900">{{ product.sku }}</span>
               </div>
             </div>
 
             {% if product.brand %}
-            <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
-              <div class="flex justify-between items-center mb-2">
-                <span class="text-sm font-medium text-gray-600">
-                  <i class="fas fa-tag mr-2 text-[#FF7F00]"></i>Brand
+            <div class="bg-gray-50 rounded-lg p-3 sm:p-4 border border-gray-200">
+              <div class="flex justify-between items-center">
+                <span class="text-xs sm:text-sm font-medium text-gray-600">
+                  <i class="fas fa-tag mr-1 sm:mr-2 text-[#FF7F00]"></i>Brand
                 </span>
-                <span class="text-sm font-bold text-gray-900">{{ product.brand }}</span>
+                <span class="text-sm sm:text-base font-bold text-gray-900">{{ product.brand }}</span>
               </div>
             </div>
             {% endif %}
 
-            <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
-              <div class="flex justify-between items-center mb-2">
-                <span class="text-sm font-medium text-gray-600">
-                  <i class="fas fa-folder mr-2 text-[#FF7F00]"></i>Category
+            <div class="bg-gray-50 rounded-lg p-3 sm:p-4 border border-gray-200">
+              <div class="flex justify-between items-center">
+                <span class="text-xs sm:text-sm font-medium text-gray-600">
+                  <i class="fas fa-folder mr-1 sm:mr-2 text-[#FF7F00]"></i>Category
                 </span>
-                <span class="text-sm font-bold text-gray-900">{{ product.category.name|default:"N/A" }}</span>
+                <span class="text-sm sm:text-base font-bold text-gray-900">{{ product.category.name|default:"N/A" }}</span>
               </div>
             </div>
           </div>
 
           <!-- Right Column -->
-          <div class="space-y-4">
+          <div class="space-y-3 sm:space-y-4">
             {% if product.weight %}
-            <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
-              <div class="flex justify-between items-center mb-2">
-                <span class="text-sm font-medium text-gray-600">
-                  <i class="fas fa-weight mr-2 text-[#FF7F00]"></i>Weight
+            <div class="bg-gray-50 rounded-lg p-3 sm:p-4 border border-gray-200">
+              <div class="flex justify-between items-center">
+                <span class="text-xs sm:text-sm font-medium text-gray-600">
+                  <i class="fas fa-weight mr-1 sm:mr-2 text-[#FF7F00]"></i>Weight
                 </span>
-                <span class="text-sm font-bold text-gray-900">{{ product.weight }} kg</span>
+                <span class="text-sm sm:text-base font-bold text-gray-900">{{ product.weight }} kg</span>
               </div>
             </div>
             {% endif %}
 
-            <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
-              <div class="flex justify-between items-center mb-2">
-                <span class="text-sm font-medium text-gray-600">
-                  <i class="fas fa-box mr-2 text-[#FF7F00]"></i>Stock Status
+            <div class="bg-gray-50 rounded-lg p-3 sm:p-4 border border-gray-200">
+              <div class="flex justify-between items-center">
+                <span class="text-xs sm:text-sm font-medium text-gray-600">
+                  <i class="fas fa-box mr-1 sm:mr-2 text-[#FF7F00]"></i>Stock Status
                 </span>
                 {% if product.in_stock %}
-                  <span class="text-sm font-bold text-green-600">
-                    <i class="fas fa-check-circle mr-1"></i>In Stock ({{ product.stock }} units)
+                  <span class="text-sm font-bold text-green-600 flex items-center gap-1">
+                    <i class="fas fa-check-circle text-sm"></i>In Stock ({{ product.stock }} units)
                   </span>
                 {% else %}
-                  <span class="text-sm font-bold text-red-600">
-                    <i class="fas fa-times-circle mr-1"></i>Out of Stock
+                  <span class="text-sm font-bold text-red-600 flex items-center gap-1">
+                    <i class="fas fa-times-circle text-sm"></i>Out of Stock
                   </span>
                 {% endif %}
               </div>
             </div>
 
-            <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
-              <div class="flex justify-between items-center mb-2">
-                <span class="text-sm font-medium text-gray-600">
-                  <i class="fas fa-store mr-2 text-[#FF7F00]"></i>Vendor
+            <div class="bg-gray-50 rounded-lg p-3 sm:p-4 border border-gray-200">
+              <div class="flex justify-between items-center">
+                <span class="text-xs sm:text-sm font-medium text-gray-600">
+                  <i class="fas fa-store mr-1 sm:mr-2 text-[#FF7F00]"></i>Vendor
                 </span>
-                <a href="{% url 'vendor_details' product.vendor.slug %}" class="text-sm font-bold text-[#FF7F00] hover:underline">
+                <a href="{% url 'vendor_details' product.vendor.slug %}" class="text-sm sm:text-base font-bold text-[#FF7F00] hover:underline">
                   {{ product.vendor.shop_name }}
                 </a>
               </div>
@@ -382,24 +394,24 @@
     {% if reviews %}
     <div class="tab-content hidden" id="reviews-tab">
       <div class="max-w-5xl">
-        <div class="flex items-center justify-between mb-6">
-          <h2 class="text-2xl font-bold text-gray-900 flex items-center gap-3">
-            <span class="w-1 h-8 bg-[#FF7F00] rounded-full"></span>
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4 sm:gap-0">
+          <h2 class="text-xl sm:text-2xl font-bold text-gray-900 flex items-center gap-2">
+            <span class="w-1 h-6 sm:h-8 bg-[#FF7F00] rounded-full"></span>
             Customer Reviews
           </h2>
           
           <!-- Review Summary -->
-          <div class="flex items-center gap-4 bg-gray-50 px-6 py-3 rounded-lg border border-gray-200">
+          <div class="flex items-center gap-3 bg-gray-50 px-4 py-2 sm:px-6 sm:py-3 rounded-lg border border-gray-200 text-xs sm:text-sm">
             <div class="text-center">
-              <div class="text-3xl font-bold text-gray-900">{{ product.average_rating|floatformat:1 }}</div>
+              <div class="text-lg sm:text-2xl font-bold text-gray-900">{{ product.average_rating|floatformat:1 }}</div>
               <div class="flex items-center gap-1 mt-1">
                 {% for i in "12345" %}
                   {% if forloop.counter <= product.average_rating %}
-                    <i class="fas fa-star text-yellow-500 text-xs"></i>
+                    <i class="fas fa-star text-yellow-500 text-xs sm:text-sm"></i>
                   {% elif forloop.counter|add:-1 < product.average_rating %}
-                    <i class="fas fa-star-half-alt text-yellow-500 text-xs"></i>
+                    <i class="fas fa-star-half-alt text-yellow-500 text-xs sm:text-sm"></i>
                   {% else %}
-                    <i class="far fa-star text-gray-300 text-xs"></i>
+                    <i class="far fa-star text-gray-300 text-xs sm:text-sm"></i>
                   {% endif %}
                 {% endfor %}
               </div>
@@ -409,30 +421,30 @@
         </div>
 
         <!-- Reviews List -->
-        <div class="space-y-4">
+        <div class="space-y-3 sm:space-y-4">
           {% for review in reviews %}
-          <article class="bg-gray-50 border border-gray-200 rounded-xl p-6 hover:shadow-md transition-shadow">
-            <div class="flex items-start gap-4">
+          <article class="bg-gray-50 border border-gray-200 rounded-xl p-4 sm:p-6 hover:shadow-sm transition-shadow">
+            <div class="flex items-start gap-3 sm:gap-4">
               
               <!-- Avatar -->
               <div class="flex-shrink-0">
-                <div class="w-12 h-12 bg-gradient-to-br from-[#FF7F00] to-[#FF9933] rounded-full flex items-center justify-center shadow-md">
-                  <span class="text-white font-bold text-lg">{{ review.user.username|first|upper }}</span>
+                <div class="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-[#FF7F00] to-[#FF9933] rounded-full flex items-center justify-center shadow-sm">
+                  <span class="text-white font-bold text-sm sm:text-lg">{{ review.user.username|first|upper }}</span>
                 </div>
               </div>
 
               <!-- Review Content -->
               <div class="flex-1 min-w-0">
-                <div class="flex items-start justify-between mb-3">
+                <div class="flex items-start justify-between mb-2 sm:mb-3">
                   <div>
-                    <h4 class="font-bold text-gray-900 text-base">{{ review.user.username }}</h4>
-                    <div class="flex items-center gap-2 mt-1">
+                    <h4 class="font-bold text-gray-900 text-sm sm:text-base">{{ review.user.username }}</h4>
+                    <div class="flex items-center gap-1 mt-1">
                       <div class="flex items-center gap-0.5">
                         {% for i in "12345" %}
                           {% if forloop.counter <= review.rating %}
-                            <i class="fas fa-star text-yellow-500 text-sm"></i>
+                            <i class="fas fa-star text-yellow-500 text-xs sm:text-sm"></i>
                           {% else %}
-                            <i class="far fa-star text-gray-300 text-sm"></i>
+                            <i class="far fa-star text-gray-300 text-xs sm:text-sm"></i>
                           {% endif %}
                         {% endfor %}
                       </div>
@@ -441,18 +453,16 @@
                     </div>
                   </div>
                   
-                  <!-- Verified Badge (optional) -->
-                  <span class="flex-shrink-0 inline-flex items-center gap-1 bg-green-50 text-green-700 px-2 py-1 rounded-full text-xs font-medium">
-                    <i class="fas fa-check-circle"></i>
+                  <span class="flex-shrink-0 inline-flex items-center gap-1 bg-green-50 text-green-700 px-2 py-0.5 rounded-full text-xs font-medium">
+                    <i class="fas fa-check-circle text-xs"></i>
                     Verified
                   </span>
                 </div>
 
                 {% if review.comment %}
-                <p class="text-gray-700 text-sm leading-relaxed">{{ review.comment }}</p>
+                <p class="text-gray-700 text-xs sm:text-sm leading-relaxed">{{ review.comment }}</p>
                 {% endif %}
 
-               
               </div>
 
             </div>
@@ -460,10 +470,9 @@
           {% endfor %}
         </div>
 
-        <!-- Load More Button (if pagination needed) -->
         {% if reviews|length > 5 %}
-        <div class="text-center mt-8">
-          <button class="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium text-sm">
+        <div class="text-center mt-6 sm:mt-8">
+          <button class="px-4 sm:px-6 py-2 sm:py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-xs sm:text-sm font-medium">
             Load More Reviews
           </button>
         </div>
@@ -475,6 +484,7 @@
 
   </div>
 </div>
+
 
 
 

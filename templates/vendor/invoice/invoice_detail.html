@@ -97,12 +97,12 @@
           <span>Rs {{ invoice.subtotal }}</span>
         </div>
         <div class="flex justify-between mb-2">
-          <span>Tax ({{ tax_rate }}%):</span>
+          <span>Tax ({{ invoice.tax_percentage }}%):</span>
           <span>Rs {{ invoice.tax_amount }}</span>
         </div>
         <div class="flex justify-between mb-2">
           <span>Shipping:</span>
-          <span>Rs {{ shipping_cost }}</span>
+          <span>Rs {{ invoice.shipping_cost }}</span>
         </div>
         <div class="flex justify-between mb-2">
           <span>Discount:</span>
