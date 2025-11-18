@@ -45,6 +45,8 @@
           <th class="px-4 py-3 text-left">Price</th>
           <th class="px-4 py-3 text-left">Stock</th>
           <th class="px-4 py-3 text-left">Shipping Cost</th>
+          <th class="px-4 py-3 text-left">Estimated Delivery Day</th>
+
 
           <th class="px-4 py-3 text-left">Featured</th>
           <th class="px-4 py-3 text-left">Gallery</th>
@@ -72,6 +74,10 @@
           <td class="px-4 py-3">Rs. {{ product.price }}</td>
           <td class="px-4 py-3">{{ product.stock }}</td>
           <td class="px-4 py-3">Rs. {{ product.shipping_cost }}</td>
+          <td class="px-4 py-3">
+  {{ product.estimated_delivery_days}} Days
+</td>
+
 
 
           <!-- Featured Badge -->

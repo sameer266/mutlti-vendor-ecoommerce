@@ -82,7 +82,7 @@
               <!-- District Dropdown -->
               <select id="district" name="city" required
                       class="p-3 border border-[var(--text-secondary)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)]">
-                <option value="{{province.city}}">Select District / City</option>
+                <option value="">Select District / City</option>
               </select>
             </div>
             <input type="text" name="postal_code" placeholder="Postal Code (Optional)" 
@@ -107,7 +107,7 @@
             {% endif %}
           </div>
           {% if coupon %}
-          <p class="text-sm text-[var(--success)] mt-2">Coupon "{{ coupon.code }}" applied: Rs {{ discount }} discount</p>
+          <p class="text-sm text-[var(--success)] mt-2">Coupon "{{ coupon.code }}" applied: Rs {{ discount|floatformat:0 }} discount</p>
           {% endif %}
         </div>
 
@@ -136,14 +136,33 @@
         <!-- Cart Items List -->
         <div class="space-y-3 mb-4 max-h-64 overflow-y-auto pr-2">
           {% for item in cart_items %}
-          <div class="flex items-center gap-3 p-2 bg-white rounded">
-            <img src="{{ item.product.main_image.url }}" alt="{{ item.product.name }}" class="w-12 h-12 object-cover rounded">
-            <div class="flex-1">
-              <h4 class="font-medium text-[var(--text-primary)] truncate">{{ item.product.name }}</h4>
-              {% if item.variant %}
-              <p class="text-xs text-[var(--text-secondary)]">{{ item.variant.get_variant_type_display }}: {{ item.variant.name }} {% if item.variant.price_adjustment != 0 %}({% if item.variant.price_adjustment > 0 %}+{% endif %}Rs {{ item.variant.price_adjustment }}){% endif %}</p>
+          <div class="flex items-start gap-3 p-2 bg-white rounded">
+            <img src="{{ item.product.main_image.url }}" 
+                 alt="{{ item.product.name }}" 
+                 class="w-12 h-12 object-cover rounded flex-shrink-0">
+            <div class="flex-1 min-w-0">
+              <h4 class="font-medium text-[var(--text-primary)] text-sm truncate">{{ item.product.name }}</h4>
+              
+              <!-- Display Multiple Variants -->
+              {% if item.variant_list %}
+              <div class="space-y-0.5 mt-1">
+                {% for variant in item.variant_list %}
+                <p class="text-xs text-[var(--text-secondary)]">
+                  <span class="font-medium">{{ variant.get_variant_type_display }}:</span> 
+                  {{ variant.name }}
+                  {% if variant.price_adjustment != 0 %}
+                  <span class="text-orange-600 font-semibold">
+                    ({% if variant.price_adjustment > 0 %}+{% endif %}Rs {{ variant.price_adjustment|floatformat:0 }})
+                  </span>
+                  {% endif %}
+                </p>
+                {% endfor %}
+              </div>
               {% endif %}
-              <p class="text-sm font-semibold text-[var(--success)]">Rs {{ item.get_item_price }} x {{ item.quantity }}</p>
+              
+              <p class="text-sm font-semibold text-[var(--success)] mt-1">
+                Rs {{ item.unit_price|floatformat:0 }} x {{ item.quantity }}
+              </p>
             </div>
           </div>
           {% endfor %}
@@ -152,29 +171,29 @@
         <div class="space-y-3 mb-6">
           <div class="flex justify-between">
             <span class="text-[var(--text-secondary)]">Subtotal ({{ cart_items.count }} items)</span>
-            <span class="font-semibold text-[var(--text-primary)]">Rs {{ subtotal|floatformat:2 }}</span>
+            <span class="font-semibold text-[var(--text-primary)]">Rs {{ subtotal|floatformat:0 }}</span>
           </div>
           <div class="flex justify-between">
             <span class="text-[var(--text-secondary)]">Shipping</span>
             <span class="font-semibold text-[var(--success)]">
-              {% if shipping_cost == 0 %} Free {% else %} Rs {{ shipping_cost|floatformat:2 }} {% endif %}
+              {% if shipping_cost == 0 %}Free{% else %}Rs {{ shipping_cost|floatformat:0 }}{% endif %}
             </span>
           </div>
           <div class="flex justify-between">
             <span class="text-[var(--text-secondary)]">Tax ({{ tax_rate }}%)</span>
-            <span class="font-semibold text-[var(--text-primary)]">Rs {{ tax|floatformat:2 }}</span>
+            <span class="font-semibold text-[var(--text-primary)]">Rs {{ tax|floatformat:0 }}</span>
           </div>
 
           {% if discount > 0 %}
-          <div class="flex justify-between">
-            <span class="text-[var(--text-secondary)]">Discount ({{ coupon.code }})</span>
-            <span class="font-semibold text-[var(--success)]">-Rs {{ discount|floatformat:2 }}</span>
+          <div class="flex justify-between text-green-600">
+            <span>Discount ({{ coupon.code }})</span>
+            <span class="font-semibold">-Rs {{ discount|floatformat:0 }}</span>
           </div>
           {% endif %}
           <hr class="my-3 border-[var(--text-secondary)]">
           <div class="flex justify-between text-lg font-bold">
             <span class="text-[var(--text-primary)]">Total</span>
-            <span class="text-[var(--success)]">Rs {{ total|floatformat:2 }}</span>
+            <span class="text-[var(--success)]">Rs {{ total|floatformat:0 }}</span>
           </div>
         </div>
 

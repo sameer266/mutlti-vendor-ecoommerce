@@ -5,176 +5,261 @@
 <div class="bg-white rounded-xl shadow p-6">
   <div class="flex justify-between items-center mb-6">
     <h1 class="text-2xl font-semibold text-gray-800">Edit Product</h1>
-    <a href="{% url 'admin_products_list' %}" class="text-sm text-blue-600 hover:text-blue-800">Back to list</a>
+    <a href="{% url 'admin_products_list' %}" class="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+      </svg>
+      Back to list
+    </a>
   </div>
 
   <form method="post" action="{% url 'admin_product_update' product.id %}" enctype="multipart/form-data" class="space-y-6">
     {% csrf_token %}
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <div>
-        <label class="block text-sm font-medium text-gray-700">Vendor</label>
-        <select name="vendor" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5" required>
-          {% for v in vendors %}
-            <option value="{{ v.id }}" {% if product.vendor.id == v.id %}selected{% endif %}>{{ v.shop_name }}</option>
-          {% endfor %}
-        </select>
+    <!-- Basic Information Section -->
+    <div class="border-b pb-6">
+      <h2 class="text-lg font-semibold text-gray-800 mb-4">Basic Information</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">
+            Vendor <span class="text-red-600">*</span>
+          </label>
+          <select name="vendor" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+            {% for v in vendors %}
+              <option value="{{ v.id }}" {% if product.vendor.id == v.id %}selected{% endif %}>{{ v.shop_name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">
+            Category <span class="text-red-600">*</span>
+          </label>
+          <select name="category" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+            {% for c in categories %}
+              <option value="{{ c.id }}" {% if product.category and product.category.id == c.id %}selected{% endif %}>{{ c.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="md:col-span-2">
+          <label class="block text-sm font-medium text-gray-700 mb-1">
+            Product Name <span class="text-red-600">*</span>
+          </label>
+          <input type="text" name="name" value="{{ product.name }}" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+        </div>
+
+        <div class="md:col-span-2">
+          <label class="block text-sm font-medium text-gray-700 mb-1">
+            Description <span class="text-red-600">*</span>
+          </label>
+          <textarea id="description" name="description" rows="4" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>{{ product.description }}</textarea>
+        </div>
       </div>
-
-      <div>
-        <label class="block text-sm font-medium text-gray-700">Category</label>
-        <select name="category" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5" required>
-          {% for c in categories %}
-            <option value="{{ c.id }}" {% if product.category and product.category.id == c.id %}selected{% endif %}>{{ c.name }}</option>
-          {% endfor %}
-        </select>
-      </div>
-
-      <div class="md:col-span-2">
-        <label class="block text-sm font-medium text-gray-700">Name</label>
-        <input type="text" name="name" value="{{ product.name }}" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5" required>
-      </div>
-
-      <div class="md:col-span-2">
-        <label class="block text-sm font-medium text-gray-700">Description</label>
-        <textarea id="description" name="description" rows="4" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5" required>{{ product.description }}</textarea>
-      </div>
-
-      
-
-      <div>
-        <label class="block text-sm font-medium text-gray-700">Price</label>
-        <input type="number" step="0.01" name="price" value="{{ product.price }}" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5" required>
-      </div>
-
-      
-
-      <div>
-        <label class="block text-sm font-medium text-gray-700">Cost Price</label>
-        <input type="number" step="0.01" name="cost_price" value="{{ product.cost_price }}" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5">
-      </div>
-
-
-      <div>
-        <label class="block text-sm font-medium text-gray-700">Stock</label>
-        <input type="number" name="stock" value="{{ product.stock }}" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5" required>
-      </div>
-
-      <div>
-        <label class="block text-sm font-medium text-gray-700">Low Stock Alert</label>
-        <input type="number" name="low_stock_alert" value="{{ product.low_stock_alert }}" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5">
-      </div>
-
-      <div>
-        <label class="block text-sm font-medium text-gray-700">Brand</label>
-        <input type="text" name="brand" value="{{ product.brand }}" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5">
-      </div>
-
-      <div>
-        <label class="block text-sm font-medium text-gray-700">Weight (kg)</label>
-        <input type="number" step="0.01" name="weight" value="{{ product.weight }}" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5">
-      </div>
-
-      <div>
-  <label class="block text-sm font-medium text-gray-700">Shipping Cost (Rs)</label>
-  <input type="number" step="0.01" name="shipping_cost" 
-         value="{{ product.shipping_cost|default:0 }}"
-         class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5" required>
-  <p class="text-xs text-gray-500 mt-1">
-    If you enter 0, it will show "Free Shipping" to the customer.
-  </p>
-</div>
-
-
-      <div class="md:col-span-2 pt-2">
-        <label class="inline-flex items-center text-sm text-gray-700">
-          <input type="checkbox" name="is_featured" class="mr-2" {% if product.is_featured %}checked{% endif %}>
-          Featured product
-        </label>
-      </div>
-
-   <div>
-  <label class="block text-sm font-medium text-gray-700">Main Image</label>
-  {% if product.main_image %}
-    <img src="{{ product.main_image.url }}" alt="{{ product.name }}" class="h-12 mb-2 rounded"/>
-  {% endif %}
-  <input type="file" name="main_image" id="main_image" accept=".jpg,.jpeg,.png,.gif" class="mt-1 block w-full">
-  <p class="text-xs text-gray-500 mt-1">Allowed formats: .jpg, .jpeg, .png, .gif</p>
-  <p id="main_image_error" class="text-xs text-red-600 mt-1 hidden">Invalid file format!</p>
-</div>
-
-<div class="md:col-span-2">
-  <label class="block text-sm font-medium text-gray-700">Add Gallery Images</label>
-  <input type="file" name="gallery_images" id="gallery_images" accept=".jpg,.jpeg,.png,.gif" class="mt-1 block w-full" multiple>
-  <p class="text-xs text-gray-500 mt-1">You can select multiple images. Allowed formats: .jpg, .jpeg, .png, .gif</p>
-  <p id="gallery_images_error" class="text-xs text-red-600 mt-1 hidden">One or more files have invalid formats!</p>
-
-  <p class="text-xs text-gray-500 mt-1">Existing:</p>
-  <div class="flex items-center space-x-2 mt-1">
-    {% for img in product.images.all %}
-      <img src="{{ img.image.url }}" alt="img" class="h-10 w-10 object-cover rounded border border-gray-200"/>
-    {% empty %}
-      <span class="text-gray-400">No gallery images</span>
-    {% endfor %}
-  </div>
-</div>
-
-
-
-      
     </div>
 
-    <div class="pt-2">
-      <h2 class="text-lg font-semibold text-gray-800 mb-2">Variants</h2>
-      <div class="space-y-3">
-        {% for v in product.variants.all %}
-        <div class="grid grid-cols-1 md:grid-cols-6 gap-3 items-end border border-gray-200 rounded-lg p-3">
-          <input type="hidden" name="existing_variant_id[]" value="{{ v.id }}" />
-          <div>
-            <label class="block text-sm font-medium text-gray-700">Type</label>
-            <select name="existing_variant_type[]" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5">
-    <option value="size" {% if v.variant_type == 'size' %}selected{% endif %}>Size</option>
-    <option value="color" {% if v.variant_type == 'color' %}selected{% endif %}>Color</option>
-    <option value="weight" {% if v.variant_type == 'weight' %}selected{% endif %}>Weight</option>
-    <option value="storage" {% if v.variant_type == 'storage' %}selected{% endif %}>Storage Capacity</option>
-    <option value="ram" {% if v.variant_type == 'ram' %}selected{% endif %}>RAM</option>
-    <option value="material" {% if v.variant_type == 'material' %}selected{% endif %}>Material</option>
-    <option value="style" {% if v.variant_type == 'style' %}selected{% endif %}>Style</option>
-    <option value="pattern" {% if v.variant_type == 'pattern' %}selected{% endif %}>Pattern</option>
-    <option value="flavor" {% if v.variant_type == 'flavor' %}selected{% endif %}>Flavor</option>
-    <option value="other" {% if v.variant_type == 'other' %}selected{% endif %}>Other</option>
-</select>
+    <!-- Pricing & Inventory Section -->
+    <div class="border-b pb-6">
+      <h2 class="text-lg font-semibold text-gray-800 mb-4">Pricing & Inventory</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">
+            Price (Rs) <span class="text-red-600">*</span>
+          </label>
+          <input type="number" step="0.01" name="price" min="0" value="{{ product.price }}" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+        </div>
 
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700">Name</label>
-            <input type="text" name="existing_variant_name[]" value="{{ v.name }}" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5" />
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700">Price Adj.</label>
-            <input type="number" step="0.01" name="existing_variant_price_adjustment[]" value="{{ v.price_adjustment }}" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5" />
-          </div>
-          
-          <div class="pt-6">
-            <label class="inline-flex items-center text-sm text-red-600">
-              <input type="checkbox" name="existing_variant_delete[]" value="{{ v.id }}" class="mr-2"> Delete
-            </label>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">
+            Cost Price (Rs)
+          </label>
+          <input type="number" step="0.01" name="cost_price" min="0" value="{{ product.cost_price }}" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+          <p class="text-xs text-gray-500 mt-1">For tracking purposes only</p>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">
+            Stock Quantity <span class="text-red-600">*</span>
+          </label>
+          <input type="number" name="stock" min="0" value="{{ product.stock }}" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">
+            Low Stock Alert
+          </label>
+          <input type="number" name="low_stock_alert" min="1" value="{{ product.low_stock_alert }}" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+          <p class="text-xs text-gray-500 mt-1">Get notified when stock is low</p>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">
+            Shipping Cost (Rs) <span class="text-red-600">*</span>
+          </label>
+          <input type="number" step="0.01" name="shipping_cost" min="0" value="{{ product.shipping_cost|default:0 }}" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+          <p class="text-xs text-gray-500 mt-1">Enter 0 for free shipping</p>
+        </div>
+
+       <div>
+  <label class="block text-sm font-medium text-gray-700 mb-1">
+    Estimated Delivery (Days) <span class="text-red-600">*</span>
+  </label>
+  <input type="number" name="estimated_delivery_days" min="1" max="365" value="{{ product.estimated_delivery_days|default:3 }}" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+  <p class="text-xs text-gray-500 mt-1">Number of days for delivery</p>
+</div>
+
+      </div>
+    </div>
+
+    <!-- Product Details Section -->
+    <div class="border-b pb-6">
+      <h2 class="text-lg font-semibold text-gray-800 mb-4">Product Details</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Brand</label>
+          <input type="text" name="brand" value="{{ product.brand }}" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="e.g., Nike, Samsung">
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">
+            Weight (kg)
+          </label>
+          <input type="number" step="0.01" name="weight" min="0" value="{{ product.weight }}" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="0.00">
+        </div>
+
+        <div class="md:col-span-2">
+          <label class="inline-flex items-center cursor-pointer">
+            <input type="checkbox" name="is_featured" class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500" {% if product.is_featured %}checked{% endif %}>
+            <span class="ml-2 text-sm font-medium text-gray-700">Mark as Featured Product</span>
+          </label>
+          <p class="text-xs text-gray-500 mt-1 ml-6">Featured products appear on the homepage</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Images Section -->
+    <div class="border-b pb-6">
+      <h2 class="text-lg font-semibold text-gray-800 mb-4">Product Images</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">
+            Main Image
+          </label>
+          {% if product.main_image %}
+            <div class="mb-3">
+              <p class="text-xs text-gray-500 mb-2">Current Image:</p>
+              <img src="{{ product.main_image.url }}" alt="{{ product.name }}" class="h-32 w-32 object-cover rounded-lg border-2 border-gray-200"/>
+            </div>
+          {% endif %}
+          <input type="file" name="main_image" id="main_image" accept=".jpg,.jpeg,.png,.gif" class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+          <p class="text-xs text-gray-500 mt-1">Allowed: .jpg, .jpeg, .png, .gif (Max: 5MB)</p>
+          <p id="main_image_error" class="text-xs text-red-600 mt-1 hidden">Invalid file format!</p>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">
+            Add Gallery Images
+          </label>
+          {% if product.images.all %}
+            <div class="mb-3">
+              <p class="text-xs text-gray-500 mb-2">Current Gallery Images:</p>
+              <div class="flex flex-wrap gap-2">
+                {% for img in product.images.all %}
+                  <img src="{{ img.image.url }}" alt="Gallery" class="h-20 w-20 object-cover rounded-lg border-2 border-gray-200"/>
+                {% endfor %}
+              </div>
+            </div>
+          {% else %}
+            <p class="text-xs text-gray-400 mb-2">No gallery images yet</p>
+          {% endif %}
+          <input type="file" name="gallery_images" id="gallery_images" accept=".jpg,.jpeg,.png,.gif" class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" multiple>
+          <p class="text-xs text-gray-500 mt-1">Multiple images allowed (Max: 5MB each)</p>
+          <p id="gallery_images_error" class="text-xs text-red-600 mt-1 hidden">One or more files have invalid formats!</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Variants Section -->
+    <div class="pb-6">
+      <h2 class="text-lg font-semibold text-gray-800 mb-4">Product Variants</h2>
+      
+      <!-- Existing Variants -->
+      {% if product.variants.all %}
+        <div class="mb-6">
+          <h3 class="text-md font-medium text-gray-700 mb-3">Existing Variants</h3>
+          <div class="space-y-4">
+            {% for v in product.variants.all %}
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-4 items-start p-4 bg-gray-50 rounded-lg border border-gray-200">
+              <input type="hidden" name="existing_variant_id[]" value="{{ v.id }}" />
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                <select name="existing_variant_type[]" class="block w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                  <option value="size" {% if v.variant_type == 'size' %}selected{% endif %}>Size</option>
+                  <option value="color" {% if v.variant_type == 'color' %}selected{% endif %}>Color</option>
+                  <option value="weight" {% if v.variant_type == 'weight' %}selected{% endif %}>Weight</option>
+                  <option value="storage" {% if v.variant_type == 'storage' %}selected{% endif %}>Storage</option>
+                  <option value="ram" {% if v.variant_type == 'ram' %}selected{% endif %}>RAM</option>
+                  <option value="material" {% if v.variant_type == 'material' %}selected{% endif %}>Material</option>
+                  <option value="style" {% if v.variant_type == 'style' %}selected{% endif %}>Style</option>
+                  <option value="pattern" {% if v.variant_type == 'pattern' %}selected{% endif %}>Pattern</option>
+                  <option value="flavor" {% if v.variant_type == 'flavor' %}selected{% endif %}>Flavor</option>
+                  <option value="other" {% if v.variant_type == 'other' %}selected{% endif %}>Other</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                <input type="text" name="existing_variant_name[]" value="{{ v.name }}" class="block w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Price Adj. (Rs)</label>
+                <input type="number" step="0.01" name="existing_variant_price_adjustment[]" value="{{ v.price_adjustment }}" class="block w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Stock</label>
+                <input type="number" name="existing_variant_stock[]" value="0" class="block w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+              </div>
+              <div class="flex items-end">
+                <label class="inline-flex items-center w-full justify-center p-2.5 bg-red-50 rounded-lg border border-red-200 cursor-pointer hover:bg-red-100 transition">
+                  <input type="checkbox" name="existing_variant_delete[]" value="{{ v.id }}" class="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-2 focus:ring-red-500">
+                  <span class="ml-2 text-sm font-medium text-red-600">Delete</span>
+                </label>
+              </div>
+            </div>
+            {% endfor %}
           </div>
         </div>
-        {% empty %}
-        <p class="text-sm text-gray-500">No variants yet.</p>
-        {% endfor %}
-      </div>
+      {% else %}
+        <p class="text-sm text-gray-500 mb-4">No variants yet. Add some below.</p>
+      {% endif %}
 
-      <div class="mt-4">
-        <h3 class="text-md font-medium text-gray-800 mb-2">Add New Variants</h3>
-        <div id="variantsContainer" class="space-y-3"></div>
-        <button type="button" id="addVariantBtn" class="mt-2 bg-gray-200 text-gray-800 px-3 py-1 rounded">+ Add Variant</button>
+      <!-- Add New Variants -->
+      <div>
+        <div class="flex justify-between items-center mb-3">
+          <h3 class="text-md font-medium text-gray-700">Add New Variants</h3>
+          <button type="button" id="addVariantBtn" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+            Add Variant
+          </button>
+        </div>
+        <div id="variantsContainer" class="space-y-4">
+          <!-- New variants will be added here -->
+        </div>
       </div>
     </div>
 
-    <div class="pt-4">
-      <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">Update Product</button>
+    <!-- Form Actions -->
+    <div class="flex justify-end gap-4 pt-4 border-t">
+      <a href="{% url 'admin_products_list' %}" class="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">
+        Cancel
+      </a>
+      <button type="submit" class="bg-blue-600 text-white px-6 py-2.5 rounded-lg hover:bg-blue-700 transition flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+        </svg>
+        Update Product
+      </button>
     </div>
   </form>
 </div>
@@ -183,81 +268,257 @@
 {% block extra_js %}
 <script src="https://cdn.ckeditor.com/4.21.0/full/ckeditor.js"></script>
 
-<script src="https://cdn.ckeditor.com/4.21.0/full/ckeditor.js"></script>
-
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    const textarea = document.querySelector('textarea[name="description"]');
-    if (!textarea) return;
+  document.addEventListener('DOMContentLoaded', function () {
+    // File validation for main image
+    const mainImageInput = document.getElementById('main_image');
+    const mainImageError = document.getElementById('main_image_error');
+    const allowedFormats = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+    const maxSize = 5 * 1024 * 1024; // 5MB
 
-    CKEDITOR.replace('description', {
-        height: 300,
-        removePlugins: 'elementspath,image', // remove image and element path
-        resize_enabled: false,
-        contentsCss: 'body{line-height:1.7; margin:0; padding:0; font-family:Arial, sans-serif; font-size:14px;}',
+    if (mainImageInput) {
+      mainImageInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+          if (!allowedFormats.includes(file.type)) {
+            mainImageError.classList.remove('hidden');
+            mainImageInput.value = '';
+          } else if (file.size > maxSize) {
+            mainImageError.textContent = 'File size must be less than 5MB!';
+            mainImageError.classList.remove('hidden');
+            mainImageInput.value = '';
+          } else {
+            mainImageError.classList.add('hidden');
+          }
+        }
+      });
+    }
 
-        font_names: 'Arial;Comic Sans MS;Courier New;Georgia;Tahoma;Times New Roman;Verdana',
-        fontSize_sizes: '12/12px;14/14px;16/16px;18/18px;20/20px;22/22px;24/24px;28/28px',
+    // File validation for gallery images
+    const galleryInput = document.getElementById('gallery_images');
+    const galleryError = document.getElementById('gallery_images_error');
 
-        toolbar: [
-            { name: 'styles', items: ['Font', 'FontSize', 'Format', 'Styles'] },
-            { name: 'basicstyles', items: ['Bold', 'Italic', 'Underline', 'Strike','RemoveFormat'] },
-            { name: 'paragraph', items: [
-                'NumberedList','BulletedList','-',
-                'Outdent','Indent','-',
-                'Blockquote','JustifyLeft','JustifyCenter','JustifyRight','JustifyBlock'
-            ]},
-            { name: 'links', items: ['Link','Unlink'] },
-            { name: 'insert', items: ['Table','HorizontalRule','SpecialChar'] },
-            { name: 'tools', items: ['Maximize','Source'] }
-        ]
-    });
-});
-</script>
+    if (galleryInput) {
+      galleryInput.addEventListener('change', function(e) {
+        const files = Array.from(e.target.files);
+        let hasError = false;
 
+        for (let file of files) {
+          if (!allowedFormats.includes(file.type)) {
+            hasError = true;
+            galleryError.textContent = 'One or more files have invalid formats!';
+            break;
+          }
+          if (file.size > maxSize) {
+            hasError = true;
+            galleryError.textContent = 'One or more files exceed 5MB!';
+            break;
+          }
+        }
 
+        if (hasError) {
+          galleryError.classList.remove('hidden');
+          galleryInput.value = '';
+        } else {
+          galleryError.classList.add('hidden');
+        }
+      });
+    }
 
-
-
-<script>
-  (function(){
+    // Variant management
+    let variantCount = 0;
     const variantsContainer = document.getElementById('variantsContainer');
     const addVariantBtn = document.getElementById('addVariantBtn');
+
     if (addVariantBtn) {
-      addVariantBtn.addEventListener('click', function(){
+      addVariantBtn.addEventListener('click', function() {
+        variantCount++;
         const row = document.createElement('div');
-        row.className = 'grid grid-cols-1 md:grid-cols-4 gap-3 items-end';
+        row.className = 'grid grid-cols-1 md:grid-cols-6 gap-4 items-start p-4 bg-gray-50 rounded-lg border border-gray-200';
+        row.id = `variant-${variantCount}`;
         row.innerHTML = `
           <div>
-            <label class="block text-sm font-medium text-gray-700">Type</label>
-            <select name="variant_type[]" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5">
-       <option value="size">Size</option>
-    <option value="color">Color</option>
-    <option value="weight">Weight</option>
-    <option value="storage">Storage Capacity</option>
-    <option value="ram">RAM</option>
-    <option value="material">Material</option>
-    <option value="style">Style</option>
-    <option value="pattern">Pattern</option>
-    <option value="flavor">Flavor</option>
-    <option value="other" selected>Other</option>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Type</label>
+            <select name="variant_type[]" class="block w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+              <option value="size">Size</option>
+              <option value="color">Color</option>
+              <option value="weight">Weight</option>
+              <option value="storage">Storage</option>
+              <option value="ram">RAM</option>
+              <option value="material">Material</option>
+              <option value="style">Style</option>
+              <option value="pattern">Pattern</option>
+              <option value="flavor">Flavor</option>
+              <option value="other" selected>Other</option>
             </select>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700">Name</label>
-            <input type="text" name="variant_name[]" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5" placeholder="e.g., XL, Red" />
+            <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+            <input type="text" name="variant_name[]" class="block w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="e.g., XL, Red" />
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700">Price Adj.</label>
-            <input type="number" step="0.01" name="variant_price_adjustment[]" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5" value="0" />
+            <label class="block text-sm font-medium text-gray-700 mb-1">Price Adj. (Rs)</label>
+            <input type="number" step="0.01" name="variant_price_adjustment[]" class="block w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" value="0" />
           </div>
-          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Stock</label>
+            <input type="number" name="variant_stock[]" class="block w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" value="0" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">SKU</label>
+            <input type="text" name="variant_sku[]" class="block w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Optional" />
+          </div>
+          <div class="flex items-end">
+            <button type="button" onclick="removeVariant(${variantCount})" class="w-full bg-red-50 text-red-600 px-3 py-2.5 rounded-lg hover:bg-red-100 transition border border-red-200">
+              <svg class="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+              </svg>
+            </button>
+          </div>
         `;
         variantsContainer.appendChild(row);
+      });
+    }
+
+    // Remove variant function
+    window.removeVariant = function(id) {
+      const variant = document.getElementById(`variant-${id}`);
+      if (variant) {
+        variant.remove();
+      }
+    };
+  });
+</script>
+
+<script>
+  // CKEditor Configuration and Initialization
+  (function() {
+    'use strict';
+
+    // Wait for DOM to be ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initEditor);
+    } else {
+      initEditor();
+    }
+
+    function initEditor() {
+      const descriptionField = document.getElementById('description');
+      
+      if (!descriptionField) {
+        console.warn('Description textarea not found');
+        return;
+      }
+
+      // Wait for CKEditor to be loaded
+      if (typeof CKEDITOR === 'undefined') {
+        console.error('CKEditor library not loaded');
+        return;
+      }
+
+      try {
+        CKEDITOR.replace('description', {
+          height: 300,
+          
+          // Toolbar configuration
+          toolbar: [
+            { 
+              name: 'basicstyles', 
+              items: ['Bold', 'Italic', 'Underline', 'Strike', 'Subscript', 'Superscript'] 
+            },
+            { 
+              name: 'paragraph', 
+              items: [
+                'NumberedList', 'BulletedList', '-',
+                'Outdent', 'Indent', '-',
+                'JustifyLeft', 'JustifyCenter', 'JustifyRight', 'JustifyBlock'
+              ]
+            },
+            { 
+              name: 'styles', 
+              items: ['Styles', 'Format', 'Font', 'FontSize'] 
+            },
+            { 
+              name: 'colors', 
+              items: ['TextColor', 'BGColor'] 
+            },
+            { 
+              name: 'insert', 
+              items: ['Link', 'Unlink', 'Image', 'Table', 'HorizontalRule', 'SpecialChar'] 
+            },
+            { 
+              name: 'tools', 
+              items: ['Maximize', 'RemoveFormat', 'Source'] 
+            }
+          ],
+
+          // Editor configuration
+          removePlugins: 'elementspath',
+          resize_enabled: true,
+          resize_minHeight: 200,
+          resize_maxHeight: 600,
+
+          // Font options
+          font_names: 
+            'Arial/Arial, Helvetica, sans-serif;' +
+            'Comic Sans MS/Comic Sans MS, cursive;' +
+            'Courier New/Courier New, Courier, monospace;' +
+            'Georgia/Georgia, serif;' +
+            'Lucida Sans Unicode/Lucida Sans Unicode, Lucida Grande, sans-serif;' +
+            'Tahoma/Tahoma, Geneva, sans-serif;' +
+            'Times New Roman/Times New Roman, Times, serif;' +
+            'Trebuchet MS/Trebuchet MS, Helvetica, sans-serif;' +
+            'Verdana/Verdana, Geneva, sans-serif',
+
+          // Font size options
+          fontSize_sizes: '10/10px;12/12px;14/14px;16/16px;18/18px;20/20px;22/22px;24/24px;28/28px;32/32px;36/36px',
+
+          // Content formatting
+          format_tags: 'p;h1;h2;h3;h4;h5;h6;pre;address;div',
+          
+          // Allow all content
+          allowedContent: true,
+          
+          // Remove automatic formatting
+          enterMode: CKEDITOR.ENTER_P,
+          shiftEnterMode: CKEDITOR.ENTER_BR,
+
+          // Language
+          language: 'en',
+          
+          // Disable spell checker
+          disableNativeSpellChecker: false,
+
+          // Auto-grow configuration
+          autoGrow_minHeight: 300,
+          autoGrow_maxHeight: 600,
+          autoGrow_bottomSpace: 50
+        });
+
+        // Handle editor events
+        CKEDITOR.instances.description.on('instanceReady', function() {
+          console.log('CKEditor initialized successfully for edit form');
+        });
+
+        CKEDITOR.instances.description.on('change', function() {
+          // Update textarea value for form submission
+          CKEDITOR.instances.description.updateElement();
+        });
+
+      } catch (error) {
+        console.error('Error initializing CKEditor:', error);
+      }
+    }
+
+    // Cleanup before form submission
+    const form = document.querySelector('form');
+    if (form) {
+      form.addEventListener('submit', function() {
+        if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances.description) {
+          CKEDITOR.instances.description.updateElement();
+        }
       });
     }
   })();
 </script>
 {% endblock %}
-
-

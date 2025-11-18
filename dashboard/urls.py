@@ -138,7 +138,6 @@ urlpatterns = [
     path('vendor/order-details/<str:order_number>/',views.vendor_order_details,name="vendor_order_details"),
     path('vendor/orders/pending/', views.vendor_orders_pending, name='vendor_orders_pending'),
     path('vendor/orders/delivered/', views.vendor_orders_delivered, name='vendor_orders_delivered'),
-    path('vendor/api/orders/<str:order_number>/update-estimated-date/', views.vendor_update_estimated_date, name='vendor_update_estimated_date'),
     path('vendor/orders/<str:order_number>/invoice/',views.vendor_order_invoice_view,name="vendor_orders_invoice_list"),
     
     

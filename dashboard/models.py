@@ -56,22 +56,12 @@ class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE,related_name="profile")
     phone = models.CharField(max_length=15,null=True,blank=True)
     avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)
-    gender=models.CharField(choices=GENDER_CHOICES,null=True,blank=True)
+    gender=models.CharField(max_length=10,choices=GENDER_CHOICES,null=True,blank=True)
     # Address
     address = models.TextField(blank=True)
     city = models.CharField(max_length=100, blank=True)
     
-    PROVINCE_CHOICES = [
-    ('Koshi Province', 'Koshi Province'),
-    ('Madhesh Province', 'Madhesh Province'),
-    ('Bagmati Province', 'Bagmati Province'),
-    ('Gandaki Province', 'Gandaki Province'),
-    ('Lumbini Province', 'Lumbini Province'),
-    ('Karnali Province', 'Karnali Province'),
-    ('Sudurpashchim Province', 'Sudurpashchim Province'),
-        ]
-
-    province = models.CharField(max_length=50, choices=PROVINCE_CHOICES, blank=True)
+    province = models.CharField(max_length=50, null=True, blank=True)
     
     def __str__(self):
         return f"{self.user.username}'s Profile"
@@ -308,6 +298,12 @@ class Product(models.Model):
     # shippiing Cost
     shipping_cost=models.DecimalField(max_digits=10, decimal_places=2, default=0.00, )
     
+    # estimated delivery
+    estimated_delivery_days = models.PositiveIntegerField(
+    null=True,
+    blank=True,
+    help_text="Number of days for delivery from order date")
+
     # Status & Stats
     is_active = models.BooleanField(default=True)
     is_featured = models.BooleanField(default=False)
@@ -405,35 +401,33 @@ class ProductVariant(models.Model):
 # Cart & Wishlist
 # -------------------------
 
-
 class Cart(models.Model):
     # Authenticated user (optional for guest)
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    session_key = models.CharField(
+        max_length=40, null=True, blank=True, help_text="For non-authenticated users"
+    )
 
-    session_key = models.CharField(max_length=40, null=True, blank=True, help_text="For non-authenticated users")
-    
     product = models.ForeignKey('Product', on_delete=models.CASCADE)
-    variant = models.ForeignKey('ProductVariant', on_delete=models.CASCADE, null=True, blank=True)
+    variant = models.ManyToManyField('ProductVariant', blank=True)  # renamed to plural
     quantity = models.PositiveIntegerField(default=1)
     added_at = models.DateTimeField(auto_now_add=True)
 
-    def get_total_price(self):
-        price = self.product.price
-        if self.variant:
-            price += self.variant.price_adjustment
-        return price * self.quantity
-
     def get_item_price(self):
+        """Price for a single unit with selected variants"""
         price = self.product.price
-        if self.variant:
-            price += self.variant.price_adjustment
+        for variant in self.variant.all():
+            price += variant.price_adjustment
         return price
-    
+
+    def get_total_price(self):
+        """Total price for quantity of items"""
+        return self.get_item_price() * self.quantity
+
     def __str__(self):
         if self.user:
             return f"{self.user.username}'s cart - {self.product.name}"
         return f"Guest cart ({self.session_key}) - {self.product.name}"
-
 
 # -------------------------
 # Order Management
@@ -498,6 +492,11 @@ class Order(models.Model):
     tax_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0,help_text="Calculated tax amount")
     total = models.DecimalField(max_digits=10, decimal_places=2)
     
+    # estimated delivery
+    estimated_delivery_date = models.DateField(
+        null=True, blank=True,
+        help_text="Calculated expected delivery date"
+    )
     # Payment
     payment_method = models.CharField(max_length=20, choices=PAYMENT_CHOICES,default="cod")
     payment_status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, default='unpaid')
@@ -508,11 +507,6 @@ class Order(models.Model):
     
     # Order Status
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
-
-    estimated_delivery_date = models.DateField(
-        null=True, blank=True,
-        help_text="Calculated expected delivery date"
-    )
     
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
@@ -532,17 +526,26 @@ class Order(models.Model):
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')
     product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True)
-    variant = models.ForeignKey(ProductVariant, on_delete=models.SET_NULL, null=True, blank=True)
-    
- 
+    variant = models.ManyToManyField(ProductVariant, blank=True)  # multiple variants
+
     quantity = models.PositiveIntegerField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
-    
+
+    def get_item_price(self):
+        """Price for a single unit including variants"""
+        total_price = self.product.price if self.product else 0
+        for variant in self.variant.all():
+            total_price += variant.price_adjustment
+        return total_price
 
     def get_total(self):
-        return self.quantity * self.price
-    
+        """Total price for this item (quantity × unit price)"""
+        return self.get_item_price() * self.quantity
+
     def __str__(self):
+        variant_names = ", ".join(v.name for v in self.variant.all())
+        if variant_names:
+            return f"{self.quantity} x {self.product.name} ({variant_names})"
         return f"{self.quantity} x {self.product.name}"
 
 
@@ -891,3 +894,18 @@ def change_invoice_payment_status_with_order(sender, instance, **kwargs):
             invoice.payment_status = "pending"
 
         invoice.save()  # Save the updated invoice
+
+
+
+@receiver(post_save, sender=User)
+def create_user_role_and_profile(sender, instance, created, **kwargs):
+    """
+    Automatically creates a UserRole and UserProfile
+    when a new user (including superuser) is created.
+    """
+
+    # Run only when a new user is created
+    if created and instance.is_superuser:
+        UserRole.objects.get_or_create(role="admin",user=instance)
+        UserProfile.objects.get_or_create(user=instance)
+        print("created")

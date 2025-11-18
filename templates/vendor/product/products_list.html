@@ -34,6 +34,9 @@
           <th class="px-4 py-3 text-left">Price (Rs.)</th>
           <th class="px-4 py-3 text-left">Stock</th>
           <th class="px-4 py-3 text-left">Shipping Cost</th>
+          <th class="px-4 py-3 text-left">Estimated Delivery Days</th>
+
+
 
           <th class="px-4 py-3 text-left">Featured</th>
           <th class="px-4 py-3 text-left">Gallery</th>
@@ -63,6 +66,10 @@
     Rs. {{ product.shipping_cost }}
   {% endif %}
 </td>
+<td class="px-4 py-3">
+  {{ product.estimated_delivery_days}} Days
+</td>
+
 
 
           <td class="px-4 py-3">

@@ -28,6 +28,7 @@ import random
 from django.contrib.auth.decorators import login_required
 from decimal import Decimal
 from django.db.models import F
+from datetime import date, timedelta
 
 
 
@@ -135,7 +136,7 @@ def become_vendor(request):
             print(request.POST)
             first_name = request.POST.get('first_name')
             last_name = request.POST.get('last_name')
-            email = request.POST.get('email')
+            email = request.POST.get('email', '').strip().lower()
             if User.objects.filter(email=email,is_active=True).exists():
                 messages.error(request,'User already exists')
                 return redirect('become_vendor_page')
@@ -195,7 +196,7 @@ def become_vendor(request):
 
             # Generate OTP
             otp_code = str(random.randint(100000, 999999))
-            otp_obj,_=OTPVerification.objects.update_or_create(user=user)
+            otp_obj,_=OTPVerification.objects.get_or_create(user=user)
             otp_obj.otp_code=otp_code
             otp_obj.save()
             
@@ -297,25 +298,44 @@ def get_session_key(request):
 
 
 
+
 def carts(request):
-    """Display cart page with user's cart items"""
-    
-    # --- Get user's cart items ---
+    # --- Get user's cart items with optimized queries ---
     if request.user.is_authenticated:
-        cart_items = Cart.objects.filter(user=request.user).select_related('product', 'variant')
+        cart_items = Cart.objects.filter(
+            user=request.user
+        ).select_related(
+            'product',
+            'product__vendor'
+        ).prefetch_related(
+            'variant'  # Prefetch all variants (ManyToMany)
+        )
     else:
         session_key = request.session.session_key
         if not session_key:
             request.session.create()
             session_key = request.session.session_key
-        cart_items = Cart.objects.filter(user__isnull=True, session_key=session_key).select_related('product', 'variant')
+        cart_items = Cart.objects.filter(
+            user__isnull=True, 
+            session_key=session_key
+        ).select_related(
+            'product',
+            'product__vendor'
+        ).prefetch_related(
+            'variant'
+        )
 
     # --- Calculate totals ---
     total_items = sum(item.quantity for item in cart_items)
+    
+    # Use the model's get_total_price() which now handles multiple variants
     sub_total_price = sum(item.get_total_price() for item in cart_items)
 
     # --- Calculate shipping dynamically per product ---
-    total_shipping = sum(item.product.shipping_cost * item.quantity for item in cart_items)
+    total_shipping = sum(
+        item.product.shipping_cost * item.quantity 
+        for item in cart_items
+    )
 
     # --- Get tax rate ---
     tax_obj = TaxRate.objects.first()
@@ -327,6 +347,15 @@ def carts(request):
 
     # --- Total price ---
     total_price = (sub_total_price + total_shipping + tax_amount).quantize(Decimal('0.01'))
+
+    # --- Additional context for better UI ---
+    # Add variant details to each cart item for template display
+    for item in cart_items:
+        # Get all variants for this cart item
+        item.variant_list = list(item.variant.all())
+        # Calculate item price with variants
+        item.unit_price = item.get_item_price()
+        item.line_total = item.get_total_price()
 
     context = {
         'cart_items': cart_items,
@@ -340,59 +369,144 @@ def carts(request):
 
     return render(request, "website/pages/cart.html", context)
 
+
+
+
 @csrf_exempt
 @require_http_methods(["POST"])
 def add_to_cart(request):
-    """Add product to cart (auth + guest)"""
+    """Add product to cart with multiple variants (auth + guest)"""
     try:
         data = json.loads(request.body)
         product_id = data.get('product_id')
         quantity = int(data.get('quantity', 1))
-        variant_id = data.get('variant_id')
+        variant_ids = data.get('variant_ids', [])  # Now accepts array
+        
+        # Determine user or session
         user = request.user if request.user.is_authenticated else None
         session_key = None if user else get_session_key(request)
+        
+        # Validate product
         try:
             product = Product.objects.get(id=product_id, is_active=True)
         except Product.DoesNotExist:
-            return JsonResponse({'success': False, 'message': 'Product not found'}, status=404)
+            return JsonResponse({
+                'success': False, 
+                'message': 'Product not found'
+            }, status=404)
 
+        # Check stock
         if product.stock < quantity:
-            return JsonResponse({'success': False, 'message': f'Only {product.stock} items available'}, status=400)
-        variant = None
-        if variant_id:
-            try:
-                variant = ProductVariant.objects.get(id=variant_id, product=product)
-            except ProductVariant.DoesNotExist:
-                return JsonResponse({'success': False, 'message': 'Product variant not found'}, status=404)
-        cart_item, created = Cart.objects.get_or_create(
-            user=user,
-            session_key=session_key,
-            product=product,
-            variant=variant,
-            defaults={'quantity': quantity}
-        )
-        if not created:
+            return JsonResponse({
+                'success': False, 
+                'message': f'Only {product.stock} items available'
+            }, status=400)
+        
+        # Validate variants
+        selected_variants = []
+        variants_with_price = []
+        
+        if variant_ids:
+            for variant_id in variant_ids:
+                try:
+                    variant = ProductVariant.objects.get(
+                        id=variant_id, 
+                        product=product
+                    )
+                    selected_variants.append(variant)
+                    
+                    # Track variants with price adjustments
+                    if variant.price_adjustment != 0:
+                        variants_with_price.append(variant)
+                        
+                except ProductVariant.DoesNotExist:
+                    return JsonResponse({
+                        'success': False,
+                        'message': f'Invalid variant selected'
+                    }, status=400)
+            
+            # Enforce rule: Only ONE variant with price adjustment
+            if len(variants_with_price) > 1:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'You can only select one variant with price adjustment'
+                }, status=400)
+        
+        # Find existing cart items with same product
+        if user:
+            existing_cart_items = Cart.objects.filter(user=user, product=product)
+        else:
+            existing_cart_items = Cart.objects.filter(
+                session_key=session_key, 
+                product=product
+            )
+        
+        # Check for exact variant match
+        cart_item = None
+        for item in existing_cart_items:
+            item_variants = set(item.variant.all())
+            if item_variants == set(selected_variants):
+                cart_item = item
+                break
+        
+        if cart_item:
+            # Update existing cart item
             new_quantity = cart_item.quantity + quantity
             if new_quantity > product.stock:
-                return JsonResponse({'success': False, 'message': f'Cannot add more. Only {product.stock} available'}, status=400)
+                return JsonResponse({
+                    'success': False,
+                    'message': f'Cannot add more. Only {product.stock} available'
+                }, status=400)
             cart_item.quantity = new_quantity
             cart_item.save()
-
-        cart_count = Cart.objects.filter(user=user) if user else Cart.objects.filter(session_key=session_key)
+        else:
+            # Create new cart item
+            cart_item = Cart.objects.create(
+                user=user,
+                session_key=session_key,
+                product=product,
+                quantity=quantity
+            )
+            # Add selected variants (ManyToMany)
+            if selected_variants:
+                cart_item.variant.set(selected_variants)
+        
+        # Calculate cart count
+        if user:
+            cart_count = Cart.objects.filter(user=user)
+        else:
+            cart_count = Cart.objects.filter(session_key=session_key)
+        
         total_items = sum(item.quantity for item in cart_count)
+        
+        # Build variant display string
+        variant_names = ', '.join([v.name for v in selected_variants]) if selected_variants else ''
+        product_display = f"{product.name} ({variant_names})" if variant_names else product.name
 
         return JsonResponse({
             'success': True,
-            'message': f'{quantity} × {product.name} added to cart',
+            'message': f'{quantity} × {product_display} added to cart',
             'cart_count': total_items,
-            'item_total': cart_item.get_total_price()
+            'item_total': float(cart_item.get_total_price())
         })
 
     except json.JSONDecodeError:
-        return JsonResponse({'success': False, 'message': 'Invalid JSON data'}, status=400)
+        return JsonResponse({
+            'success': False, 
+            'message': 'Invalid JSON data'
+        }, status=400)
+    except ValueError:
+        return JsonResponse({
+            'success': False,
+            'message': 'Invalid quantity'
+        }, status=400)
     except Exception as e:
-        return JsonResponse({'success': False, 'message': 'Error adding to cart'}, status=500)
-
+        # Log the error for debugging
+        print(f"Cart Error: {str(e)}")
+        return JsonResponse({
+            'success': False, 
+            'message': 'Error adding to cart'
+        }, status=500)
 
 @csrf_exempt
 @require_http_methods(["POST"])
@@ -476,31 +590,39 @@ def remove_from_cart(request):
         return JsonResponse({'success': False, 'message': 'Error removing from cart'}, status=500)
 
 
+
+
 @login_required
 def checkout(request):
     """Handle checkout process and create separate orders per vendor"""
-    cart_items = Cart.objects.filter(user=request.user).select_related('product', 'variant')
+    cart_items = Cart.objects.filter(user=request.user).select_related(
+        'product', 'product__vendor'
+    ).prefetch_related('variant')
 
     if not cart_items.exists():
         messages.error(request, "Your cart is empty. Please add items to proceed.")
         return redirect('all_collections')
 
-    # --- Tax Rate ---
     tax_obj = TaxRate.objects.first()
     tax_rate = tax_obj.tax if tax_obj else Decimal('0.00')
 
-    # --- Coupon ---
     coupon_code = request.session.get('coupon_code')
     coupon = None
+    discount = Decimal('0.00')
+
     if coupon_code:
         try:
             coupon = Coupon.objects.get(code=coupon_code)
+            is_valid, message = coupon.is_valid(user=request.user, cart_items=list(cart_items))
+            if not is_valid:
+                request.session.pop('coupon_code', None)
+                coupon = None
+                messages.warning(request, message)
         except Coupon.DoesNotExist:
             request.session.pop('coupon_code', None)
 
-    # --- Handle Form Submission ---
     if request.method == "POST":
-        email = request.POST.get('email')
+        email = request.POST.get('email', '').strip().lower()
         phone = request.POST.get('phone')
         full_name = request.POST.get('full_name')
         address = request.POST.get('address')
@@ -509,24 +631,24 @@ def checkout(request):
         postal_code = request.POST.get('postal_code', '')
         payment_method = request.POST.get('payment_method')
 
-        # Validate required fields
         if not all([email, phone, full_name, address, city, province, payment_method]):
             messages.error(request, "Please fill in all required fields.")
-            return render(request, 'website/pages/checkout.html', {'cart_items': cart_items})
+            return render(request, 'website/pages/checkout.html', {
+                'cart_items': cart_items,
+                'coupon': coupon,
+            })
 
-        # Validate province
         valid_provinces = [choice[0] for choice in Order.PROVINCE_CHOICES]
         if province not in valid_provinces:
             messages.error(request, "Please select a valid province.")
-            return render(request, 'website/pages/checkout.html', {'cart_items': cart_items})
+            return render(request, 'website/pages/checkout.html', {'cart_items': cart_items, 'coupon': coupon})
 
-        # Validate payment method
         valid_payment_methods = [choice[0] for choice in Order.PAYMENT_CHOICES]
         if payment_method not in valid_payment_methods:
             messages.error(request, "Please select a valid payment method.")
-            return render(request, 'website/pages/checkout.html', {'cart_items': cart_items})
+            return render(request, 'website/pages/checkout.html', {'cart_items': cart_items, 'coupon': coupon})
 
-        # --- Group cart items by vendor ---
+        # Group cart items by vendor
         vendor_items = {}
         for item in cart_items:
             vendor = item.product.vendor
@@ -535,31 +657,35 @@ def checkout(request):
         created_orders = []
 
         for vendor, items in vendor_items.items():
-            # Subtotal: sum of product price × quantity
             subtotal = sum(item.get_total_price() for item in items)
-
-            # Total shipping: sum of product shipping × quantity
             total_shipping = sum(item.product.shipping_cost * item.quantity for item in items)
-
-            # Tax
             tax_amount = (subtotal + total_shipping) * (tax_rate / Decimal('100'))
+            tax_amount = tax_amount.quantize(Decimal('0.01'))
 
-            # Discount (if coupon applies)
-            discount = Decimal('0.00')
+            vendor_discount = Decimal('0.00')
             if coupon:
                 is_valid, message = coupon.is_valid(user=request.user, cart_items=items)
                 if is_valid:
-                    discount = coupon.get_discount_amount(subtotal)
+                    vendor_discount = coupon.get_discount_amount(subtotal)
                 else:
                     messages.warning(request, f"Coupon not valid for vendor {vendor.shop_name}.")
 
-            # Total
-            total = max(subtotal + total_shipping + tax_amount - discount, Decimal('0.00'))
+            total = max(subtotal + total_shipping + tax_amount - vendor_discount, Decimal('0.00'))
+            total = total.quantize(Decimal('0.01'))
+
+            # --- Calculate estimated delivery date from estimated_delivery_days ---
+            product_delivery_days = [
+                item.product.estimated_delivery_days for item in items if item.product.estimated_delivery_days
+            ]
+            if product_delivery_days:
+                max_days = max(product_delivery_days)
+                estimated_delivery_date = date.today() + timedelta(days=max_days)
+            else:
+                estimated_delivery_date = None
 
             # Create Order
             order = Order.objects.create(
                 user=request.user,
-                order_number='',  # your auto-generation logic
                 email=email,
                 phone=phone,
                 full_name=full_name,
@@ -573,23 +699,26 @@ def checkout(request):
                 shipping_cost=total_shipping,
                 tax_percentage=tax_rate,
                 tax_amount=tax_amount,
-                discount=discount,
+                discount=vendor_discount,
                 total=total,
                 coupon=coupon,
                 status='pending',
+                estimated_delivery_date=estimated_delivery_date,  # updated
                 created_at=timezone.now(),
             )
             created_orders.append(order)
 
-            # Create Order Items & Invoice
+            # Create Order Items with variants
             for item in items:
-                OrderItem.objects.create(
+                order_item = OrderItem.objects.create(
                     order=order,
                     product=item.product,
-                    variant=item.variant,
                     quantity=item.quantity,
                     price=item.get_item_price(),
                 )
+                order_item.variant.set(item.variant.all())
+
+            # Create Invoice
             Invoice.objects.create(
                 customer=request.user,
                 vendor=vendor,
@@ -598,42 +727,58 @@ def checkout(request):
                 total=total,
                 tax_percentage=tax_rate,
                 tax_amount=tax_amount,
-                discount=discount,
+                discount=vendor_discount,
                 shipping_cost=total_shipping,
             )
 
             # Record coupon usage
-            if coupon and discount > 0:
+            if coupon and vendor_discount > 0:
                 CouponUsage.objects.create(
                     user=request.user,
                     coupon=coupon,
                     order=order,
                     used_at=timezone.now(),
                 )
-                coupon.used_count += 1
-                coupon.save()
 
-        # Clear cart and session
+        if coupon and discount > 0:
+            coupon.used_count += 1
+            coupon.save()
+
         cart_items.delete()
         request.session.pop('coupon_code', None)
 
         messages.success(request, f"{len(created_orders)} order(s) placed successfully!")
         return redirect('order_confirmation', order_id=created_orders[-1].id)
 
-    # --- GET Request: Render Checkout Page ---
+    # --- GET Request ---
     subtotal = sum(item.get_total_price() for item in cart_items)
     total_shipping = sum(item.product.shipping_cost * item.quantity for item in cart_items)
     tax_amount = (subtotal + total_shipping) * (tax_rate / Decimal('100'))
-    total = subtotal + total_shipping + tax_amount
+    tax_amount = tax_amount.quantize(Decimal('0.01'))
 
-    return render(request, 'website/pages/checkout.html', {
+    if coupon:
+        discount = coupon.get_discount_amount(subtotal)
+    
+    total = subtotal + total_shipping + tax_amount - discount
+    total = total.quantize(Decimal('0.01'))
+
+    for item in cart_items:
+        item.variant_list = list(item.variant.all())
+        item.unit_price = item.get_item_price()
+        item.line_total = item.get_total_price()
+
+    context = {
         'cart_items': cart_items,
         'subtotal': subtotal,
         'shipping_cost': total_shipping,
+        'tax_rate': tax_rate,
         'tax': tax_amount,
+        'discount': discount,
         'total': total,
         'coupon': coupon,
-    })
+    }
+
+    return render(request, 'website/pages/checkout.html', context)
 
 
 @login_required
@@ -675,8 +820,8 @@ def order_confirmation(request, order_id):
     })
 
 
+
 def product_details(request, slug):
-    """Display detailed product information"""
     try:
         product = Product.objects.select_related('vendor', 'category')\
                     .prefetch_related('images', 'variants', 'reviews')\
@@ -686,9 +831,14 @@ def product_details(request, slug):
         product.views_count += 1
         product.save(update_fields=['views_count'])
 
+        # --- Convert estimated_delivery_days to estimated delivery date ---
+        estimated_delivery_str = None
+        if product.estimated_delivery_days:
+            estimated_delivery_date = date.today() + timedelta(days=product.estimated_delivery_days)
+            estimated_delivery_str = estimated_delivery_date.strftime("%b %d")  # e.g., Nov 18
+
         # Get recommended products
         recommended_df = get_recommendations(product.id, top_n=30)
-
         recommended_products = []
         if recommended_df:  
             for row in recommended_df: 
@@ -698,8 +848,6 @@ def product_details(request, slug):
                     'slug': row['slug'],
                     'price': row['price'],
                     'cost_price': row['cost_price'],
-        
-                    # Build full image URL
                     'main_image': row['main_image'] if row['main_image'] and row['main_image'].startswith('http') 
                                    else settings.MEDIA_URL + str(row['main_image']),
                 })
@@ -712,6 +860,7 @@ def product_details(request, slug):
             'related_products': recommended_products,
             'reviews': reviews,
             'banners': Banner.objects.filter(is_active=True, page="products"),
+            'estimated_delivery_str': estimated_delivery_str,
         }
 
         return render(request, 'website/pages/product_details.html', context)
@@ -815,7 +964,7 @@ def signup_page(request):
 
 def forget_password(request):
     if request.method == "POST":
-        email=request.POST.get('email')
+        email=request.POST.get('email', '').strip().lower()
         try:
             user=User.objects.get(email=email,is_active=True)
         except User.DoesNotExist:
@@ -876,17 +1025,17 @@ def verify_otp_page(request):
                 user.is_active = True
                 user.save()
                 if Vendor.objects.filter(user=user).exists():
-                    UserRole.objects.create(role="vendor",user=user)
+                    UserRole.objects.get_or_create(role="vendor",user=user)
                 else:
-                    UserRole.objects.create(role="customer",user=user)
+                    UserRole.objects.get_or_create(role="customer",user=user)
                     
                
-                UserProfile.objects.create(user=user)
+                UserProfile.objects.get_or_create(user=user)
                 otp_obj.delete()
                 del request.session['user_email']
                 auth_login(request, user)
                 messages.success(request, "Your account has been verified successfully!")
-                return redirect('login_page')
+                return redirect('set_password')
             elif user.is_active:
                 otp_obj.delete()
                 del request.session['user_email']
@@ -911,7 +1060,7 @@ def logout_view(request):
 def contact_view(request):
     if request.method == 'POST':
         name = request.POST.get('name')
-        email = request.POST.get('email')
+        email = request.POST.get('email', '').strip().lower()
         phone = request.POST.get('phone')
         subject = request.POST.get('subject')
         message_text = request.POST.get('message')

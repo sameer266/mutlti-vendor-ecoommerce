@@ -14,6 +14,7 @@ from .models import (
     Review, Coupon,  Organization, Newsletter, Contact, 
     Notification, Slider, Banner, VendorCommission, VendorPayoutRequest,VendorWallet,VendorCommission,TaxRate
 )
+from datetime import datetime
 
 # Helper decorator to check admin access
 def admin_required(view_func):
@@ -156,7 +157,7 @@ def admin_user_update(request, pk):
     user = get_object_or_404(User, pk=pk)
     if request.method == 'POST':
         user.username = request.POST.get('username')
-        user.email = request.POST.get('email')
+        user.email = request.POST.get('email', '').strip().lower()
         user.first_name=request.POST.get('first_name')
         user.last_name=request.POST.get('last_name')
         user.save()      
@@ -244,7 +245,7 @@ def admin_vendor_add(request):
         try:
             first_name = request.POST.get('first_name')
             last_name = request.POST.get('last_name')
-            email = request.POST.get('email')
+            email = request.POST.get('email', '').strip().lower()
             
             if User.objects.filter(email=email).exists():
                 messages.error(request, 'Email already exists')
@@ -330,7 +331,7 @@ def admin_vendor_update(request, pk):
     if request.method == 'POST':
         vendor.user.first_name=request.POST.get('full_name')
         vendor.user.last_name=request.POST.get('last_name')
-        vendor.user.email=request.POST.get('email')
+        vendor.user.email= request.POST.get('email', '').strip().lower()
         vendor.shop_name = request.POST.get('shop_name')
         vendor.phone = request.POST.get('phone')
         vendor.address = request.POST.get('address')
@@ -511,10 +512,13 @@ def admin_product_add(request):
             stock=int(request.POST.get('stock', 0)),
             low_stock_alert=int(request.POST.get('low_stock_alert', 5)),
             brand=request.POST.get('brand', ''),
+            estimated_delivery_days=request.POST.get('estimated_delivery_days'),
             shipping_cost=Decimal(request.POST.get('shipping_cost', '0.00')) ,
             weight=Decimal(request.POST.get('weight')) if request.POST.get('weight') else None,
             is_featured=True if request.POST.get('is_featured') == 'on' else False,
         )
+        
+       
         if request.FILES.get('main_image'):
             product.main_image = request.FILES['main_image']
             product.save()
@@ -563,9 +567,10 @@ def admin_product_update(request, pk):
         product.stock = int(request.POST.get('stock', 0))
         product.low_stock_alert = int(request.POST.get('low_stock_alert', 5))
         product.brand = request.POST.get('brand', '')
+        product.estimated_delivery_days=request.POST.get('estimated_delivery_days')
         product.weight = Decimal(request.POST.get('weight')) if request.POST.get('weight') else None
         product.is_featured = True if request.POST.get('is_featured') == 'on' else False
-
+  
         if request.FILES.get('main_image'):
             product.main_image = request.FILES['main_image']
         product.save()
@@ -1178,7 +1183,7 @@ def admin_newsletter_list(request):
 def admin_newsletter_add(request):
     if request.method == 'POST':
         Newsletter.objects.create(
-            email=request.POST.get('email')
+            email= request.POST.get('email', '').strip().lower()
         )
         messages.success(request, 'Subscriber added successfully.')
         return redirect('admin_newsletter_list')
@@ -1188,7 +1193,7 @@ def admin_newsletter_add(request):
 def admin_newsletter_update(request, pk):
     subscriber = get_object_or_404(Newsletter, pk=pk)
     if request.method == 'POST':
-        subscriber.email = request.POST.get('email')
+        subscriber.email =  request.POST.get('email', '').strip().lower()
         subscriber.save()
         messages.success(request, 'Subscriber updated successfully.')
         return redirect('admin_newsletter_list')
@@ -1372,7 +1377,7 @@ def admin_organization_update(request):
         print(request.POST)
         organization.name = request.POST.get('name')
         organization.phone = request.POST.get('phone')
-        organization.email = request.POST.get('email')
+        organization.email =  request.POST.get('email', '').strip().lower()
         
         organization.phone_secondary = request.POST.get('phone_secondary', '')
         organization.address = request.POST.get('address')
@@ -1450,7 +1455,7 @@ def admin_profile_edit(request):
     if request.method == "POST":
         first_name = request.POST.get('first_name')
         last_name = request.POST.get('last_name')
-        email = request.POST.get('email')
+        email = request.POST.get('email', '').strip().lower()
         user=request.user
         user.first_name=first_name
         user.last_name=last_name
@@ -1555,11 +1560,13 @@ def vendor_product_add(request):
                 stock=int(request.POST.get('stock', 0)),
                 low_stock_alert=int(request.POST.get('low_stock_alert', 5)),
                 brand=request.POST.get('brand', ''),
+                estimated_delivery_days=request.POST.get('estimated_delivery_days'),
                 shipping_cost=Decimal(request.POST.get('shipping_cost', '0.00')),
                 weight=Decimal(request.POST.get('weight')) if request.POST.get('weight') else None,
                 is_featured=True if request.POST.get('is_featured') == 'on' else False,
             )
-
+         
+         
             # Handle main image
             if request.FILES.get('main_image'):
                 product.main_image = request.FILES['main_image']
@@ -1615,7 +1622,8 @@ def vendor_product_update(request, pk):
         product.shipping_cost=Decimal(request.POST.get('shipping_cost', '0.00')) 
         product.weight = Decimal(request.POST.get('weight')) if request.POST.get('weight') else None
         product.is_featured = True if request.POST.get('is_featured') == 'on' else False
-
+        product.estimated_delivery_days=request.POST.get('estimated_delivery_days')
+       
         if request.FILES.get('main_image'):
             product.main_image = request.FILES['main_image']
         product.save()
@@ -1758,13 +1766,21 @@ def vendor_orders_list(request):
 
 @login_required
 def vendor_order_details(request, order_number):
-    vendor=Vendor.objects.get(user=request.user)
-    order = get_object_or_404(Order, order_number=order_number, items__product__vendor=vendor)
+    vendor = Vendor.objects.get(user=request.user)
     
+    # Get the order first
+    order = get_object_or_404(Order, order_number=order_number)
+    
+    # Verify that this vendor has at least one product in this order
+    vendor_items = order.items.filter(product__vendor=vendor)
+    if not vendor_items.exists():
+        messages.error(request,"You don't have access to this order")
+        return redirect('vendor_orders_list')
+        
     return render(request, 'vendor/order/order_details.html', {
-        'order': order
+        'order': order,
+        'vendor_items': vendor_items  # Optional: pass only vendor's items
     })
-    
     
 @login_required
 def vendor_orders_pending(request):
@@ -1786,35 +1802,6 @@ def vendor_orders_delivered(request):
         'order_model': Order,
     })
     
-
-from django.utils.dateparse import parse_date
-
-@login_required
-def vendor_update_estimated_date(request, order_number):
-    """
-    JSON API to update estimated_delivery_date of an order
-    """
-    if request.method == "POST":
-        new_date_str = request.POST.get("estimated_date")
-        if not new_date_str:
-            return JsonResponse({"success": False, "message": "No date provided."})
-
-        order = Order.objects.filter(order_number=order_number).first()
-        if not order:
-            return JsonResponse({"success": False, "message": "Order not found."})
-
-        # Parse date from string
-        try:
-            new_date = parse_date(new_date_str)
-            if not new_date:
-                raise ValueError
-            order.estimated_delivery_date = new_date
-            order.save()
-            return JsonResponse({"success": True, "message": "Estimated delivery date updated."})
-        except ValueError:
-            return JsonResponse({"success": False, "message": "Invalid date format."})
-
-    return JsonResponse({"success": False, "message": "Invalid request method."})
 
 
 
@@ -1982,29 +1969,34 @@ def vendor_invoices(request):
     return render(request, 'vendor/invoice/invoices.html', {'invoices': invoices})
 
 
-@login_required
-def vendor_invoice_detail(request, invoice_number):
-    vendor = Vendor.objects.get(user=request.user)
-    invoice = get_object_or_404(Invoice, invoice_number=invoice_number, vendor=vendor)
-    
-    order_items = invoice.order.items.all()
-    total_shipping_cost = sum(item.product.shipping_cost * item.quantity for item in order_items)
 
-    tax_obj = TaxRate.objects.first()
-    tax_rate = tax_obj.tax if tax_obj else 0
-    tax_amount = (invoice.subtotal + total_shipping_cost) * (tax_rate / 100)
-
-    total_price = invoice.subtotal + total_shipping_cost + tax_amount - (invoice.discount or 0)
-
-    return render(request, 'vendor/invoice/invoice_detail.html', {
-        'invoice': invoice,
-        'order_items': order_items,
-        'shipping_cost': total_shipping_cost,
-        'tax_rate': tax_rate,
-        'tax_amount': tax_amount,
-        'total_price': total_price,
+@login_required 
+def vendor_invoice_detail(request, invoice_number): 
+    vendor = Vendor.objects.get(user=request.user) 
+    invoice = get_object_or_404(Invoice, invoice_number=invoice_number, vendor=vendor) 
+     
+    order_items = invoice.order.items.filter(product__vendor=vendor)  # Only vendor's items
+    total_shipping_cost = sum(
+        (item.product.shipping_cost or Decimal('0')) * item.quantity 
+        for item in order_items
+    )
+    total_shipping_cost = Decimal(str(total_shipping_cost))  # Ensure it's Decimal
+    tax_obj = TaxRate.objects.first() 
+    tax_rate = Decimal(str(tax_obj.tax)) if tax_obj else Decimal('0')
+    tax_amount = (invoice.subtotal + total_shipping_cost) * (tax_rate / Decimal('100'))
+ 
+    # Calculate total price
+    discount = invoice.discount if invoice.discount else Decimal('0')
+    total_price = invoice.subtotal + total_shipping_cost + tax_amount - discount
+ 
+    return render(request, 'vendor/invoice/invoice_detail.html', { 
+        'invoice': invoice, 
+        'order_items': order_items, 
+        'shipping_cost': total_shipping_cost, 
+        'tax_rate': tax_rate, 
+        'tax_amount': tax_amount, 
+        'total_price': total_price, 
     })
-
 
 # ====================
 # Vendor Profile
@@ -2023,7 +2015,7 @@ def vendor_profile_edit_view(request):
         vendor.shop_name = request.POST.get('shop_name', vendor.shop_name)
         vendor.description = request.POST.get('description', vendor.description)
         vendor.phone = request.POST.get('phone', vendor.phone)
-        vendor.email = request.POST.get('email', vendor.email)
+        vendor.user.email = (request.POST.get('email') or vendor.user.email).strip().lower()
         vendor.address = request.POST.get('address', vendor.address)
         vendor.city = request.POST.get('city', vendor.city)
         vendor.province = request.POST.get('province', vendor.province)

@@ -23,6 +23,7 @@ def global_context(request):
     # Vendor 
     total_vendor_pending_orders=0
     total_vendor_pending_payouts=0
+    user_role = getattr(request.user, 'role', None)
     if request.user.is_authenticated and  request.user.role.role == 'vendor':
         vendor=Vendor.objects.get(user=request.user)
         total_vendor_pending_payouts=VendorPayoutRequest.objects.filter(vendor=vendor,status="pending").count()

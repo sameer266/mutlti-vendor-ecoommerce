@@ -3,6 +3,59 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+<style>
+  .product-preview {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+  .product-preview:last-child {
+    margin-bottom: 0;
+  }
+  .product-img {
+    width: 40px;
+    height: 40px;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 1px solid #e5e7eb;
+  }
+  .product-info {
+    flex: 1;
+    min-width: 0;
+  }
+  .product-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: #1f2937;
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .product-meta {
+    font-size: 11px;
+    color: #6b7280;
+    margin-top: 2px;
+  }
+  .variant-badge {
+    display: inline-block;
+    background: #f3f4f6;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 10px;
+    color: #4b5563;
+    margin-right: 4px;
+    margin-top: 2px;
+  }
+  .more-items {
+    font-size: 11px;
+    color: #6b7280;
+    font-style: italic;
+    margin-top: 4px;
+  }
+</style>
 {% endblock %}
 
 {% block content %}
@@ -40,12 +93,12 @@
         <tr>
           <th>Order #</th>
           <th>Customer</th>
-          <th>Contact</th>
+          <th>Products</th>
+          <th>Items</th>
           <th>Total</th>
           <th>Payment</th>
           <th>Status</th>
-          <th>Estimated Delivery Date</th>
-          <th>Delivered At</th>
+          <th>Est. Delivery</th>
           <th>Created</th>
           <th>Actions</th>
         </tr>
@@ -53,48 +106,149 @@
       <tbody>
         {% for order in orders %}
         <tr>
-          <td>{{ order.order_number }}</td>
-          <td>{{ order.full_name }}</td>
+          <!-- Order Number -->
           <td>
-            {{ order.email }}<br>
-            <span class="text-xs text-gray-500">{{ order.phone }}</span>
+            <span class="font-semibold text-gray-900">{{ order.order_number }}</span>
           </td>
-          <td>Rs {{ order.total }}</td>
+          
+          <!-- Customer -->
           <td>
-            {% for value,label in order_model.PAYMENT_STATUS_CHOICES %}
-              {% if order.payment_status == value %}
-                {{ label }}
+            <div class="font-medium text-gray-900">{{ order.full_name }}</div>
+            <div class="text-xs text-gray-500">{{ order.email }}</div>
+            <div class="text-xs text-gray-500">{{ order.phone }}</div>
+          </td>
+          
+          <!-- Products with Images -->
+          <td style="max-width: 300px;">
+            {% with order.items.all as items %}
+              {% for item in items|slice:":2" %}
+              <div class="product-preview">
+                {% if item.product.main_image %}
+                <img src="{{ item.product.main_image.url }}" 
+                     alt="{{ item.product.name }}" 
+                     class="product-img">
+                {% else %}
+                <div class="product-img bg-gray-200 flex items-center justify-center">
+                  <i class="fas fa-image text-gray-400 text-xs"></i>
+                </div>
+                {% endif %}
+                
+                <div class="product-info">
+                  <div class="product-name">{{ item.product.name }}</div>
+                  <div class="product-meta">
+                    Qty: {{ item.quantity }} × Rs {{ item.price|floatformat:0 }}
+                  </div>
+                  
+                  <!-- Display Variants -->
+                  {% if item.variant.all %}
+                  <div>
+                    {% for variant in item.variant.all %}
+                    <span class="variant-badge">{{ variant.name }}</span>
+                    {% endfor %}
+                  </div>
+                  {% endif %}
+                </div>
+              </div>
+              {% endfor %}
+              
+              {% if items.count > 2 %}
+              <div class="more-items">
+                + {{ items.count|add:"-2" }} more item{{ items.count|add:"-2"|pluralize }}
+              </div>
               {% endif %}
-            {% endfor %}
+            {% endwith %}
           </td>
+          
+          <!-- Total Items -->
+          <td class="text-center">
+            <span class="inline-flex items-center justify-center w-8 h-8 bg-blue-100 text-blue-800 rounded-full font-semibold text-xs">
+              {{ order.items.count }}
+            </span>
+          </td>
+          
+          <!-- Total Price -->
           <td>
-            <select class="status-select border rounded p-1" data-id="{{ order.order_number }}">
+            <span class="font-bold text-gray-900">Rs {{ order.total|floatformat:0 }}</span>
+          </td>
+          
+          <!-- Payment Status -->
+          <td>
+            <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold
+              {% if order.payment_status == 'paid' %}bg-green-100 text-green-800
+              {% elif order.payment_status == 'unpaid' %}bg-yellow-100 text-yellow-800
+              {% elif order.payment_status == 'failed' %}bg-red-100 text-red-800
+              {% elif order.payment_status == 'refunded' %}bg-gray-100 text-gray-800
+              {% endif %}">
+              {% for value,label in order_model.PAYMENT_STATUS_CHOICES %}
+                {% if order.payment_status == value %}{{ label }}{% endif %}
+              {% endfor %}
+            </span>
+          </td>
+          
+          <!-- Order Status -->
+          <td>
+            <select class="status-select border border-gray-300 rounded-lg p-2 text-xs font-medium
+              {% if order.status == 'pending' %}bg-yellow-50 text-yellow-800
+              {% elif order.status == 'processing' %}bg-blue-50 text-blue-800
+              {% elif order.status == 'shipped' %}bg-indigo-50 text-indigo-800
+              {% elif order.status == 'delivered' %}bg-green-50 text-green-800
+              {% elif order.status == 'cancelled' %}bg-red-50 text-red-800
+              {% endif %}" 
+              data-id="{{ order.order_number }}">
               {% for value,label in order_model.STATUS_CHOICES %}
                 <option value="{{ value }}" {% if order.status == value %}selected{% endif %}>{{ label }}</option>
               {% endfor %}
             </select>
           </td>
-          <td>{{ order.estimated_shipping_date|date:"Y-m-d"|default:"No Date" }}</td>
-          <td>{{ order.delivered_at|date:"Y-m-d h:i A" }}</td>
-          <td>{{ order.created_at|date:"Y-m-d h:i A" }}</td>
-          <td class="text-center flex justify-center gap-3">
-            <!-- View Items -->
-            <a href="{% url 'admin_order_details' order.order_number%}" class="view-items-btn flex items-center gap-2 text-blue-600 hover:text-blue-800 font-medium" data-id="{{ order.order_number }}">
-              <i class="fa-solid fa-eye"></i>
-            </a>
-            <!-- View Invoices -->
-            <a href="{% url 'admin_orders_invoice_list' order.order_number %}" class="flex items-center gap-2 text-green-600 hover:text-green-800 font-medium">
-              <i class="fa-solid fa-file-invoice"></i>
-            </a>
-            <!-- Delete -->
-            <a href="{% url 'admin_order_delete' order.order_number %}" class="flex items-center gap-2 text-red-600 hover:text-red-800 font-medium" onclick="return confirm('Delete this order?')">
-              <i class="fa-solid fa-trash"></i>
-            </a>
+          
+          <!-- Estimated Delivery -->
+          <td>
+            {% if order.estimated_delivery_date %}
+              <span class="text-xs">{{ order.estimated_delivery_date|date:"M d, Y" }}</span>
+            {% else %}
+              <span class="text-xs text-gray-400">Not set</span>
+            {% endif %}
+          </td>
+          
+          <!-- Created Date -->
+          <td>
+            <div class="text-xs">{{ order.created_at|date:"M d, Y" }}</div>
+            <div class="text-xs text-gray-500">{{ order.created_at|date:"h:i A" }}</div>
+          </td>
+          
+          <!-- Actions -->
+          <td class="text-center">
+            <div class="flex justify-center gap-2">
+              <!-- View Details -->
+              <a href="{% url 'admin_order_details' order.order_number %}" 
+                 class="inline-flex items-center justify-center w-8 h-8 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                 title="View Details">
+                <i class="fa-solid fa-eye"></i>
+              </a>
+              
+              <!-- View Invoices -->
+              <a href="{% url 'admin_orders_invoice_list' order.order_number %}" 
+                 class="inline-flex items-center justify-center w-8 h-8 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                 title="View Invoices">
+                <i class="fa-solid fa-file-invoice"></i>
+              </a>
+              
+              <!-- Delete -->
+              <a href="{% url 'admin_order_delete' order.order_number %}" 
+                 class="inline-flex items-center justify-center w-8 h-8 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                 onclick="return confirm('Delete this order and all related data?')"
+                 title="Delete Order">
+                <i class="fa-solid fa-trash"></i>
+              </a>
+            </div>
           </td>
         </tr>
         {% empty %}
         <tr>
-          <td colspan="10" class="text-center text-gray-500 py-6">No orders found.</td>
+          <td colspan="10" class="text-center text-gray-500 py-12">
+            <i class="fas fa-shopping-cart text-4xl text-gray-300 mb-3"></i>
+            <div class="font-medium">No orders found.</div>
+          </td>
         </tr>
         {% endfor %}
       </tbody>
@@ -104,7 +258,7 @@
 {% endblock %}
 
 {% block extra_js %}
-
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 
 <script>
 $(document).ready(function() {
@@ -114,14 +268,19 @@ $(document).ready(function() {
         ordering: true,
         order: [[8, 'desc']], // Default sorting by Created date
         columnDefs: [
-            { orderable: false, targets: 9 } // Actions column not sortable
+            { orderable: false, targets: [2, 9] }, // Products and Actions columns not sortable
+            { width: '300px', targets: 2 } // Fixed width for products column
         ],
-        searching: false 
+        searching: false,
+        language: {
+            lengthMenu: "Show _MENU_ orders",
+            info: "Showing _START_ to _END_ of _TOTAL_ orders",
+            emptyTable: "No orders available"
+        }
     });
 });
 
-
-// AJAX for status/payment change
+// AJAX for status change
 function getCookie(name) {
     const value = `; ${document.cookie}`;
     const parts = value.split(`; ${name}=`);
@@ -129,9 +288,13 @@ function getCookie(name) {
 }
 
 $(document).on('change', '.status-select', function(){
-    const row = $(this).closest('tr');
-    const orderNumber = $(this).data('id');
-    const status = row.find('.status-select').val();
+    const $select = $(this);
+    const orderNumber = $select.data('id');
+    const status = $select.val();
+    const originalValue = $select.find('option:selected').data('original') || $select.val();
+    
+    // Disable select during request
+    $select.prop('disabled', true);
 
     $.ajax({
         url: `{% url 'admin_order_change_status' 'ORD00000000000000' %}`.replace('ORD00000000000000', orderNumber),
@@ -139,10 +302,22 @@ $(document).on('change', '.status-select', function(){
         data: { status },
         headers: { 'X-CSRFToken': getCookie('csrftoken') },
         success: function(resp){
-            if (resp.success) location.reload();
-            else alert('Failed to update order');
+            if (resp.success) {
+                // Show success message
+                toastr.success('Order status updated successfully');
+                // Reload page to reflect changes
+                setTimeout(() => location.reload(), 500);
+            } else {
+                toastr.error(resp.message || 'Failed to update order status');
+                $select.val(originalValue);
+                $select.prop('disabled', false);
+            }
         },
-        error: function(){ alert('Server error updating order'); }
+        error: function(xhr){
+            toastr.error('Server error updating order');
+            $select.val(originalValue);
+            $select.prop('disabled', false);
+        }
     });
 });
 </script>

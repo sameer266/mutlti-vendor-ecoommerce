@@ -10,7 +10,12 @@
   <!-- Header -->
   <div class="flex justify-between items-center mb-6">
     <h1 class="text-2xl font-semibold text-gray-800"><i class="fas fa-receipt"></i> Order Details</h1>
-    <a href="{% url 'vendor_orders_list' %}" class="text-white bg-blue-600 hover:bg-blue-800 font-medium px-4 py-2 border rounded">Back</a>
+    <div class="flex gap-2">
+      <a href="{% url 'vendor_orders_list' %}" class="text-white bg-blue-600 hover:bg-blue-800 font-medium px-4 py-2 border rounded">Back</a>
+      <a href="{% url 'vendor_orders_invoice_list' order.order_number %}" class="text-white bg-green-600 hover:bg-green-800 font-medium px-4 py-2 border rounded">
+        <i class="fas fa-eye"></i> Invoice
+      </a>
+    </div>
   </div> 
 
   <!-- Order Info -->
@@ -39,7 +44,7 @@
       <thead class="bg-gray-100">
         <tr>
           <th class="px-4 py-2">Product</th>
-          <th class="px-4 py-2">Variant</th>
+          <th class="px-4 py-2">Variants</th>
           <th class="px-4 py-2">Quantity</th>
           <th class="px-4 py-2">Price</th>
           <th class="px-4 py-2">Total</th>
@@ -50,8 +55,16 @@
         <tr>
           <td class="border px-4 py-2">{{ item.product.name }}</td>
           <td class="border px-4 py-2">
-            {% if item.variant %}
-              {{ item.variant.name }}
+            {% if item.variant.all %}
+              {% for variant in item.variant.all %}
+                <div>{{ variant.name }}
+                  {% if variant.price_adjustment > 0 %}
+                    <span class="text-green-700">(+Rs {{ variant.price_adjustment }})</span>
+                  {% elif variant.price_adjustment < 0 %}
+                    <span class="text-red-600">(-Rs {{ variant.price_adjustment }})</span>
+                  {% endif %}
+                </div>
+              {% endfor %}
             {% else %}
               -
             {% endif %}

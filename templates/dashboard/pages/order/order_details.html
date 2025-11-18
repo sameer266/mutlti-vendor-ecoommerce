@@ -51,14 +51,25 @@
         {% for item in order.items.all %}
         <tr>
           <td class="border px-4 py-2">{{ item.product.name }}</td>
-         <td class="border px-4 py-2">
-  {% if item.variant %}
-    {{ item.variant.name }}
-  {% else %}
-    -
-  {% endif %}
-</td>
+          <td class="border px-4 py-2">
+            {% if item.variant.all %}
+              <div class="space-y-1">
+              {% for variant in item.variant.all %}
+  <div class="flex items-center gap-2">
+    <span>{{ variant.name }}</span>
+    {% if variant.price_adjustment != 0 %}
+      <span class="{% if variant.price_adjustment > 0 %}text-green-700{% else %}text-red-600{% endif %}">
+        {% if variant.price_adjustment > 0 %}(+{% else %}(-{% endif %}Rs {{ variant.price_adjustment}}) 
+      </span>
+    {% endif %}
+  </div>
+{% endfor %}
 
+              </div>
+            {% else %}
+              -
+            {% endif %}
+          </td>
           <td class="border px-4 py-2">{{ item.quantity }}</td>
           <td class="border px-4 py-2">Rs {{ item.price }}</td>
           <td class="border px-4 py-2">Rs {{ item.get_total }}</td>
@@ -105,9 +116,12 @@
           <td class="border px-4 py-2">{{ invoice.get_payment_status_display }}</td>
           <td class="border px-4 py-2">Rs {{ invoice.total }}</td>
           <td class="border px-4 py-2">{{ invoice.created_at|date:"Y-m-d h:i A" }}</td>
-          <td class="border px-4 py-2">
-            <a href="{% url 'admin_invoice_detail' invoice.invoice_number %}" class="text-blue-600 hover:text-blue-800">View</a>
-          </td>
+         <td class="border px-4 py-2 text-center">
+  <a href="{% url 'admin_invoice_detail' invoice.invoice_number %}" class="text-blue-600 hover:text-blue-800">
+    <i class="fas fa-eye"></i>
+  </a>
+</td>
+
         </tr>
         {% endfor %}
       </tbody>

@@ -187,6 +187,21 @@
 </div>
 
 
+<!-- Estimated Delivery - Compact Version -->
+{% if estimated_delivery_str %}
+<div class="mt-2 flex items-center gap-2 p-2 bg-green-50 rounded-lg border border-green-200">
+  <i class="fas fa-shipping-fast text-green-600"></i>
+  <span class="text-xs sm:text-sm text-gray-700">
+    Get it by 
+    <span class="font-bold text-green-700">
+      {{ estimated_delivery_str }}
+    </span>
+  </span>
+</div>
+{% endif %}
+
+
+
   <!-- Stock Status -->
   <div>
     {% if product.in_stock %}
@@ -689,10 +704,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 <script>
-
 $(document).ready(function() {
   let selectedVariant = null;
   const basePrice = {{ product.price }};
+  
+  // Track selected variants with price adjustments
+  let selectedVariantsWithPrice = [];
+  let selectedVariantsWithoutPrice = [];
   
   // Toastr helper
   function showToast(message, type = 'info') {
@@ -744,26 +762,21 @@ $(document).ready(function() {
 
     // Handle image load (for both cached and new images)
     if (mainImage[0].complete && mainImage[0].naturalWidth > 0) {
-      // Image already loaded (cached)
       setupMagnifier();
     } else {
-      // Image still loading
       mainImage.on('load', setupMagnifier);
     }
 
-    // Show magnifier on hover
     container.on('mouseenter', function() {
       if (imageLoaded) {
         glass.addClass('active');
       }
     });
 
-    // Hide magnifier on leave
     container.on('mouseleave', function() {
       glass.removeClass('active');
     });
 
-    // Move magnifier with mouse
     container.on('mousemove', function(e) {
       if (!imageLoaded) return;
 
@@ -771,22 +784,18 @@ $(document).ready(function() {
       const containerWidth = container.width();
       const containerHeight = container.height();
       
-      // Get mouse position relative to container
       const mouseX = e.pageX - containerOffset.left;
       const mouseY = e.pageY - containerOffset.top;
 
-      // Get displayed image dimensions and position
       const img = mainImage[0];
       const imgWidth = mainImage.width();
       const imgHeight = mainImage.height();
       const imgOffsetX = (containerWidth - imgWidth) / 2;
       const imgOffsetY = (containerHeight - imgHeight) / 2;
 
-      // Calculate position relative to actual image
       const relativeX = mouseX - imgOffsetX;
       const relativeY = mouseY - imgOffsetY;
 
-      // Check if mouse is over the image
       if (relativeX < 0 || relativeX > imgWidth || relativeY < 0 || relativeY > imgHeight) {
         glass.removeClass('active');
         return;
@@ -799,11 +808,9 @@ $(document).ready(function() {
       const glassHalfW = glassWidth / 2;
       const glassHalfH = glassHeight / 2;
 
-      // Position the magnifier glass
       let glassX = mouseX - glassHalfW;
       let glassY = mouseY - glassHalfH;
 
-      // Keep glass within container bounds
       glassX = Math.max(0, Math.min(glassX, containerWidth - glassWidth));
       glassY = Math.max(0, Math.min(glassY, containerHeight - glassHeight));
 
@@ -812,7 +819,6 @@ $(document).ready(function() {
         top: glassY + "px"
       });
 
-      // Calculate background position for zoom effect
       const scaleX = img.naturalWidth / imgWidth;
       const scaleY = img.naturalHeight / imgHeight;
       
@@ -842,44 +848,57 @@ $(document).ready(function() {
     const imageUrl = $(this).data('image');
     const $mainImage = $('#mainImage');
     
-    // Fade out
     $mainImage.css('opacity', '0.5');
     
     setTimeout(() => {
       $mainImage.attr('src', imageUrl);
       
-      // Wait for new image to load before reinitializing magnifier
       $mainImage.off('load').on('load', function() {
         initImageMagnifier();
         $mainImage.css('opacity', '1');
       });
       
-      // Handle cached images
       if ($mainImage[0].complete) {
         initImageMagnifier();
         $mainImage.css('opacity', '1');
       }
     }, 150);
     
-    // Update active thumbnail
     $('.thumbnail-item').removeClass('active');
     $(this).addClass('active');
   });
   
-  // Variant Selection
+  // Variant Selection - NEW LOGIC
   $('.variant-option').on('click', function() {
     const $this = $(this);
+    const variantId = $this.data('variant-id');
+    const priceAdjustment = parseFloat($this.data('price-adjustment')) || 0;
     const isSelected = $this.hasClass('selected');
     
     if (isSelected) {
+      // Deselect the variant
       deselectVariant($this);
-      selectedVariant = null;
+      
+      // Remove from tracking arrays
+      if (priceAdjustment !== 0) {
+        selectedVariantsWithPrice = selectedVariantsWithPrice.filter(id => id !== variantId);
+      } else {
+        selectedVariantsWithoutPrice = selectedVariantsWithoutPrice.filter(id => id !== variantId);
+      }
     } else {
-      $('.variant-option').each(function() {
-        deselectVariant($(this));
-      });
+      // Check if trying to select a variant with price adjustment
+      if (priceAdjustment !== 0) {
+        // Check if another variant with price adjustment is already selected
+        if (selectedVariantsWithPrice.length > 0) {
+          showToast('You can only select one variant with price adjustment', 'warning');
+          return;
+        }
+        selectedVariantsWithPrice.push(variantId);
+      } else {
+        selectedVariantsWithoutPrice.push(variantId);
+      }
+      
       selectVariant($this);
-      selectedVariant = $this.data('variant-id');
     }
     
     updatePrice();
@@ -899,16 +918,20 @@ $(document).ready(function() {
       .addClass('far fa-circle text-gray-400');
   }
   
-  // Dynamic Price Update
+  // Dynamic Price Update - NEW CALCULATION
   function updatePrice() {
     let finalPrice = basePrice;
-    if (selectedVariant) {
-      const $variant = $(`.variant-option[data-variant-id="${selectedVariant}"]`);
-      const priceAdjustment = parseFloat($variant.data('price-adjustment')) || 0;
-      finalPrice = basePrice + priceAdjustment;
-    }
     
-    // Update price display if element exists
+    // Add price adjustments from selected variants
+    const allSelectedVariants = [...selectedVariantsWithPrice, ...selectedVariantsWithoutPrice];
+    
+    allSelectedVariants.forEach(variantId => {
+      const $variant = $(`.variant-option[data-variant-id="${variantId}"]`);
+      const priceAdjustment = parseFloat($variant.data('price-adjustment')) || 0;
+      finalPrice += priceAdjustment;
+    });
+    
+    // Update price display
     const $priceElement = $('.text-2xl.sm\\:text-3xl.font-bold.text-gray-900').first();
     if ($priceElement.length) {
       $priceElement.text('Rs ' + finalPrice.toFixed(0));
@@ -949,12 +972,14 @@ $(document).ready(function() {
     }
   });
   
-  // Add to Cart
+  // Add to Cart - UPDATED TO SEND MULTIPLE VARIANTS
   $('.add-to-cart').on('click', function() {
     const $btn = $(this);
     const qty = parseInt($('.qtyInput').val()) || 1;
     const productId = $btn.data('product-id');
-    const variantId = selectedVariant;
+    
+    // Collect all selected variant IDs
+    const allSelectedVariants = [...selectedVariantsWithPrice, ...selectedVariantsWithoutPrice];
     
     $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
     
@@ -968,13 +993,21 @@ $(document).ready(function() {
       data: JSON.stringify({
         product_id: productId,
         quantity: qty,
-        variant_id: variantId
+        variant_ids: allSelectedVariants  // Send array of variant IDs
       }),
       success: function(response) {
         if (response.success) {
           showToast(response.message, 'success');
           $('#desktopCartBadge, #mobileCartBadge').text(response.cart_count);
           $('.qtyInput').val(1);
+          
+          // Reset variant selections
+          $('.variant-option').each(function() {
+            deselectVariant($(this));
+          });
+          selectedVariantsWithPrice = [];
+          selectedVariantsWithoutPrice = [];
+          updatePrice();
         } else {
           showToast(response.message, 'error');
         }
