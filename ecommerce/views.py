@@ -787,16 +787,14 @@ def apply_coupon(request):
     coupon_code = request.POST.get('coupon_code', '').strip()
     action = request.POST.get('action', 'apply')
 
-
     if action == 'remove':
         request.session.pop('coupon_code', None)
         return JsonResponse({'success': True, 'message': 'Coupon removed successfully!'})
 
     try:
         coupon = Coupon.objects.get(code=coupon_code)
-        cart_items = Cart.objects.filter(user=request.user).select_related('product', 'variant')
+        cart_items = Cart.objects.filter(user=request.user).select_related('product').prefetch_related('variant')
 
-  
         is_valid, message = coupon.is_valid(user=request.user, cart_items=cart_items)
         if not is_valid:
             return JsonResponse({'success': False, 'message': message}, status=400)
@@ -906,12 +904,7 @@ def signup_page(request):
             first_name = request.POST.get('first_name')
             last_name = request.POST.get('last_name')
             email = request.POST.get('email', '').strip()
-            password1 = request.POST.get('password1', '')
-            password2 = request.POST.get('password2', '')
-
-            if password1 != password2:
-                messages.error(request, "Passwords do not match.")
-                return redirect('signup_page')
+         
 
             if User.objects.filter(email=email, is_active=True).exists():
                 messages.error(request, 'User already exists')
@@ -926,7 +919,6 @@ def signup_page(request):
                 user = User.objects.create_user(
                     username=email,
                     email=email,
-                    password=password1,
                     first_name=first_name,
                     last_name=last_name,
                     is_active=False

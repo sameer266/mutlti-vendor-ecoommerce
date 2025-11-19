@@ -15,8 +15,7 @@
           <th class="px-4 py-3 text-left">Code</th>
           <th class="px-4 py-3 text-left">Type</th>
           <th class="px-4 py-3 text-left">Value</th>
-          <th class="px-4 py-3 text-left">Min Purchase</th>
-          <th class="px-4 py-3 text-left">Max Discount</th>
+
           <th class="px-4 py-3 text-left">Usage (Total/User)</th>
           <th class="px-4 py-3 text-left">Active</th>
           <th class="px-4 py-3 text-left">Valid From</th>
@@ -30,14 +29,7 @@
           <td class="px-4 py-3 font-medium">{{ c.code }}</td>
           <td class="px-4 py-3">{{ c.get_discount_type_display }}</td>
           <td class="px-4 py-3">Rs {{ c.discount_value|floatformat:2 }}</td>
-          <td class="px-4 py-3">Rs {{ c.min_purchase|floatformat:2 }}</td>
-          <td class="px-4 py-3">
-            {% if c.max_discount %}
-              Rs {{ c.max_discount|floatformat:2 }}
-            {% else %}
-              -
-            {% endif %}
-          </td>
+          
           <td class="px-4 py-3">
             {{ c.used_count }} 
             {% if c.usage_limit %}/ {{ c.usage_limit }}{% endif %}

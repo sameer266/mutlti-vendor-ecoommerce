@@ -7,9 +7,11 @@ from decimal import Decimal
   
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-
 import uuid
 
+# ==================================
+#   OTP Verification
+# ==================================
 
 class OTPVerification(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE,null=True,blank=True)
@@ -262,6 +264,29 @@ class Category(models.Model):
     def __str__(self):
         return self.name
       
+
+# ---------------------------
+#  sub Category
+# ---------------------------
+class SubCategory(models.Model):
+    name=models.CharField(max_length=100)
+    category=models.ForeignKey(Category,on_delete=models.CASCADE,related_name='subcategories' )
+    slug=models.SlugField(unique=True,blank=True)
+    
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            base_slug = slugify(self.name)
+            slug = base_slug
+            counter = 1
+            while Category.objects.filter(slug=slug).exists():
+                slug = f"{base_slug}-{counter}"
+                counter += 1
+            self.slug = slug
+        super().save(*args, **kwargs)
+    
+    def __str__(self):
+        return self.name
+            
     
     
 
@@ -569,10 +594,8 @@ class Review(models.Model):
 # -------------------------
 # Coupons & Discounts
 # -------------------------
-
 class Coupon(models.Model):
     code = models.CharField(max_length=50, unique=True)
-    description = models.CharField(max_length=255, blank=True)
     
     DISCOUNT_TYPES = [
         ('percent', 'Percentage'),
@@ -581,9 +604,8 @@ class Coupon(models.Model):
     discount_type = models.CharField(max_length=10, choices=DISCOUNT_TYPES)
     discount_value = models.DecimalField(max_digits=10, decimal_places=2)
     
-    # Conditions
-    min_purchase = models.DecimalField(max_digits=10, decimal_places=2, default=0, help_text='Minimum order value')
-    max_discount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, help_text='Max discount amount (for percentage)')
+    
+    min_purchase = models.DecimalField(max_digits=10, decimal_places=2, default=0.00, help_text='Minimum order value')
     
     # Usage limits
     usage_limit = models.PositiveIntegerField(null=True, blank=True, help_text='Total usage limit')
@@ -595,9 +617,7 @@ class Coupon(models.Model):
     valid_to = models.DateTimeField()
     is_active = models.BooleanField(default=True)
     
-    # Restrictions
-    categories = models.ManyToManyField('Category', blank=True, help_text='Applicable categories')
-    vendors = models.ManyToManyField('Vendor', blank=True, help_text='Applicable vendors')
+
     
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -621,7 +641,7 @@ class Coupon(models.Model):
         # Check minimum purchase
         if cart_items is not None:
             subtotal = sum(item.get_item_price() * item.quantity for item in cart_items)
-            if subtotal < self.min_purchase:
+            if hasattr(self, 'min_purchase') and subtotal < self.min_purchase:
                 return False, f"Minimum order amount of Rs {self.min_purchase} required."
 
         return True, "Coupon is valid."
@@ -630,8 +650,6 @@ class Coupon(models.Model):
         """Calculate discount based on subtotal"""
         if self.discount_type == 'percent':
             discount = (self.discount_value / 100) * subtotal
-            if self.max_discount is not None:
-                discount = min(discount, self.max_discount)
         else:
             discount = self.discount_value
         return discount
@@ -804,7 +822,7 @@ class Slider(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     
     def __str__(self):
-        return self.title or f"Slider {self.id}"
+        return  f"Slider {self.id}"
 
 
 
@@ -848,16 +866,18 @@ def credit_vendor_wallet_on_order_complete(sender, instance, **kwargs):
         for item in instance.items.all():
             vendor = item.product.vendor
             if vendor:
-                # Get vendor-specific commission rate, or default if not set
+
+                # Get vendor-specific commission or fallback to default 10%
                 vc = VendorCommission.objects.first()
-                rate = vc.rate
+                rate = vc.rate if vc else Decimal('0.10')
+
                 total_amount = Decimal(item.get_total())
                 admin_commission = (total_amount * rate).quantize(Decimal('0.01'))
                 vendor_earning = (total_amount - admin_commission).quantize(Decimal('0.01'))
 
-                # Credit vendor wallet
                 wallet, _ = VendorWallet.objects.get_or_create(vendor=vendor)
                 wallet.credit(vendor_earning)
+
 
 
 

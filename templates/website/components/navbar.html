@@ -1,249 +1,458 @@
 <!--  Top Bar (Desktop Only) -->
-<div id="top-bar" class="hidden lg:flex fixed top-0 left-0 right-0 bg-gray-800 text-[var(--text-light)] text-sm z-50 shadow-md">
+<div id="top-bar" class="hidden lg:flex fixed top-0 left-0 right-0 bg-gray-800 text-white text-sm z-50 shadow-md">
   <div class="container mx-auto flex justify-between items-center px-4 py-2">
     <p>Welcome to Hello Bajar</p>
     <p>Need help? Call us:
-      <a href="tel:+{{organization.phone}}" class="hover:text-[var(--primary)] font-semibold">
+      <a href="tel:+{{organization.phone}}" class="hover:text-orange-400 font-semibold transition">
         +{{organization.phone}}
       </a>
     </p>
-    <ul class="hidden md:flex space-x-4">
-
-
-
-
-          
-<!-- Language Selector -->
-<div id="language_selector" class="flex items-center gap-2 sm:justify-start text-sm">
-    <div class="flex items-center gap-2 bg-gray-100 px-3 py-2 rounded-md shadow-sm hover:shadow-md transition">
-       <i class="fa-solid fa-earth-americas text-blue-600 text-lg"></i>
-
-
-        <select id="custom_translate" class="bg-transparent text-gray-700 outline-none cursor-pointer font-medium">
-            <option value="en">🇺🇸 US</option>
+    <ul class="hidden md:flex space-x-4 items-center">
+      <!-- Language Selector -->
+      <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2 bg-gray-700 px-3 py-1.5 rounded-md hover:bg-gray-600 transition">
+          <i class="fa-solid fa-earth-americas text-orange-400 text-sm"></i>
+          <select id="custom_translate" class="bg-gray-700 text-white outline-none cursor-pointer text-sm font-medium">
+            <option value="en">🇺🇸 EN</option>
             <option value="ne">🇳🇵 NP</option>
-        </select>
-    </div>
-</div>
-
+          </select>
+        </div>
+      </div>
 
       {% if organization.phone_secondary %}
-<a href="https://wa.me/{{ organization.phone_secondary }}" target="_blank" 
-   class="text-white hover:text-blue-800 transition text-xl">
-  <i class="fab fa-whatsapp"></i>
-</a>
-{% endif %}
+      <a href="https://wa.me/{{ organization.phone_secondary }}" target="_blank" 
+         class="text-white hover:text-green-400 transition text-lg">
+        <i class="fab fa-whatsapp"></i>
+      </a>
+      {% endif %}
 
+      {% if organization.facebook %}
+      <a href="{{ organization.facebook }}" target="_blank" class="text-white hover:text-blue-400 transition text-lg">
+        <i class="fab fa-facebook"></i>
+      </a>
+      {% endif %}
 
+      {% if organization.instagram %}
+      <a href="{{ organization.instagram }}" target="_blank" class="text-white hover:text-pink-400 transition text-lg">
+        <i class="fab fa-instagram"></i>
+      </a>
+      {% endif %}
 
+      {% if organization.twitter %}
+      <a href="{{ organization.twitter }}" target="_blank" class="text-white hover:text-sky-400 transition text-lg">
+        <i class="fab fa-twitter"></i>
+      </a>
+      {% endif %}
 
+      {% if organization.youtube %}
+      <a href="{{ organization.youtube }}" target="_blank" class="text-white hover:text-red-400 transition text-lg">
+        <i class="fab fa-youtube"></i>
+      </a>
+      {% endif %}
 
-
-    
-  {% if organization.facebook %}
-    <a href="{{ organization.facebook }}" target="_blank" class="text-white hover:text-blue-800 transition text-xl">
-      <i class="fab fa-facebook"></i>
-    </a>
-  {% endif %}
-
-  {% if organization.instagram %}
-    <a href="{{ organization.instagram }}" target="_blank" class="text-white hover:text-pink-600 transition text-xl">
-      <i class="fab fa-instagram"></i>
-    </a>
-  {% endif %}
-
-  {% if organization.twitter %}
-    <a href="{{ organization.twitter }}" target="_blank" class="text-white hover:text-sky-700 transition text-xl">
-      <i class="fab fa-twitter"></i>
-    </a>
-  {% endif %}
-
-  {% if organization.youtube %}
-    <a href="{{ organization.youtube }}" target="_blank" class="text-white hover:text-red-700 transition text-xl">
-      <i class="fab fa-youtube"></i>
-    </a>
-  {% endif %}
-
-  {% if organization.tiktok %}
-    <a href="{{ organization.tiktok }}" target="_blank" class="text-white hover:text-black transition text-xl">
-      <i class="fab fa-tiktok"></i>
-    </a>
-  {% endif %}
-
-
-    
+      {% if organization.tiktok %}
+      <a href="{{ organization.tiktok }}" target="_blank" class="text-white hover:text-gray-300 transition text-lg">
+        <i class="fab fa-tiktok"></i>
+      </a>
+      {% endif %}
     </ul>
   </div>
 </div>
 
 <!-- Main Header -->
-<header id="main-header" class="bg-white shadow-lg fixed top-9 lg:top-9 left-0 right-0 z-50 transition-all duration-300">
+<header id="main-header" class="bg-white shadow-lg fixed top-10 left-0 right-0 z-40 transition-all duration-300">
   <div class="hidden lg:flex items-center justify-between container mx-auto px-4 py-3">
-
     <!-- Logo -->
-    <a href="{% url 'home' %}" class="flex items-center">
-      <img src="{{organization.logo.url}}" alt="Hello Bajar" class="h-12">
+    <a href="{% url 'home' %}" class="flex items-center flex-shrink-0">
+      <img src="{{organization.logo.url}}" alt="Hello Bajar" class="h-12 w-auto">
     </a>
 
-    <!-- Category Dropdown -->
-    <div class="relative group ">
-      <button class="flex items-center px-4 py-2 bg-gray-100 text-gray-900 rounded hover:bg-[var(--bg-brown)] hover:text-white cursor-pointer  transition">
-        <i class="fa-solid fa-bars mr-2"></i> Shop by Category
-        <i class="fa-solid fa-chevron-down ml-2 text-xs"></i>
+    <!-- Category Dropdown with Multi-Column Subcategories -->
+    <div class="relative category-dropdown-wrapper">
+      <button class="category-trigger flex items-center px-4 py-2 bg-gray-100 text-gray-900 rounded-lg hover:bg-orange-500 hover:text-white cursor-pointer transition-all duration-200 shadow-sm hover:shadow-md">
+        <i class="fa-solid fa-bars mr-2"></i> 
+        <span class="font-medium">Shop by Category</span>
+        <i class="fa-solid fa-chevron-down ml-2 text-xs transition-transform"></i>
       </button>
 
-      <ul class="absolute top-full left-0 bg-white shadow-xl rounded-lg w-64 mt-1 hidden group-hover:block z-50 max-h-96 overflow-y-auto">
-        {% for category in categories %}
-        <li>
-          <a href="{% url 'category_details' category.slug %}" class="flex items-center px-4 py-2 hover:bg-gray-50 space-x-3 transition">
-            {% if category.image %}
-            <img src="{{ category.image.url }}" class="w-6 h-6 rounded-full object-cover" alt="{{ category.name }}">
+      <!-- Mega Menu Dropdown -->
+      <div class="category-mega-menu absolute top-full left-0 bg-white shadow-2xl rounded-lg mt-2 opacity-0 invisible transition-all duration-300 z-50 border border-gray-100">
+        <div class="grid grid-cols-4 gap-0 min-w-[800px] max-w-5xl">
+          {% for category in categories %}
+          <div class="category-mega-item border-r border-gray-100 last:border-r-0">
+            <!-- Category Header -->
+            <a href="{% url 'category_details' category.slug %}" 
+               class="flex items-center gap-3 px-4 py-3 bg-orange-50 hover:bg-orange-100 transition-colors border-b border-orange-100">
+              {% if category.image %}
+              <img src="{{ category.image.url }}" class="w-8 h-8 rounded-full object-cover shadow-sm" alt="{{ category.name }}">
+              {% else %}
+              <div class="w-8 h-8 rounded-full bg-orange-200 flex items-center justify-center">
+                <i class="fa-solid fa-tag text-orange-600 text-sm"></i>
+              </div>
+              {% endif %}
+              <span class="text-sm font-bold text-gray-800 hover:text-orange-600 transition">
+                {{ category.name }}
+              </span>
+            </a>
+
+            <!-- Subcategories -->
+            {% if category.subcategories.exists %}
+            <div class="px-2 py-2 max-h-[400px] overflow-y-auto subcategory-scroll">
+              {% for subcategory in category.subcategories.all %}
+              <a href="{% url 'category_details' subcategory.slug %}" 
+                 class="block px-3 py-2 text-xs text-gray-700 hover:bg-orange-50 hover:text-orange-600 rounded transition-colors duration-150">
+                <i class="fa-solid fa-angle-right text-orange-400 mr-1 text-[10px]"></i>
+                {{ subcategory.name }}
+              </a>
+              {% endfor %}
+            </div>
             {% else %}
-            <i class="fa-solid fa-tag text-[var(--primary)] w-6 h-6"></i>
+            <div class="px-4 py-6 text-center">
+              <p class="text-xs text-gray-400">No subcategories</p>
+            </div>
             {% endif %}
-            <span class="truncate text-sm font-medium text-gray-700 hover:text-[var(--primary)]">{{ category.name }}</span>
-          </a>
-        </li>
-        {% empty %}
-        <li class="px-4 py-2 text-gray-500">No categories available</li>
-        {% endfor %}
-      </ul>
+          </div>
+          {% empty %}
+          <div class="col-span-4 px-4 py-8 text-center text-gray-500">
+            <i class="fa-solid fa-inbox text-3xl mb-2 text-gray-300"></i>
+            <p class="text-sm">No categories available</p>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
     </div>
 
     <!-- Search -->
-    <form action="{% url 'search' %}" method="get" class="flex flex-1 max-w-xl mx-6 border border-gray-300 rounded overflow-hidden shadow-sm">
-      <input type="text" name="q" placeholder="Search products..." class="flex-1 px-4 py-2 focus:outline-none text-sm">
-      <button type="submit" class="px-4 bg-[var(--bg-brown)] text-white hover:bg-gray-800 cursor-pointer transition">
+    <form action="{% url 'search' %}" method="get" class="flex flex-1 max-w-xl mx-6 border border-gray-300 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+      <input type="text" name="q" placeholder="Search for products..." 
+             class="flex-1 px-4 py-2.5 focus:outline-none text-sm bg-gray-50 focus:bg-white transition">
+      <button type="submit" class="px-5 bg-orange-500 text-white hover:bg-orange-600 cursor-pointer transition-colors duration-200">
         <i class="fa-solid fa-magnifying-glass"></i>
       </button>
     </form>
 
     <!-- Account & Cart -->
-    <div class="flex items-center space-x-3">
+    <div class="flex items-center space-x-3 flex-shrink-0">
       {% if user.is_authenticated %}
-      <a href="{% url 'customer_profile' %}" class="flex items-center gap-2 border border-gray-300 rounded-lg px-3 py-2 hover:bg-[var(--bg-brown)] hover:text-white transition">
+      <a href="{% url 'customer_profile' %}" 
+         class="flex items-center gap-2 border border-gray-300 rounded-lg px-3 py-2 hover:bg-orange-500 hover:text-white hover:border-orange-500 transition-all duration-200">
         {% if user.profile.avatar %}
-        <img src="{{ user.profile.avatar.url }}" class="w-6 h-6 rounded-full object-cover">
+        <img src="{{ user.profile.avatar.url }}" class="w-6 h-6 rounded-full object-cover ring-2 ring-gray-200">
         {% else %}
         <i class="fa-regular fa-user text-lg"></i>
         {% endif %}
-        <span>{{ user.first_name|default:"User" }}</span>
+        <span class="font-medium text-sm">{{ user.first_name|default:"User" }}</span>
       </a>
       {% else %}
-      <a href="{% url 'login_page' %}" class="border border-gray-300 rounded-lg px-3 py-2 flex items-center gap-2 hover:bg-[var(--bg-brown)] hover:text-white transition">
-        <i class="fa-regular fa-user text-lg"></i><span>Account</span>
+      <a href="{% url 'login_page' %}" 
+         class="border border-gray-300 rounded-lg px-3 py-2 flex items-center gap-2 hover:bg-orange-500 hover:text-white hover:border-orange-500 transition-all duration-200">
+        <i class="fa-regular fa-user text-lg"></i>
+        <span class="font-medium text-sm">Account</span>
       </a>
       {% endif %}
 
-      <a href="{% url 'carts' %}" class="relative border border-gray-300 rounded-lg px-3 py-2 flex items-center gap-2 hover:bg-[var(--bg-brown)] hover:text-white transition">
-        <i class="fa-solid fa-cart-shopping"></i><span>Cart</span>
-        <span id="desktopCartBadge" class="absolute -top-2 -right-2 w-5 h-5 bg-[var(--bg-brown)] text-white text-xs rounded-full flex items-center justify-center">{{ cart_count }}</span>
+      <a href="{% url 'carts' %}" 
+         class="relative border border-gray-300 rounded-lg px-3 py-2 flex items-center gap-2 hover:bg-orange-500 hover:text-white hover:border-orange-500 transition-all duration-200">
+        <i class="fa-solid fa-cart-shopping text-lg"></i>
+        <span class="font-medium text-sm">Cart</span>
+        <span id="desktopCartBadge" 
+              class="absolute -top-2 -right-2 min-w-[20px] h-5 px-1.5 bg-orange-600 text-white text-xs rounded-full flex items-center justify-center font-semibold shadow-md">
+          {{ cart_count }}
+        </span>
       </a>
     </div>
   </div>
 
   <!-- Desktop Nav Menu -->
-<nav class="hidden lg:flex justify-center container mx-auto px-4 py-2 space-x-6 bg-[var(--bg-light)] shadow-inner text-sm font-medium items-center">
-  <a href="{% url 'home' %}" class="flex items-center gap-1 pb-1 {% if request.path == '/' %}text-[var(--primary)] font-bold border-b-2 border-[var(--primary)]{% else %}text-gray-600 hover:text-[var(--primary)]{% endif %}">
-    <i class="fa-solid fa-house"></i> Home
-  </a>
+  <nav class="hidden lg:flex justify-center container mx-auto px-4 py-3 space-x-6 bg-orange-50 shadow-inner text-sm font-medium items-center">
+    <a href="{% url 'home' %}" 
+       class="flex items-center gap-2 pb-1 transition-all duration-200 {% if request.path == '/' %}text-orange-600 font-bold border-b-2 border-orange-600{% else %}text-gray-700 hover:text-orange-600{% endif %}">
+      <i class="fa-solid fa-house"></i> Home
+    </a>
 
-  <a href="{% url 'all_collections' %}" class="flex items-center gap-1 pb-1 {% if request.path == '/all-collections/' %}text-[var(--primary)] font-bold border-b-2 border-[var(--primary)]{% else %}text-gray-600 hover:text-[var(--primary)]{% endif %}">
-    <i class="fa-solid fa-th-large"></i> All Collections
-  </a>
+    <a href="{% url 'all_collections' %}" 
+       class="flex items-center gap-2 pb-1 transition-all duration-200 {% if request.path == '/all-collections/' %}text-orange-600 font-bold border-b-2 border-orange-600{% else %}text-gray-700 hover:text-orange-600{% endif %}">
+      <i class="fa-solid fa-th-large"></i> All Collections
+    </a>
 
-  <a href="{% url 'vendors' %}" class="flex items-center gap-1 pb-1 {% if request.path == '/vendors/' %}text-[var(--primary)] font-bold border-b-2 border-[var(--primary)]{% else %}text-gray-600 hover:text-[var(--primary)]{% endif %}">
-    <i class="fa-solid fa-store"></i> Our Vendors
-  </a>
+    <a href="{% url 'vendors' %}" 
+       class="flex items-center gap-2 pb-1 transition-all duration-200 {% if request.path == '/vendors/' %}text-orange-600 font-bold border-b-2 border-orange-600{% else %}text-gray-700 hover:text-orange-600{% endif %}">
+      <i class="fa-solid fa-store"></i> Our Vendors
+    </a>
 
-  <a href="{% url 'new_arrivals' %}" class="flex items-center gap-1 pb-1 {% if request.path == '/new-arrivals/' %}text-[var(--primary)] font-bold border-b-2 border-[var(--primary)]{% else %}text-gray-600 hover:text-[var(--primary)]{% endif %}">
-    <i class="fa-solid fa-star"></i> New Arrivals
-  </a>
+    <a href="{% url 'new_arrivals' %}" 
+       class="flex items-center gap-2 pb-1 transition-all duration-200 {% if request.path == '/new-arrivals/' %}text-orange-600 font-bold border-b-2 border-orange-600{% else %}text-gray-700 hover:text-orange-600{% endif %}">
+      <i class="fa-solid fa-star"></i> New Arrivals
+    </a>
 
-  <!-- Join as Vendor Button -->
-   {% if not user.is_authenticated %}
-  <a href="{% url 'become_vendor_page'%}" class=" px-4 py-2 bg-[var(--primary)] text-white font-semibold rounded-lg hover:bg-opacity-90 transition flex items-center gap-2 shadow-md hover:shadow-lg">
-    <i class="fa-solid fa-user-plus"></i> Become a Vendor
-  </a>
-  {%endif%}
-</nav>
-
+    {% if not user.is_authenticated %}
+    <a href="{% url 'become_vendor_page'%}" 
+       class="px-4 py-2 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 transition-all duration-200 flex items-center gap-2 shadow-md hover:shadow-lg hover:scale-105">
+      <i class="fa-solid fa-user-plus"></i> Become a Vendor
+    </a>
+    {% endif %}
+  </nav>
 </header>
 
-
-
 <!-- 📱 Mobile Navigation -->
-<!-- 🔹 Top Row: Logo + Search + Cart -->
+<!-- Top Row: Logo + Search + Language + Cart -->
 <div class="lg:hidden fixed top-0 inset-x-0 bg-white shadow-md z-50">
-  <div class="flex items-center justify-between px-4 py-2">
+  <div class="flex items-center justify-between px-3 py-2">
     <!-- Logo -->
-    <a href="{% url 'home' %}" class="flex items-center">
+    <a href="{% url 'home' %}" class="flex items-center flex-shrink-0">
       <img src="{{organization.logo.url}}" alt="Hello Bajar" class="h-9 w-auto">
     </a>
 
     <!-- Search -->
-    <form action="{% url 'search' %}" method="get" class="flex-1 mx-3">
+    <form action="{% url 'search' %}" method="get" class="flex-1 mx-2">
       <div class="relative">
         <input name="q" type="text" placeholder="Search..."
-          class="w-full px-3 py-2 pr-9 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[var(--primary)] outline-none shadow-sm">
-        <button type="submit" class="absolute right-2 top-2 text-gray-500 hover:text-[var(--primary)]">
-          <i class="fa-solid fa-magnifying-glass"></i>
+          class="w-full px-3 py-2 pr-9 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 outline-none shadow-sm bg-gray-50">
+        <button type="submit" class="absolute right-2 top-2.5 text-gray-500 hover:text-orange-500">
+          <i class="fa-solid fa-magnifying-glass text-sm"></i>
         </button>
       </div>
     </form>
 
-    
-<!-- Language Selector -->
-<div id="language_selector" class="flex items-center gap-2 justify-end sm:justify-start text-sm">
-    <div class="flex items-center gap-2 bg-gray-100 px-3 py-2 rounded-md shadow-sm hover:shadow-md transition">
-        <i class="bi bi-globe-americas text-blue-600 text-lg"></i>
-        <select id="custom_translate" class="bg-transparent text-gray-700  outline-none cursor-pointer font-medium">
-            <option value="en">English</option>
-            <option value="ne">Nepali</option>
-        </select>
+    <!-- Language Selector (Mobile) -->
+    <div class="flex items-center gap-1 flex-shrink-0">
+      <select id="custom_translate_mobile" class="bg-gray-100 text-gray-700 px-2 py-1.5 rounded-md text-xs outline-none cursor-pointer font-medium border border-gray-200">
+        <option value="en">EN</option>
+        <option value="ne">NP</option>
+      </select>
     </div>
-</div>
-
 
     <!-- Cart -->
-    <a href="{% url 'carts' %}" class="relative p-2 rounded-lg hover:bg-[var(--bg-brown)] hover:text-white transition duration-200">
-      <i class="fa-solid fa-cart-shopping text-lg"></i>
+    <a href="{% url 'carts' %}" class="relative p-2 rounded-lg hover:bg-orange-100 transition duration-200 flex-shrink-0">
+      <i class="fa-solid fa-cart-shopping text-lg text-gray-700"></i>
       <span id="mobileCartBadge"
-        class="absolute -top-1 -right-1 w-4 h-4 bg-[var(--bg-brown)] text-white text-[10px] rounded-full flex items-center justify-center font-semibold">
+        class="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 bg-orange-500 text-white text-[10px] rounded-full flex items-center justify-center font-semibold">
         {{ cart_count }}
       </span>
     </a>
   </div>
+
+  <!-- Mobile Category Bar (Horizontal Scroll) -->
+  <div class="border-t border-gray-200 bg-white overflow-x-auto hide-scrollbar">
+    <div class="flex items-center gap-2 px-3 py-2 whitespace-nowrap">
+      <!-- Category Dropdown Button -->
+      <button id="mobileCategoryBtn" 
+              class="flex items-center gap-2 px-3 py-1.5 bg-orange-500 text-white rounded-lg text-xs font-semibold shadow-sm hover:bg-orange-600 transition flex-shrink-0 cursor-pointer">
+        <i class="fa-solid fa-bars"></i>
+        <span>Categories</span>
+      </button>
+
+      <!-- Quick Category Links -->
+      {% for category in categories|slice:":5" %}
+      <a href="{% url 'category_details' category.slug %}" 
+         class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-xs font-medium hover:bg-orange-100 hover:text-orange-600 transition flex-shrink-0">
+        {{ category.name }}
+      </a>
+      {% endfor %}
+    </div>
+  </div>
 </div>
 
-<!-- 🔹 Bottom Navigation (Fixed Bottom) -->
-<div class="lg:hidden fixed bottom-0 inset-x-0 bg-white border-t border-gray-200 shadow-inner py-2 text-xs font-medium text-gray-700 z-100">
+<!-- Mobile Category Sidebar with Accordion Subcategories -->
+<div id="mobileCategorySidebar" class="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+  <div class="absolute left-0 top-0 bottom-0 w-80 max-w-[85vw] bg-white shadow-2xl overflow-y-auto transform -translate-x-full transition-transform duration-300" id="sidebarContent">
+    <!-- Sidebar Header -->
+    <div class="sticky top-0 bg-orange-500 text-white px-4 py-4 flex items-center justify-between z-10 shadow-md">
+      <h3 class="font-bold text-lg flex items-center gap-2">
+        <i class="fa-solid fa-layer-group"></i>
+        Categories
+      </h3>
+      <button id="closeSidebar" class="text-white hover:text-gray-200 text-2xl cursor-pointer">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <!-- Category Accordion List -->
+    <div class="divide-y divide-gray-100">
+      {% for category in categories %}
+      <div class="mobile-category-item">
+        <!-- Category Header with Toggle -->
+        <div class="flex items-center justify-between px-4 py-3 hover:bg-orange-50 transition-colors">
+          <a href="{% url 'category_details' category.slug %}" 
+             class="flex items-center gap-3 flex-1">
+            {% if category.image %}
+            <img src="{{ category.image.url }}" class="w-10 h-10 rounded-lg object-cover shadow-sm" alt="{{ category.name }}">
+            {% else %}
+            <div class="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center">
+              <i class="fa-solid fa-tag text-orange-500"></i>
+            </div>
+            {% endif %}
+            <span class="font-medium text-gray-800 text-sm">{{ category.name }}</span>
+          </a>
+          {% if category.subcategories.exists %}
+          <button class="toggle-subcategory p-2 text-gray-400 hover:text-orange-500">
+            <i class="fa-solid fa-chevron-down text-xs transition-transform"></i>
+          </button>
+          {% endif %}
+        </div>
+
+        <!-- Subcategories (Hidden by default) -->
+        {% if category.subcategories.exists %}
+        <div class="subcategory-list hidden bg-gray-50 px-4 py-2">
+          {% for subcategory in category.subcategories.all %}
+          <a href="{% url 'category_details' subcategory.slug %}" 
+             class="block px-3 py-2 text-sm text-gray-700 hover:text-orange-600 hover:bg-white rounded transition-colors">
+            <i class="fa-solid fa-circle text-[6px] text-orange-400 mr-2"></i>
+            {{ subcategory.name }}
+          </a>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+      {% empty %}
+      <div class="px-4 py-8 text-center text-gray-500">
+        <i class="fa-solid fa-inbox text-4xl mb-2 text-gray-300"></i>
+        <p class="text-sm">No categories available</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<!-- Bottom Navigation (Fixed) -->
+<div class="lg:hidden fixed bottom-0 inset-x-0 bg-white border-t border-gray-200 shadow-2xl py-2 text-xs font-medium text-gray-700 z-40">
   <div class="flex justify-around items-center">
-    <a href="{% url 'home' %}" class="flex flex-col items-center gap-1 transition-all duration-200 {% if request.path == '/' %}text-[var(--primary)] scale-110{% else %}hover:text-[var(--primary)]{% endif %}">
+    <a href="{% url 'home' %}" 
+       class="flex flex-col items-center gap-1 transition-all duration-200 {% if request.path == '/' %}text-orange-600 scale-110{% else %}hover:text-orange-600{% endif %}">
       <i class="fa-solid fa-house text-lg"></i>
-      <span>Home</span>
+      <span class="text-[10px]">Home</span>
     </a>
 
-    
-
-    <a href="{% url 'all_collections' %}" class="flex flex-col items-center gap-1 transition-all duration-200 {% if request.path == '/all-collections/' %}text-[var(--primary)] scale-110{% else %}hover:text-[var(--primary)]{% endif %}">
+    <a href="{% url 'all_collections' %}" 
+       class="flex flex-col items-center gap-1 transition-all duration-200 {% if request.path == '/all-collections/' %}text-orange-600 scale-110{% else %}hover:text-orange-600{% endif %}">
       <i class="fa-solid fa-layer-group text-lg"></i>
-      <span>Collections</span>
+      <span class="text-[10px]">Collections</span>
     </a>
 
-    <a href="{% url 'vendors' %}" class="flex flex-col items-center gap-1 transition-all duration-200 {% if request.path == '/vendors/' %}text-[var(--primary)] scale-110{% else %}hover:text-[var(--primary)]{% endif %}">
+    <a href="{% url 'vendors' %}" 
+       class="flex flex-col items-center gap-1 transition-all duration-200 {% if request.path == '/vendors/' %}text-orange-600 scale-110{% else %}hover:text-orange-600{% endif %}">
       <i class="fa-solid fa-store text-lg"></i>
-      <span>Vendors</span>
+      <span class="text-[10px]">Vendors</span>
     </a>
 
-    <a href="{% url 'new_arrivals' %}" class="flex flex-col items-center gap-1 transition-all duration-200 {% if request.path == '/new-arrivals/' %}text-[var(--primary)] scale-110{% else %}hover:text-[var(--primary)]{% endif %}">
+    <a href="{% url 'new_arrivals' %}" 
+       class="flex flex-col items-center gap-1 transition-all duration-200 {% if request.path == '/new-arrivals/' %}text-orange-600 scale-110{% else %}hover:text-orange-600{% endif %}">
       <i class="fa-solid fa-star text-lg"></i>
-      <span>New</span>
+      <span class="text-[10px]">New</span>
     </a>
 
-    <a href="{% if user.is_authenticated %} {% url 'customer_profile' %} {%else%} {% url 'login_page'%} {% endif %}" class="flex flex-col items-center gap-1 transition-all duration-200 {% if request.path == '/login/' %}text-[var(--primary)] scale-110{% else %}hover:text-[var(--primary)]{% endif %}">
+    <a href="{% if user.is_authenticated %}{% url 'customer_profile' %}{% else %}{% url 'login_page' %}{% endif %}" 
+       class="flex flex-col items-center gap-1 transition-all duration-200 {% if request.path == '/login/' %}text-orange-600 scale-110{% else %}hover:text-orange-600{% endif %}">
       <i class="fa-regular fa-user text-lg"></i>
-      <span>Account</span>
+      <span class="text-[10px]">Account</span>
     </a>
   </div>
 </div>
+
+<style>
+  /* Hide scrollbar for mobile category bar */
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  /* Custom scrollbar for subcategories */
+  .subcategory-scroll::-webkit-scrollbar {
+    width: 4px;
+  }
+  .subcategory-scroll::-webkit-scrollbar-track {
+    background: #f1f1f1;
+  }
+  .subcategory-scroll::-webkit-scrollbar-thumb {
+    background: #fb923c;
+    border-radius: 4px;
+  }
+
+  /* Desktop Mega Menu Dropdown */
+  .category-dropdown-wrapper:hover .category-mega-menu {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .category-dropdown-wrapper:hover .category-trigger i.fa-chevron-down {
+    transform: rotate(180deg);
+  }
+
+  /* Mega Menu stays visible */
+  .category-mega-menu {
+    pointer-events: auto;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+  }
+
+  .category-dropdown-wrapper:not(:hover) .category-mega-menu {
+    transition-delay: 0.2s;
+  }
+
+  /* Mobile Subcategory Accordion */
+  .subcategory-list {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+  }
+
+  .subcategory-list.active {
+    max-height: 500px;
+  }
+
+  .toggle-subcategory i {
+    transition: transform 0.3s ease;
+  }
+
+  .toggle-subcategory.active i {
+    transform: rotate(180deg);
+  }
+</style>
+
+<script>
+// Mobile Category Sidebar Toggle
+document.getElementById('mobileCategoryBtn')?.addEventListener('click', function() {
+  const sidebar = document.getElementById('mobileCategorySidebar');
+  const content = document.getElementById('sidebarContent');
+  sidebar.classList.remove('hidden');
+  setTimeout(() => content.classList.add('translate-x-0'), 10);
+});
+
+document.getElementById('closeSidebar')?.addEventListener('click', function() {
+  const sidebar = document.getElementById('mobileCategorySidebar');
+  const content = document.getElementById('sidebarContent');
+  content.classList.remove('translate-x-0');
+  setTimeout(() => sidebar.classList.add('hidden'), 300);
+});
+
+// Close sidebar when clicking outside
+document.getElementById('mobileCategorySidebar')?.addEventListener('click', function(e) {
+  if (e.target === this) {
+    document.getElementById('closeSidebar').click();
+  }
+});
+
+// Mobile Subcategory Accordion Toggle
+document.querySelectorAll('.toggle-subcategory').forEach(button => {
+  button.addEventListener('click', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const categoryItem = this.closest('.mobile-category-item');
+    const subcategoryList = categoryItem.querySelector('.subcategory-list');
+    
+    // Toggle active states
+    this.classList.toggle('active');
+    subcategoryList.classList.toggle('active');
+    subcategoryList.classList.toggle('hidden');
+  });
+});
+
+// Sync mobile language selector
+document.getElementById('custom_translate_mobile')?.addEventListener('change', function() {
+  document.getElementById('custom_translate').value = this.value;
+  document.getElementById('custom_translate').dispatchEvent(new Event('change'));
+});
+</script>

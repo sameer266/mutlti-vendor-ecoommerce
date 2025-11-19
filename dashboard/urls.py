@@ -53,9 +53,10 @@ urlpatterns = [
     path('odrer-details/<str:order_number>/',views.admin_order_details,name='admin_order_details'),
     path('orders/pending/', views.admin_orders_pending, name='admin_orders_pending'),
     path('orders/delivered/', views.admin_orders_delivered, name='admin_orders_delivered'),
-    path('orders/<str:order_number>/status/', views.admin_order_change_status, name='admin_order_change_status'),
     path('orders/<str:order_number>/items/', views.admin_order_items_json, name='admin_order_items_json'),
     path('orders/<str:order_number>/delete/', views.admin_order_delete, name='admin_order_delete'),
+    
+    path('orders/<str:order_number>/status/', views.admin_order_change_status, name='admin_order_change_status'),
     
     path('orders/<str:order_number>/invoice/',views.admin_order_invoice_view,name="admin_orders_invoice_list"),
     path('invoice/<str:invoice_number>/', views.admin_invoice_detail, name='admin_invoice_detail'),
@@ -139,7 +140,7 @@ urlpatterns = [
     path('vendor/orders/pending/', views.vendor_orders_pending, name='vendor_orders_pending'),
     path('vendor/orders/delivered/', views.vendor_orders_delivered, name='vendor_orders_delivered'),
     path('vendor/orders/<str:order_number>/invoice/',views.vendor_order_invoice_view,name="vendor_orders_invoice_list"),
-    
+    path('orders/payment/<str:order_number>/status/',views.vendor_order_update_payment_status,name="vendor_payment_change_status"),    
     
     path('vendor/payout-lists/', views.vendor_payouts_list, name='vendor_payout_list'),
     path('vendor/payout-requests/add/', views.vendor_payout_request_add, name='vendor_payout_requests_add'),

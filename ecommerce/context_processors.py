@@ -6,7 +6,7 @@ def global_context(request):
     Works for both authenticated and guest users.
     """
     categories = Category.objects.filter(is_active=True).order_by('order', 'name')
-
+    
     if request.user.is_authenticated:
         cart_items = Cart.objects.filter(user=request.user)
     else:

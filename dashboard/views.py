@@ -1033,6 +1033,8 @@ def admin_order_change_status(request, order_number):
     return JsonResponse({'success': True})
 
 
+    
+
 @login_required
 def admin_order_items_json(request, order_number):
     order = get_object_or_404(Order, order_number=order_number)
@@ -1314,11 +1316,9 @@ def admin_coupon_add(request):
     if request.method == 'POST':
         coupon = Coupon.objects.create(
             code=request.POST.get('code'),
-            description=request.POST.get('description', ''),
             discount_type=request.POST.get('discount_type'),
             discount_value=Decimal(request.POST.get('discount_value')),
-            min_purchase=Decimal(request.POST.get('min_purchase', 0)),
-            max_discount=Decimal(request.POST.get('max_discount')) if request.POST.get('max_discount') else None,
+            min_purchase=Decimal(request.POST.get('min_purchase')),
             usage_limit=int(request.POST.get('usage_limit')) if request.POST.get('usage_limit') else None,
             usage_limit_per_user=int(request.POST.get('usage_limit_per_user')) if request.POST.get('usage_limit_per_user') else None,
             valid_from=request.POST.get('valid_from'),
@@ -1332,11 +1332,9 @@ def admin_coupon_update(request, pk):
     coupon = get_object_or_404(Coupon, pk=pk)
     if request.method == 'POST':
         coupon.code = request.POST.get('code')
-        coupon.description = request.POST.get('description', '')
         coupon.discount_type = request.POST.get('discount_type')
         coupon.discount_value = Decimal(request.POST.get('discount_value'))
-        coupon.min_purchase = Decimal(request.POST.get('min_purchase', 0))
-        coupon.max_discount = Decimal(request.POST.get('max_discount')) if request.POST.get('max_discount') else None
+        coupon.min_purchase=Decimal(request.POST.get('min_purchase'))
         coupon.usage_limit = int(request.POST.get('usage_limit')) if request.POST.get('usage_limit') else None
         coupon.usage_limit_per_user = int(request.POST.get('usage_limit_per_user')) if request.POST.get('usage_limit_per_user') else None
         coupon.valid_from = request.POST.get('valid_from')
@@ -1811,6 +1809,30 @@ def vendor_order_invoice_view(request,order_number):
     invoices=Invoice.objects.filter(order=order)
     return render(request,'vendor/order/invoice_list.html',{'invoices':invoices,'order_number':order_number})
     
+
+@login_required
+def vendor_order_update_payment_status(request, order_number):
+    
+    if not Vendor.objects.filter(user=request.user):
+        messages.error(request,"Permission denied ")
+        return JsonResponse({'success':False},status=403)
+        
+    order = get_object_or_404(Order, order_number=order_number)
+    new_payment_status = request.POST.get('payment_status')
+    transaction_id = request.POST.get('transaction_id', '').strip()
+
+    order.payment_status = new_payment_status
+    if transaction_id:
+        order.transaction_id = transaction_id
+    if new_payment_status == 'paid' and order.status == 'pending':
+        order.status = 'delivered'
+    order.save()
+    messages.success(request, f'Payment status updated to "{new_payment_status}" for order {order_number}.')
+
+    return JsonResponse({
+        'success': True,
+       
+    })
     
 # =============================
 # Vendor Payouts

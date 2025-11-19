@@ -93,43 +93,42 @@
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 mb-16">
 
     <!-- Product Images -->
-    <div class="space-y-4">
-      <!-- Main Image with Magnifier -->
-      <div class="relative aspect-square bg-white rounded-lg border border-gray-200 overflow-hidden image-magnifier-container" id="imageContainer">
+   <div class="space-y-4">
+    <!-- Main Image with Magnifier -->
+    <div class="relative aspect-square bg-white rounded-lg border border-gray-200 overflow-hidden image-magnifier-container" 
+         id="imageContainer">
+      <img src="{{ product.main_image.url }}" 
+           alt="{{ product.name }}" 
+           class="w-full h-full object-contain p-8 transition-opacity duration-400"
+           id="mainImage">
+      <div class="magnifier-glass" id="magnifierGlass"></div>
+    </div>
+    
+    <!-- Thumbnails -->
+    <div class="grid grid-cols-5 gap-3">
+      <div class="thumbnail-item active aspect-square bg-white rounded-lg border-2 border-gray-300 overflow-hidden cursor-pointer" 
+           data-src="{{ product.main_image.url }}">
         <img src="{{ product.main_image.url }}" 
              alt="{{ product.name }}" 
-             class="w-full h-full object-contain p-8"
-             id="mainImage">
-        <div class="magnifier-glass" id="magnifierGlass"></div>
+             class="w-full h-full object-contain p-3">
       </div>
-      
-      <!-- Thumbnail Images -->
-      <div class="grid grid-cols-5 gap-2">
-        <div class="thumbnail-item active aspect-square bg-white rounded-lg border border-gray-300 overflow-hidden cursor-pointer" 
-             data-image="{{ product.main_image.url }}">
-          <img src="{{ product.main_image.url }}" 
-               alt="{{ product.name }}" 
-               class="w-full h-full object-contain p-2">
-        </div>
-        {% if product.images.all %}
-          {% for image in product.images.all %}
-          <div class="thumbnail-item aspect-square bg-white rounded-lg border border-gray-300 overflow-hidden cursor-pointer" 
-               data-image="{{ image.image.url }}">
-            <img src="{{ image.image.url }}" 
-                 alt="{{ product.name }}" 
-                 class="w-full h-full object-contain p-2">
-          </div>
-          {% endfor %}
-        {% endif %}
+      {% for image in product.images.all %}
+      <div class="thumbnail-item aspect-square bg-white rounded-lg border-2 border-gray-300 overflow-hidden cursor-pointer" 
+           data-src="{{ image.image.url }}">
+        <img src="{{ image.image.url }}" 
+             alt="{{ product.name }}" 
+             class="w-full h-full object-contain p-3">
       </div>
+      {% endfor %}
     </div>
+  </div>
 
   <!-- Product Info Card -->
-<div class="bg-white shadow-lg rounded-xl p-6 max-w-xl mx-auto space-y-6">
+<div class="bg-white shadow-lg rounded-xl p-6 max-w-xl mx-auto space-y-4">
 
   <!-- Title & Vendor -->
   <div>
-    <p class="text-1xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
+    <p class="text-1xl sm:text-3xl lg:text-2xl font-medium text-gray-900 mb-2">
       {{ product.name }}
     </p>
     <a href="{% url 'vendor_details' product.vendor.slug %}" 
@@ -176,29 +175,38 @@
   </div>
 
 
-  <!-- Shipping Cost -->
-<div class="mt-2 text-sm text-gray-700">
-  Shipping: 
-  {% if product.shipping_cost|default:0 == 0 %}
-    <span class="text-green-600 font-semibold">Free</span>
-  {% else %}
-    Rs {{ product.shipping_cost|floatformat:0 }}
-  {% endif %}
-</div>
+ <!-- Shipping Cost + Delivery Info Card -->
+<!-- Shipping & Delivery Info – Clean & Classic -->
+<div class="mt-4 p-5 bg-gray-50/70 border border-gray-200 rounded-xl">
+  <div class="space-y-4 text-sm text-gray-700">
 
+    <!-- Shipping Cost -->
+    <div class="flex justify-between items-center">
+      <div class="flex items-center gap-3">
+        <i class="fas fa-truck text-gray-500 text-base"></i>
+        <span class="font-medium">Shipping</span>
+      </div>
 
-<!-- Estimated Delivery - Compact Version -->
-{% if estimated_delivery_str %}
-<div class="mt-2 flex items-center gap-2 p-2 bg-green-50 rounded-lg border border-green-200">
-  <i class="fas fa-shipping-fast text-green-600"></i>
-  <span class="text-xs sm:text-sm text-gray-700">
-    Get it by 
-    <span class="font-bold text-green-700">
-      {{ estimated_delivery_str }}
-    </span>
-  </span>
+      {% if product.shipping_cost|default:0 == 0 %}
+        <span class="text-green-700 font-semibold">Free</span>
+      {% else %}
+        <span class="font-semibold text-gray-900">Rs {{ product.shipping_cost|floatformat:0 }}</span>
+      {% endif %}
+    </div>
+
+    <!-- Estimated Delivery (only if exists) -->
+    {% if estimated_delivery_str %}
+    <div class="flex justify-between items-center">
+      <div class="flex items-center gap-3">
+        <i class="fas fa-calendar-alt text-gray-500 text-base"></i>
+        <span class="font-medium">Estimated Delivery</span>
+      </div>
+      <span class="font-semibold text-gray-900">{{ estimated_delivery_str }}</span>
+    </div>
+    {% endif %}
+
+  </div>
 </div>
-{% endif %}
 
 
 
@@ -277,7 +285,6 @@
 
   </div>
 
-<!-- Product Description & Reviews -->
 <!-- Product Tabs Section -->
 <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-16">
   
@@ -311,7 +318,7 @@
           Product Description
         </h2>
         
-        <div class="product-description prose prose-xs sm:prose-sm max-w-none text-gray-700 leading-relaxed">
+        <div class="product-description max-w-none text-gray-700  text-sm ">
           {{ product.description|safe }}
         </div>
       </div>
@@ -676,6 +683,80 @@
 <script>
 // Tab Switching Functionality
 document.addEventListener('DOMContentLoaded', function() {
+
+
+  const container = document.getElementById('imageContainer');
+  const mainImage = document.getElementById('mainImage');
+  const glass = document.getElementById('magnifierGlass');
+  const thumbnails = document.querySelectorAll('.thumbnail-item');
+
+  let currentImageSrc = mainImage.src;
+
+  // Update main image when thumbnail is clicked
+  thumbnails.forEach(thumb => {
+    thumb.addEventListener('click', function() {
+      const newSrc = this.getAttribute('data-src');
+
+      // Update active thumbnail
+      thumbnails.forEach(t => t.classList.remove('active'));
+      this.classList.add('active');
+
+      // Fade out, change src, fade in
+      mainImage.style.opacity = '0.5';
+      setTimeout(() => {
+        mainImage.src = newSrc;
+        currentImageSrc = newSrc;
+        mainImage.style.opacity = '1';
+      }, 200);
+    });
+  });
+
+  // Magnifier functionality
+  function magnify(e) {
+    if (window.innerWidth <= 1024) return; // Disable on mobile
+
+    const rect = container.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    // Show glass
+    glass.classList.add('active');
+
+    // Position glass
+    glass.style.left = (x - glass.offsetWidth / 2) + 'px';
+    glass.style.top = (y - glass.offsetHeight / 2) + 'px';
+
+    // Calculate zoom ratio
+    const zoom = 2.5;
+    const bgX = -(x * zoom - glass.offsetWidth / 2);
+    const bgY = -(y * zoom - glass.offsetHeight / 2);
+
+    glass.style.backgroundImage = `url('${currentImageSrc}')`;
+    glass.style.backgroundSize = `${container.offsetWidth * zoom}px ${container.offsetHeight * zoom}px`;
+    glass.style.backgroundPosition = `${bgX}px ${bgY}px`;
+  }
+
+  // Mouse move - show magnifier
+  container.addEventListener('mousemove', magnify);
+
+  // Mouse enter - show glass
+  container.addEventListener('mouseenter', function() {
+    if (window.innerWidth > 1024) {
+      glass.classList.add('active');
+    }
+  });
+
+  // Mouse leave - hide glass
+  container.addEventListener('mouseleave', function() {
+    glass.classList.remove('active');
+  });
+
+  // Touch devices - optional tap to zoom (or just disable)
+  container.addEventListener('touchstart', function(e) {
+    e.preventDefault();
+  });
+
+
   const tabs = document.querySelectorAll('.product-tab');
   const contents = document.querySelectorAll('.tab-content');
 
@@ -703,14 +784,12 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 
-<script>
-$(document).ready(function() {
+<script>$(document).ready(function() {
   let selectedVariant = null;
   const basePrice = {{ product.price }};
   
-  // Track selected variants with price adjustments
-  let selectedVariantsWithPrice = [];
-  let selectedVariantsWithoutPrice = [];
+  // Track selected variants - organized by type
+  let selectedVariantsMap = new Map(); // key: variant_type, value: {id, hasPrice}
   
   // Toastr helper
   function showToast(message, type = 'info') {
@@ -728,177 +807,46 @@ $(document).ready(function() {
     }
   }
 
-  // Image Magnifier Function
-  function initImageMagnifier() {
-    const container = $('#imageContainer');
-    const mainImage = $('#mainImage');
-    const glass = $('#magnifierGlass');
-
-    if (!container.length || !mainImage.length || !glass.length) return;
-
-    // Check if screen is large enough for magnifier
-    if ($(window).width() < 1024) {
-      glass.hide();
-      return;
-    }
-
-    const zoomLevel = 2.5;
-    let imageLoaded = false;
-
-    // Function to setup magnifier background
-    function setupMagnifier() {
-      const img = mainImage[0];
-      const naturalWidth = img.naturalWidth;
-      const naturalHeight = img.naturalHeight;
-
-      if (naturalWidth && naturalHeight) {
-        glass.css({
-          'background-image': `url('${mainImage.attr('src')}')`,
-          'background-size': `${naturalWidth * zoomLevel}px ${naturalHeight * zoomLevel}px`
-        });
-        imageLoaded = true;
-      }
-    }
-
-    // Handle image load (for both cached and new images)
-    if (mainImage[0].complete && mainImage[0].naturalWidth > 0) {
-      setupMagnifier();
-    } else {
-      mainImage.on('load', setupMagnifier);
-    }
-
-    container.on('mouseenter', function() {
-      if (imageLoaded) {
-        glass.addClass('active');
-      }
-    });
-
-    container.on('mouseleave', function() {
-      glass.removeClass('active');
-    });
-
-    container.on('mousemove', function(e) {
-      if (!imageLoaded) return;
-
-      const containerOffset = container.offset();
-      const containerWidth = container.width();
-      const containerHeight = container.height();
-      
-      const mouseX = e.pageX - containerOffset.left;
-      const mouseY = e.pageY - containerOffset.top;
-
-      const img = mainImage[0];
-      const imgWidth = mainImage.width();
-      const imgHeight = mainImage.height();
-      const imgOffsetX = (containerWidth - imgWidth) / 2;
-      const imgOffsetY = (containerHeight - imgHeight) / 2;
-
-      const relativeX = mouseX - imgOffsetX;
-      const relativeY = mouseY - imgOffsetY;
-
-      if (relativeX < 0 || relativeX > imgWidth || relativeY < 0 || relativeY > imgHeight) {
-        glass.removeClass('active');
-        return;
-      }
-
-      glass.addClass('active');
-
-      const glassWidth = glass.width();
-      const glassHeight = glass.height();
-      const glassHalfW = glassWidth / 2;
-      const glassHalfH = glassHeight / 2;
-
-      let glassX = mouseX - glassHalfW;
-      let glassY = mouseY - glassHalfH;
-
-      glassX = Math.max(0, Math.min(glassX, containerWidth - glassWidth));
-      glassY = Math.max(0, Math.min(glassY, containerHeight - glassHeight));
-
-      glass.css({
-        left: glassX + "px",
-        top: glassY + "px"
-      });
-
-      const scaleX = img.naturalWidth / imgWidth;
-      const scaleY = img.naturalHeight / imgHeight;
-      
-      const bgX = -(relativeX * scaleX * zoomLevel - glassHalfW);
-      const bgY = -(relativeY * scaleY * zoomLevel - glassHalfH);
-
-      glass.css({
-        'background-position': `${bgX}px ${bgY}px`
-      });
-    });
-  }
-
-  // Initialize magnifier
-  initImageMagnifier();
-
-  // Reinitialize on window resize
-  let resizeTimer;
-  $(window).on('resize', function() {
-    clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(function() {
-      initImageMagnifier();
-    }, 250);
-  });
-  
-  // Thumbnail Image Switching
-  $('.thumbnail-item').on('click', function() {
-    const imageUrl = $(this).data('image');
-    const $mainImage = $('#mainImage');
-    
-    $mainImage.css('opacity', '0.5');
-    
-    setTimeout(() => {
-      $mainImage.attr('src', imageUrl);
-      
-      $mainImage.off('load').on('load', function() {
-        initImageMagnifier();
-        $mainImage.css('opacity', '1');
-      });
-      
-      if ($mainImage[0].complete) {
-        initImageMagnifier();
-        $mainImage.css('opacity', '1');
-      }
-    }, 150);
-    
-    $('.thumbnail-item').removeClass('active');
-    $(this).addClass('active');
-  });
-  
-  // Variant Selection - NEW LOGIC
+  // Variant Selection - CORRECTED LOGIC
   $('.variant-option').on('click', function() {
     const $this = $(this);
     const variantId = $this.data('variant-id');
     const priceAdjustment = parseFloat($this.data('price-adjustment')) || 0;
+    const variantType = $this.find('.text-sm.font-medium').text().split(':')[0].trim();
     const isSelected = $this.hasClass('selected');
     
     if (isSelected) {
       // Deselect the variant
       deselectVariant($this);
-      
-      // Remove from tracking arrays
-      if (priceAdjustment !== 0) {
-        selectedVariantsWithPrice = selectedVariantsWithPrice.filter(id => id !== variantId);
-      } else {
-        selectedVariantsWithoutPrice = selectedVariantsWithoutPrice.filter(id => id !== variantId);
-      }
+      selectedVariantsMap.delete(variantType);
     } else {
+      const hasPriceAdjustment = priceAdjustment !== 0;
+      
+      // Check if this variant type is already selected
+      if (selectedVariantsMap.has(variantType)) {
+        showToast(`You already selected a ${variantType} option. Please deselect it first.`, 'warning');
+        return;
+      }
+      
       // Check if trying to select a variant with price adjustment
-      if (priceAdjustment !== 0) {
+      if (hasPriceAdjustment) {
         // Check if another variant with price adjustment is already selected
-        if (selectedVariantsWithPrice.length > 0) {
+        const hasOtherPricedVariant = Array.from(selectedVariantsMap.values())
+          .some(v => v.hasPrice);
+        
+        if (hasOtherPricedVariant) {
           showToast('You can only select one variant with price adjustment', 'warning');
           return;
         }
-        selectedVariantsWithPrice.push(variantId);
-      } else {
-        selectedVariantsWithoutPrice.push(variantId);
       }
       
+      // All checks passed - select the variant
       selectVariant($this);
+      selectedVariantsMap.set(variantType, {
+        id: variantId,
+        hasPrice: hasPriceAdjustment,
+        adjustment: priceAdjustment
+      });
     }
     
     updatePrice();
@@ -918,17 +866,13 @@ $(document).ready(function() {
       .addClass('far fa-circle text-gray-400');
   }
   
-  // Dynamic Price Update - NEW CALCULATION
+  // Dynamic Price Update - CORRECTED CALCULATION
   function updatePrice() {
     let finalPrice = basePrice;
     
-    // Add price adjustments from selected variants
-    const allSelectedVariants = [...selectedVariantsWithPrice, ...selectedVariantsWithoutPrice];
-    
-    allSelectedVariants.forEach(variantId => {
-      const $variant = $(`.variant-option[data-variant-id="${variantId}"]`);
-      const priceAdjustment = parseFloat($variant.data('price-adjustment')) || 0;
-      finalPrice += priceAdjustment;
+    // Add price adjustments from all selected variants
+    selectedVariantsMap.forEach((variant) => {
+      finalPrice += variant.adjustment;
     });
     
     // Update price display
@@ -972,14 +916,14 @@ $(document).ready(function() {
     }
   });
   
-  // Add to Cart - UPDATED TO SEND MULTIPLE VARIANTS
+  // Add to Cart - UPDATED TO SEND ALL VARIANT IDs
   $('.add-to-cart').on('click', function() {
     const $btn = $(this);
     const qty = parseInt($('.qtyInput').val()) || 1;
     const productId = $btn.data('product-id');
     
-    // Collect all selected variant IDs
-    const allSelectedVariants = [...selectedVariantsWithPrice, ...selectedVariantsWithoutPrice];
+    // Collect all selected variant IDs from the Map
+    const allSelectedVariantIds = Array.from(selectedVariantsMap.values()).map(v => v.id);
     
     $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
     
@@ -993,7 +937,7 @@ $(document).ready(function() {
       data: JSON.stringify({
         product_id: productId,
         quantity: qty,
-        variant_ids: allSelectedVariants  // Send array of variant IDs
+        variant_ids: allSelectedVariantIds
       }),
       success: function(response) {
         if (response.success) {
@@ -1005,8 +949,7 @@ $(document).ready(function() {
           $('.variant-option').each(function() {
             deselectVariant($(this));
           });
-          selectedVariantsWithPrice = [];
-          selectedVariantsWithoutPrice = [];
+          selectedVariantsMap.clear();
           updatePrice();
         } else {
           showToast(response.message, 'error');

@@ -141,7 +141,7 @@
             </div>
           {% endif %}
           <input type="file" name="main_image" id="main_image" accept=".jpg,.jpeg,.png,.gif" class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
-          <p class="text-xs text-gray-500 mt-1">Allowed: .jpg, .jpeg, .png, .gif (Max: 5MB)</p>
+          <p class="text-xs text-gray-500 mt-1">Allowed: .jpg, .jpeg, .png, .gif (Max: 15MB)</p>
           <p id="main_image_error" class="text-xs text-red-600 mt-1 hidden">Invalid file format!</p>
         </div>
 
@@ -162,7 +162,7 @@
             <p class="text-xs text-gray-400 mb-2">No gallery images yet</p>
           {% endif %}
           <input type="file" name="gallery_images" id="gallery_images" accept=".jpg,.jpeg,.png,.gif" class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" multiple>
-          <p class="text-xs text-gray-500 mt-1">Multiple images allowed (Max: 5MB each)</p>
+          <p class="text-xs text-gray-500 mt-1">Multiple images allowed (Max: 15MB each)</p>
           <p id="gallery_images_error" class="text-xs text-red-600 mt-1 hidden">One or more files have invalid formats!</p>
         </div>
       </div>
@@ -263,7 +263,7 @@
     const mainImageInput = document.getElementById('main_image');
     const mainImageError = document.getElementById('main_image_error');
     const allowedFormats = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
-    const maxSize = 5 * 1024 * 1024; // 5MB
+    const maxSize = 15 * 1024 * 1024; // 15MB
 
     if (mainImageInput) {
       mainImageInput.addEventListener('change', function(e) {
@@ -273,7 +273,7 @@
             mainImageError.classList.remove('hidden');
             mainImageInput.value = '';
           } else if (file.size > maxSize) {
-            mainImageError.textContent = 'File size must be less than 5MB!';
+            mainImageError.textContent = 'File size must be less than 15MB!';
             mainImageError.classList.remove('hidden');
             mainImageInput.value = '';
           } else {
@@ -300,7 +300,7 @@
           }
           if (file.size > maxSize) {
             hasError = true;
-            galleryError.textContent = 'One or more files exceed 5MB!';
+            galleryError.textContent = 'One or more files exceed 15MB!';
             break;
           }
         }
