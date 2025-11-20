@@ -10,7 +10,7 @@ from django.contrib.auth.models import User
 from django.http import JsonResponse
 from django.contrib import messages
 from .models import (
-    UserRole,  Vendor, Category, Product, ProductImage, ProductVariant, Order, OrderItem, Invoice,
+    UserRole,  Vendor, Category, SubCategory, Product, ProductImage, ProductVariant, Order, OrderItem, Invoice,
     Review, Coupon,  Organization, Newsletter, Contact, 
     Notification, Slider, Banner, VendorCommission, VendorPayoutRequest,VendorWallet,VendorCommission,TaxRate
 )
@@ -417,6 +417,8 @@ def admin_products_list(request):
             Q(name__icontains=search) |
             Q(description__icontains=search) |
             Q(brand__icontains=search) |
+            Q(category__name__icontains=search) |
+            Q(category__subcategories__name__icontains=search) |
             Q(sku__icontains=search)
         )
 
@@ -494,17 +496,26 @@ def admin_products_low_stock(request):
         'categories': categories,
         'vendors': vendors
     })
+    
+    
+def get_subcategories(request,category_id):
+    subcategories=SubCategory.objects.filter(category__id=category_id).values_list('id','name')
+    data=[{'id':id,'name':name} for id,name in subcategories]
+    return JsonResponse(data,safe=False)
 
 @admin_required
 def admin_product_add(request):
     if request.method == 'POST':
         vendor_id = request.POST.get('vendor')
         category_id = request.POST.get('category')
+        subcategory_id=request.POST.get('subcategory')
         vendor = get_object_or_404(Vendor, pk=vendor_id)
         category = get_object_or_404(Category, pk=category_id)
+        subcategory=get_object_or_404(SubCategory,pk=subcategory_id)
         product = Product.objects.create(
             vendor=vendor,
             category=category,
+            subcategory=subcategory,
             name=request.POST.get('name'),
             description=request.POST.get('description'),
             price=Decimal(request.POST.get('price')),
@@ -547,9 +558,10 @@ def admin_product_add(request):
             )
 
         return redirect('admin_products_list')
+    subcategory=SubCategory.objects.all()
     categories = Category.objects.filter(is_active=True)
     vendors = Vendor.objects.filter(is_active=True)
-    return render(request, 'dashboard/pages/product/add_product.html', {'categories': categories, 'vendors': vendors})
+    return render(request, 'dashboard/pages/product/add_product.html', {'categories': categories, 'vendors': vendors,'subcategory':subcategory})
 
 @admin_required
 def admin_product_update(request, pk):
@@ -557,8 +569,10 @@ def admin_product_update(request, pk):
     if request.method == 'POST':
         vendor_id = request.POST.get('vendor')
         category_id = request.POST.get('category')
+        subcategory_id=request.POST.get('subcategory')
         product.vendor = get_object_or_404(Vendor, pk=vendor_id)
         product.category = get_object_or_404(Category, pk=category_id)
+        product.subcategory=get_object_or_404(SubCategory,pk=subcategory_id)
         product.name = request.POST.get('name')
         product.shipping_cost=Decimal(request.POST.get('shipping_cost', '0.00')) 
         product.description = request.POST.get('description')
@@ -607,10 +621,9 @@ def admin_product_update(request, pk):
             variant.price_adjustment = Decimal(existing_price_adjustments[idx]) if idx < len(existing_price_adjustments) and existing_price_adjustments[idx] else Decimal('0')
             try:
                 variant.save()
-            except Exception:
-                # Silently ignore unique constraint conflicts for now
-                pass
-
+            except Exception as e:
+                messages.error(request,f'Error in updating product',str(e))
+                return redirect('admin_products_list')
         # Append new variants from form
         variant_types = request.POST.getlist('variant_type[]')
         variant_names = request.POST.getlist('variant_name[]')
@@ -628,9 +641,10 @@ def admin_product_update(request, pk):
                     name=name,
                     price_adjustment=Decimal(variant_price_adjustments[i]) if i < len(variant_price_adjustments) and variant_price_adjustments[i] else 0,
                 )
-            except Exception:
-                # Ignore duplicates violating unique_together
-                pass
+            except Exception as e:
+                messages.error(request,f'Error in updating product',str(e))
+                return redirect('admin_products_list')
+        messages.success(request,'Product updated successfully')
         return redirect('admin_products_list')
     categories = Category.objects.filter(is_active=True)
     vendors = Vendor.objects.filter(is_active=True)
@@ -644,6 +658,7 @@ def admin_product_update(request, pk):
 def admin_product_delete(request, pk):
     product = get_object_or_404(Product, pk=pk)
     product.delete()
+    messages.success(request,'Product deleted successfully')
     return redirect('admin_products_list')
 
 # Category Management
@@ -686,6 +701,62 @@ def admin_category_delete(request, pk):
     category = get_object_or_404(Category, pk=pk)
     category.delete()
     return redirect('admin_categories_list')
+
+
+# ========================
+
+# Subcategory Management
+
+# ========================
+
+@admin_required
+def admin_subcategory_list(request):
+    subcategories = SubCategory.objects.all()
+    return render(request, 'dashboard/pages/subcategory/subcategory_list.html', {'subcategories': subcategories})
+
+@admin_required
+def admin_subcategory_add(request):
+    if request.method == "POST":
+        name = request.POST.get('name')
+        category_id = request.POST.get('category')
+      
+        category = Category.objects.get(id=category_id)
+        SubCategory.objects.create(
+        name=name,
+        category=category,
+   
+        )
+        messages.success(request, "Subcategory added successfully.")
+        return redirect('admin_subcategory_list')
+    categories = Category.objects.all()
+    return render(request, 'dashboard/pages/subcategory/subcategory_add.html', {'categories': categories})
+
+
+@admin_required
+def admin_subcategory_update(request, subcategory_id):
+    subcategory = SubCategory.objects.get(id=subcategory_id)
+    if request.method == "POST":
+        subcategory.name = request.POST.get('name')
+        category_id = request.POST.get('category')
+        subcategory.category = Category.objects.get(id=category_id)
+        subcategory.save()
+        messages.success(request, "Subcategory updated successfully.")
+        return redirect('admin_subcategory_list')
+    categories = Category.objects.all()
+    return render(request, 'dashboard/pages/subcategory/subcategory_edit.html', {
+        'subcategory': subcategory,
+        'categories': categories
+    })
+
+
+@admin_required
+def admin_subcategory_delete(request, subcategory_id):
+    subcategory = SubCategory.objects.get(id=subcategory_id)
+    subcategory.delete()
+    messages.success(request, "Subcategory deleted successfully.")
+    return redirect('admin_subcategory_list')
+
+
 
 # Order Management
 @admin_required
@@ -1545,12 +1616,15 @@ def vendor_product_add(request):
     if request.method == 'POST':
         try:
             category_id = request.POST.get('category')
+            subcategory_id=request.POST.get('subcategory')
             vendor = Vendor.objects.get(user=request.user)
             category = get_object_or_404(Category, pk=category_id)
+            subcategory=get_object_or_404(SubCategory,pk=subcategory_id)
 
             product = Product.objects.create(
                 vendor=vendor,
                 category=category,
+                subcategory=subcategory,
                 name=request.POST.get('name'),
                 description=request.POST.get('description'),
                 price=Decimal(request.POST.get('price')),
@@ -1609,7 +1683,10 @@ def vendor_product_update(request, pk):
     if request.method == 'POST':
         
         category_id = request.POST.get('category')
+        subcategory_id=request.POST.get('subcategory')
+        
         product.category = get_object_or_404(Category, pk=category_id)
+        product.subcategory=get_object_or_404(SubCategory,pk=subcategory_id)
         product.name = request.POST.get('name')
         product.description = request.POST.get('description')
         product.price = Decimal(request.POST.get('price'))
@@ -1659,8 +1736,8 @@ def vendor_product_update(request, pk):
             try:
                 variant.save()
             except Exception:
-                # Silently ignore unique constraint conflicts for now
-                pass
+                messages.error(request,f'Error in updating product',str(e))
+                return redirect('vendor_products_list')
 
         # Append new variants from form
         variant_types = request.POST.getlist('variant_type[]')
@@ -1679,9 +1756,10 @@ def vendor_product_update(request, pk):
                     name=name,
                     price_adjustment=Decimal(variant_price_adjustments[i]) if i < len(variant_price_adjustments) and variant_price_adjustments[i] else 0,
                 )
-            except Exception:
-                # Ignore duplicates violating unique_together
-                pass
+            except Exception as e:
+                messages.error(request,f'Error in updating product',str(e))
+                return redirect('vendor_products_list')
+        messages.success(request,f'Product updated successfully')   
         return redirect('vendor_products_list')
     categories = Category.objects.filter(is_active=True)
  

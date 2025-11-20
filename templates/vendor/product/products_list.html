@@ -56,7 +56,20 @@
             {% endif %}
           </td>
           <td class="px-4 py-3 font-medium">{{ product.name|truncatechars:20 }}</td>
-          <td class="px-4 py-3">{{ product.category.name }}</td>
+           <td class="px-4 py-3">
+  <div class="flex flex-col">
+    <span class="font-medium text-gray-800">{{ product.category.name }}</span>
+
+    {% if product.subcategory%}
+      <span class="text-xs text-gray-600">
+        {{product.subcategory.name}}
+        
+      </span>
+    {% else %}
+      <span class="text-xs text-gray-400">No Subcategory</span>
+    {% endif %}
+  </div>
+</td>
           <td class="px-4 py-3">Rs. {{ product.price }}</td>
           <td class="px-4 py-3">{{ product.stock }}</td>
           <td class="px-4 py-3">

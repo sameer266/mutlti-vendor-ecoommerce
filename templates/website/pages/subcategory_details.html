@@ -1,6 +1,6 @@
 {% extends 'website/components/base.html' %}
 
-{% block title %}{{ category.name }} - Products{% endblock %}
+{% block title %}{{ subcategory.name }} - Products{% endblock %}
 
 {% block content %}
 
@@ -8,14 +8,9 @@
 <section class="bg-gradient-to-r from-orange-50 to-orange-100 py-6 md:py-10">
   <div class="container mx-auto px-4">
     <h1 class="text-2xl md:text-4xl font-bold text-gray-800 mb-2">
-      {{ category.name }}
+      {{ subcategory.name }}
     </h1>
-    {% if category.description %}
-    <p class="text-gray-600 text-sm md:text-base mt-2 max-w-3xl">
-      {{ category.description }}
-    </p>
-    {% endif %}
-    <p class="text-gray-600 text-sm md:text-base mt-3">
+    <p class="text-gray-600 text-sm md:text-base">
       <span id="productCount">{{ products|length }}</span> products available
     </p>
   </div>
@@ -26,77 +21,79 @@
   <div class="flex flex-col lg:flex-row gap-6">
     
     <!-- Sidebar Filters -->
-    <aside class="w-full  lg:w-64 space-y-4">
+    <aside class="w-full lg:w-64 space-y-4">
       <!-- Mobile Filter Toggle -->
-      <button id="filterToggle" class="lg:hidden w-full bg-orange-500 text-white px-4 py-3 rounded-lg font-semibold flex items-center justify-between shadow-md hover:bg-orange-600 transition">
+      <button id="filterToggle" class="lg:hidden w-full bg-orange-500 text-white px-4 py-3 rounded-lg font-semibold flex items-center justify-between">
         <span><i class="fas fa-filter mr-2"></i>Filters</span>
-        <i class="fas fa-chevron-down transition-transform duration-300" id="filterIcon"></i>
+        <i class="fas fa-chevron-down transition-transform" id="filterIcon"></i>
       </button>
 
       <!-- Filter Panel -->
       <div id="filterPanel" class="hidden lg:block space-y-4">
         
         <!-- Search Filter -->
-        <div class="bg-white rounded-lg shadow-sm p-4 border border-gray-100">
-          <h3 class="font-semibold text-gray-800 mb-3 flex items-center text-sm md:text-base">
-            <i class="fas fa-search text-orange-500 mr-2"></i>Search Products
+        <div class="bg-white rounded-lg shadow-sm p-4">
+          <h3 class="font-semibold text-gray-800 mb-3 flex items-center">
+            <i class="fas fa-search text-orange-500 mr-2"></i>Search
           </h3>
-          <input type="text" id="searchInput" placeholder="Search by name..." 
-                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm transition">
+          <input type="text" id="searchInput" placeholder="Search products..." 
+                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm">
         </div>
 
         <!-- Price Range Filter -->
-        <div class="bg-white rounded-lg shadow-sm p-4 border border-gray-100">
-          <h3 class="font-semibold text-gray-800 mb-3 flex items-center text-sm md:text-base">
+        <div class="bg-white rounded-lg shadow-sm p-4">
+          <h3 class="font-semibold text-gray-800 mb-3 flex items-center">
             <i class="fas fa-tag text-orange-500 mr-2"></i>Price Range
           </h3>
           <div class="space-y-3">
             <div class="flex gap-2">
-              <input type="number" id="minPrice" placeholder="Min (Rs)" 
-                     class="w-1/2 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm transition">
-              <input type="number" id="maxPrice" placeholder="Max (Rs)" 
-                     class="w-1/2 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm transition">
+              <input type="number" id="minPrice" placeholder="Min" 
+                     class="w-1/2 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm">
+              <input type="number" id="maxPrice" placeholder="Max" 
+                     class="w-1/2 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm">
             </div>
-            <button id="applyPriceFilter" class="w-full bg-orange-500 text-white py-2 rounded-lg hover:bg-orange-600 active:bg-orange-700 transition shadow-sm hover:shadow-md text-sm font-medium">
-              <i class="fas fa-check mr-1"></i>Apply Price
+            <button id="applyPriceFilter" class="w-full bg-orange-500 text-white py-2 rounded-lg hover:bg-orange-600 transition text-sm font-medium">
+              Apply
             </button>
           </div>
         </div>
 
         <!-- Availability Filter -->
-        <div class="bg-white rounded-lg shadow-sm p-4 border border-gray-100">
-          <h3 class="font-semibold text-gray-800 mb-3 flex items-center text-sm md:text-base">
+        <div class="bg-white rounded-lg shadow-sm p-4">
+          <h3 class="font-semibold text-gray-800 mb-3 flex items-center">
             <i class="fas fa-check-circle text-orange-500 mr-2"></i>Availability
           </h3>
           <div class="space-y-2">
-            <label class="flex items-center cursor-pointer group hover:bg-gray-50 p-2 rounded-lg transition">
-              <input type="checkbox" class="stock-filter w-4 h-4 text-orange-500 border-gray-300 rounded focus:ring-orange-500" value="in_stock">
-              <span class="ml-3 text-sm text-gray-700 group-hover:text-orange-600 transition">In Stock</span>
+            <label class="flex items-center cursor-pointer group">
+              <input type="checkbox" class="stock-filter" value="in_stock" 
+                     class="w-4 h-4 text-orange-500 border-gray-300 rounded focus:ring-orange-500">
+              <span class="ml-2 text-sm text-gray-700 group-hover:text-orange-500">In Stock</span>
             </label>
-            <label class="flex items-center cursor-pointer group hover:bg-gray-50 p-2 rounded-lg transition">
-              <input type="checkbox" class="stock-filter w-4 h-4 text-orange-500 border-gray-300 rounded focus:ring-orange-500" value="out_of_stock">
-              <span class="ml-3 text-sm text-gray-700 group-hover:text-orange-600 transition">Out of Stock</span>
+            <label class="flex items-center cursor-pointer group">
+              <input type="checkbox" class="stock-filter" value="out_of_stock" 
+                     class="w-4 h-4 text-orange-500 border-gray-300 rounded focus:ring-orange-500">
+              <span class="ml-2 text-sm text-gray-700 group-hover:text-orange-500">Out of Stock</span>
             </label>
           </div>
         </div>
 
         <!-- Sort By -->
-        <div class="bg-white rounded-lg shadow-sm p-4 border border-gray-100">
-          <h3 class="font-semibold text-gray-800 mb-3 flex items-center text-sm md:text-base">
+        <div class="bg-white rounded-lg shadow-sm p-4">
+          <h3 class="font-semibold text-gray-800 mb-3 flex items-center">
             <i class="fas fa-sort text-orange-500 mr-2"></i>Sort By
           </h3>
-          <select id="sortBy" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm bg-white transition">
-            <option value="">Default Order</option>
+          <select id="sortBy" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm">
+            <option value="">Default</option>
             <option value="price-asc">Price: Low to High</option>
             <option value="price-desc">Price: High to Low</option>
             <option value="name-asc">Name: A to Z</option>
             <option value="name-desc">Name: Z to A</option>
-            <option value="discount">Discount: High to Low</option>
+            <option value="newest">Newest First</option>
           </select>
         </div>
 
         <!-- Clear Filters -->
-        <button id="clearFilters" class="w-full bg-gray-200 text-gray-700 py-2.5 rounded-lg hover:bg-gray-300 active:bg-gray-400 transition font-medium text-sm shadow-sm">
+        <button id="clearFilters" class="w-full bg-gray-200 text-gray-700 py-2 rounded-lg hover:bg-gray-300 transition font-medium text-sm">
           <i class="fas fa-redo mr-2"></i>Clear All Filters
         </button>
       </div>
@@ -114,7 +111,6 @@
              data-product-id="{{ product.id }}"
              data-price="{{ product.price }}"
              data-name="{{ product.name|lower }}"
-             data-discount="{{ product.discount_percentage }}"
              data-in-stock="{{ product.in_stock|yesno:'true,false' }}">
           
           <a href="{% url 'product_details' product.slug %}" class="block relative group">
@@ -127,17 +123,17 @@
             {% if product.discount_percentage > 0 %}
             <div class="absolute top-2 left-2 z-10">
               <div class="relative">
-                <i class="fa-solid fa-bookmark text-4xl md:text-5xl text-yellow-500 drop-shadow-md"></i>
-                <span class="absolute inset-0 flex flex-col items-center justify-center text-[10px] md:text-xs font-bold text-gray-900 pt-1">
-                  {{ product.discount_percentage }}%<br><span class="text-[8px]">OFF</span>
+                <i class="fa-solid fa-bookmark text-4xl md:text-5xl text-yellow-500"></i>
+                <span class="absolute inset-0 flex items-center justify-center text-xs font-bold text-gray-900 pt-1">
+                  {{ product.discount_percentage }}%<br>OFF
                 </span>
               </div>
             </div>
             {% endif %}
             
             {% if not product.in_stock %}
-            <div class="absolute inset-0 bg-black/60 flex items-center justify-center backdrop-blur-sm">
-              <span class="bg-red-600 text-white px-3 py-1.5 rounded-lg font-semibold text-xs md:text-sm shadow-lg">
+            <div class="absolute inset-0 bg-black/60 flex items-center justify-center">
+              <span class="bg-red-600 text-white px-3 py-1.5 rounded-lg font-semibold text-xs md:text-sm">
                 Out of Stock
               </span>
             </div>
@@ -147,22 +143,22 @@
           <div class="p-3 space-y-2">
             <!-- Product Name & Stock Badge -->
             <div class="flex justify-between items-start gap-2">
-              <h3 class="font-semibold text-gray-900 text-xs md:text-sm line-clamp-2 flex-1 leading-tight">
+              <h3 class="font-semibold text-gray-900 text-xs md:text-sm line-clamp-2 flex-1">
                 {{ product.name }}
               </h3>
               {% if product.in_stock %}
-              <span class="text-[10px] md:text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full font-medium whitespace-nowrap">
+              <span class="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full font-medium whitespace-nowrap">
                 In Stock
               </span>
               {% else %}
-              <span class="text-[10px] md:text-xs px-2 py-0.5 bg-red-100 text-red-700 rounded-full font-medium whitespace-nowrap">
+              <span class="text-xs px-2 py-0.5 bg-red-100 text-red-700 rounded-full font-medium whitespace-nowrap">
                 Out
               </span>
               {% endif %}
             </div>
 
             <!-- Price -->
-            <div class="flex items-center gap-2 flex-wrap">
+            <div class="flex items-center gap-2">
               {% if product.cost_price > product.price %}
               <p class="text-xs text-gray-400 line-through">Rs {{ product.cost_price|floatformat:0 }}</p>
               {% endif %}
@@ -172,20 +168,20 @@
             <!-- Quantity & Add to Cart -->
             <div class="flex gap-2 mt-2">
               <div class="flex items-center border-2 border-gray-300 rounded-lg overflow-hidden flex-shrink-0">
-                <button class="decreaseQty px-2 py-1 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                <button class="decreaseQty px-2 py-1 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-700 transition"
                         {% if not product.in_stock %}disabled{% endif %}>
                   <i class="fas fa-minus text-xs"></i>
                 </button>
                 <input type="number" value="1" min="1" max="{% if product.in_stock %}{{ product.stock|default:10 }}{% else %}0{% endif %}"
                        class="qtyInput w-10 text-center text-xs md:text-sm border-x-2 border-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-500 font-medium text-gray-900"
                        {% if not product.in_stock %}disabled{% endif %}>
-                <button class="increaseQty px-2 py-1 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                <button class="increaseQty px-2 py-1 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-700 transition"
                         {% if not product.in_stock %}disabled{% endif %}>
                   <i class="fas fa-plus text-xs"></i>
                 </button>
               </div>
 
-              <button class="add-to-cart flex-1 flex items-center justify-center gap-1 text-xs md:text-sm px-3 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 active:bg-orange-700 transition shadow-sm hover:shadow-md font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              <button class="add-to-cart flex-1 flex items-center justify-center gap-1 text-xs md:text-sm px-3 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 active:bg-orange-700 transition shadow-sm hover:shadow-md font-medium"
                       data-product-id="{{ product.id }}"
                       data-product-name="{{ product.name }}"
                       {% if not product.in_stock %}disabled{% endif %}>
@@ -196,9 +192,9 @@
           </div>
         </div>
         {% empty %}
-        <div class="col-span-full text-center py-16 bg-white rounded-lg shadow-sm">
+        <div class="col-span-full text-center py-16">
           <i class="fas fa-box-open text-6xl text-gray-300 mb-4"></i>
-          <p class="text-gray-500 text-lg font-medium">No products available in this category.</p>
+          <p class="text-gray-500 text-lg font-medium">No products available.</p>
         </div>
         {% endfor %}
       </div>
@@ -207,9 +203,8 @@
       <div id="noResultsMessage" class="hidden text-center py-16 bg-white rounded-lg shadow-sm">
         <i class="fas fa-search text-6xl text-gray-300 mb-4"></i>
         <p class="text-gray-600 text-lg font-medium mb-2">No products match your filters</p>
-        <p class="text-gray-500 text-sm mb-4">Try adjusting your search or filter criteria</p>
-        <button id="resetFromNoResults" class="px-6 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition shadow-md">
-          <i class="fas fa-redo mr-2"></i>Clear All Filters
+        <button id="resetFromNoResults" class="mt-4 px-6 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition">
+          Clear Filters
         </button>
       </div>
     </main>
@@ -247,7 +242,7 @@ $(document).ready(function() {
   // ===================================
   $('#filterToggle').on('click', function() {
     $('#filterPanel').slideToggle(300);
-    $('#filterIcon').toggleClass('fa-chevron-down fa-chevron-up rotate-180');
+    $('#filterIcon').toggleClass('fa-chevron-down fa-chevron-up');
   });
 
   // ===================================
@@ -297,10 +292,10 @@ $(document).ready(function() {
       }
       
       if (show) {
-        $card.fadeIn(200);
+        $card.show();
         visibleCount++;
       } else {
-        $card.fadeOut(200);
+        $card.hide();
       }
     });
     
@@ -313,16 +308,13 @@ $(document).ready(function() {
     updateProductCount(visibleCount);
     updateActiveFilters();
     
-    // Show/hide no results message
-    setTimeout(() => {
-      if (visibleCount === 0) {
-        $('#noResultsMessage').removeClass('hidden').hide().fadeIn(300);
-        $('#productsGrid').addClass('hidden');
-      } else {
-        $('#noResultsMessage').addClass('hidden');
-        $('#productsGrid').removeClass('hidden');
-      }
-    }, 250);
+    if (visibleCount === 0) {
+      $('#noResultsMessage').removeClass('hidden');
+      $('#productsGrid').addClass('hidden');
+    } else {
+      $('#noResultsMessage').addClass('hidden');
+      $('#productsGrid').removeClass('hidden');
+    }
   }
 
   // ===================================
@@ -345,8 +337,6 @@ $(document).ready(function() {
           return $a.data('name').localeCompare($b.data('name'));
         case 'name-desc':
           return $b.data('name').localeCompare($a.data('name'));
-        case 'discount':
-          return parseFloat($b.data('discount') || 0) - parseFloat($a.data('discount') || 0);
         default:
           return 0;
       }
@@ -398,9 +388,9 @@ $(document).ready(function() {
 
   function createFilterBadge(label, value, type) {
     return $(`
-      <span class="inline-flex items-center gap-2 bg-orange-100 text-orange-800 px-3 py-1.5 rounded-full text-xs md:text-sm shadow-sm animate-fade-in">
+      <span class="inline-flex items-center gap-2 bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-sm">
         <span><strong>${label}:</strong> ${value}</span>
-        <button class="remove-filter hover:text-orange-600 hover:scale-110 transition-transform" data-filter="${type}">
+        <button class="remove-filter hover:text-orange-600" data-filter="${type}">
           <i class="fas fa-times"></i>
         </button>
       </span>
@@ -429,7 +419,6 @@ $(document).ready(function() {
     }
     
     filterProducts();
-    showToast('Filter removed', 'info');
   });
 
   // ===================================
@@ -451,13 +440,6 @@ $(document).ready(function() {
   $('#applyPriceFilter').on('click', filterProducts);
   $('.stock-filter').on('change', filterProducts);
   $('#sortBy').on('change', filterProducts);
-  
-  // Enter key on price inputs
-  $('#minPrice, #maxPrice').on('keypress', function(e) {
-    if (e.which === 13) {
-      filterProducts();
-    }
-  });
 
   // Debounce function
   function debounce(func, wait) {

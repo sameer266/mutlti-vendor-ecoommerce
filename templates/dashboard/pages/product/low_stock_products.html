@@ -63,7 +63,22 @@
           </td>
 
           <td class="px-4 py-3 font-medium">{{ product.name|truncatechars:25 }}</td>
-          <td class="px-4 py-3">{{ product.category.name }}</td>
+         <td class="px-4 py-3">
+  <div class="flex flex-col">
+    <span class="font-medium text-gray-800">{{ product.category.name }}</span>
+
+    {% if product.category.subcategories.all %}
+      <span class="text-xs text-gray-600">
+        {% for sub in product.category.subcategories.all %}
+          {{ sub.name }}{% if not forloop.last %}, {% endif %}
+        {% endfor %}
+      </span>
+    {% else %}
+      <span class="text-xs text-gray-400">No Subcategory</span>
+    {% endif %}
+  </div>
+</td>
+
           <td class="px-4 py-3">{{ product.vendor.shop_name }}</td>
           <td class="px-4 py-3">Rs. {{ product.price }}</td>
           <td class="px-4 py-3">{{ product.stock }}</td>

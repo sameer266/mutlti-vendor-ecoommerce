@@ -125,6 +125,15 @@
           <span>Category</span>
         </a>
       </li>
+      <li>
+  <a href="{% url 'admin_subcategory_list' %}"
+     class="sidebar-link flex items-center px-4 py-2 rounded-md font-medium transition-all duration-200
+            {% if request.path == '/admin-dashboard/subcategories/' %}bg-blue-50 text-blue-600 font-semibold{% else %}text-gray-600 hover:bg-gray-100{% endif %}">
+    <i class="fas fa-layer-group w-6 text-center text-gray-500 mr-3"></i>
+    <span>Subcategory</span>
+  </a>
+</li>
+
 
       <!-- Order Management -->
       <li>

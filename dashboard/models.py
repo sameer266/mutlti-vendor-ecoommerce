@@ -269,21 +269,22 @@ class Category(models.Model):
 #  sub Category
 # ---------------------------
 class SubCategory(models.Model):
-    name=models.CharField(max_length=100)
-    category=models.ForeignKey(Category,on_delete=models.CASCADE,related_name='subcategories' )
-    slug=models.SlugField(unique=True,blank=True)
-    
+    name = models.CharField(max_length=100)
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='subcategories')
+    slug = models.SlugField(unique=True, blank=True)
+
     def save(self, *args, **kwargs):
         if not self.slug:
             base_slug = slugify(self.name)
             slug = base_slug
             counter = 1
-            while Category.objects.filter(slug=slug).exists():
+            # CHECK inside SubCategory
+            while SubCategory.objects.filter(slug=slug).exists():
                 slug = f"{base_slug}-{counter}"
                 counter += 1
             self.slug = slug
         super().save(*args, **kwargs)
-    
+
     def __str__(self):
         return self.name
             
@@ -298,6 +299,7 @@ class SubCategory(models.Model):
 class Product(models.Model):
     vendor = models.ForeignKey(Vendor, on_delete=models.CASCADE, related_name='products')
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, related_name='products')
+    subcategory = models.ForeignKey(SubCategory, on_delete=models.SET_NULL, null=True, blank=True, related_name='products')
     
     # Basic Info
     name = models.CharField(max_length=255)

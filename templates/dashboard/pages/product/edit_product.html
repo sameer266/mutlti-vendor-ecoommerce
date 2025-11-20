@@ -42,6 +42,17 @@
           </select>
         </div>
 
+
+        <div>
+  <label class="block text-sm font-medium text-gray-700 mb-1">
+    Subcategory <span class="text-red-600">*</span>
+  </label>
+  <select name="subcategory"   data-selected="{{ product.subcategory.id }}"class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+    <option value="{{product.subcategory.name}}">Select subcategory</option>
+  </select>
+</div>
+
+
         <div class="md:col-span-2">
           <label class="block text-sm font-medium text-gray-700 mb-1">
             Product Name <span class="text-red-600">*</span>
@@ -269,256 +280,155 @@
 <script src="https://cdn.ckeditor.com/4.21.0/full/ckeditor.js"></script>
 
 <script>
-  document.addEventListener('DOMContentLoaded', function () {
-    // File validation for main image
-    const mainImageInput = document.getElementById('main_image');
-    const mainImageError = document.getElementById('main_image_error');
-    const allowedFormats = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+$(document).ready(function() {
+
+    // ---------------------------
+    // 1. CKEditor Initialization
+    // ---------------------------
+    if ($('textarea[name="description"]').length && typeof CKEDITOR !== 'undefined') {
+        CKEDITOR.replace('description', {
+            height: 400,
+            toolbar: [
+                { name: 'clipboard', items: ['Cut', 'Copy', 'Paste', 'PasteText', 'PasteFromWord', '-', 'Undo', 'Redo'] },
+                { name: 'styles', items: ['Format', 'Font', 'FontSize'] },
+                { name: 'basicstyles', items: ['Bold', 'Italic', 'Underline', 'Strike', 'RemoveFormat'] },
+                { name: 'colors', items: ['TextColor', 'BGColor'] },
+                { name: 'paragraph', items: ['NumberedList','BulletedList','-','Outdent','Indent','-','JustifyLeft','JustifyCenter','JustifyRight','JustifyBlock','-','Blockquote','CreateDiv'] },
+                { name: 'insert', items: ['HorizontalRule','Smiley','SpecialChar','Link','Unlink'] },
+                { name: 'tools', items: ['Maximize','ShowBlocks','Source'] }
+            ],
+            removePlugins: 'elementspath',
+            resize_enabled: true
+        });
+
+        $('form').on('submit', function() {
+            CKEDITOR.instances.description.updateElement();
+        });
+    }
+
+    // ---------------------------
+    // 2. File Validation
+    // ---------------------------
+    const allowedFormats = ['image/jpeg','image/jpg','image/png','image/gif'];
     const maxSize = 15 * 1024 * 1024; // 15MB
 
-    if (mainImageInput) {
-      mainImageInput.addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (file) {
-          if (!allowedFormats.includes(file.type)) {
-            mainImageError.classList.remove('hidden');
-            mainImageInput.value = '';
-          } else if (file.size > maxSize) {
-            mainImageError.textContent = 'File size must be less than 15MB!';
-            mainImageError.classList.remove('hidden');
-            mainImageInput.value = '';
-          } else {
-            mainImageError.classList.add('hidden');
-          }
-        }
-      });
-    }
+    function validateFile(inputSelector, errorSelector) {
+        $(inputSelector).on('change', function() {
+            const files = Array.from(this.files);
+            const errorEl = $(errorSelector);
+            let hasError = false;
 
-    // File validation for gallery images
-    const galleryInput = document.getElementById('gallery_images');
-    const galleryError = document.getElementById('gallery_images_error');
+            files.forEach(file => {
+                if (!allowedFormats.includes(file.type)) {
+                    hasError = true;
+                    errorEl.text('Invalid file format!').removeClass('hidden');
+                }
+                if (file.size > maxSize) {
+                    hasError = true;
+                    errorEl.text('File size must be less than 15MB!').removeClass('hidden');
+                }
+            });
 
-    if (galleryInput) {
-      galleryInput.addEventListener('change', function(e) {
-        const files = Array.from(e.target.files);
-        let hasError = false;
-
-        for (let file of files) {
-          if (!allowedFormats.includes(file.type)) {
-            hasError = true;
-            galleryError.textContent = 'One or more files have invalid formats!';
-            break;
-          }
-          if (file.size > maxSize) {
-            hasError = true;
-            galleryError.textContent = 'One or more files exceed 15MB!';
-            break;
-          }
-        }
-
-        if (hasError) {
-          galleryError.classList.remove('hidden');
-          galleryInput.value = '';
-        } else {
-          galleryError.classList.add('hidden');
-        }
-      });
-    }
-
-    // Variant management
-    let variantCount = 0;
-    const variantsContainer = document.getElementById('variantsContainer');
-    const addVariantBtn = document.getElementById('addVariantBtn');
-
-    if (addVariantBtn) {
-      addVariantBtn.addEventListener('click', function() {
-        variantCount++;
-        const row = document.createElement('div');
-        row.className = 'grid grid-cols-1 md:grid-cols-6 gap-4 items-start p-4 bg-gray-50 rounded-lg border border-gray-200';
-        row.id = `variant-${variantCount}`;
-        row.innerHTML = `
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Type</label>
-            <select name="variant_type[]" class="block w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-              <option value="size">Size</option>
-              <option value="color">Color</option>
-              <option value="weight">Weight</option>
-              <option value="storage">Storage</option>
-              <option value="ram">RAM</option>
-              <option value="material">Material</option>
-              <option value="style">Style</option>
-              <option value="pattern">Pattern</option>
-              <option value="flavor">Flavor</option>
-              <option value="other" selected>Other</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
-            <input type="text" name="variant_name[]" class="block w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="e.g., XL, Red" />
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Price Adj. (Rs)</label>
-            <input type="number" step="0.01" name="variant_price_adjustment[]" class="block w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" value="0" />
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Stock</label>
-            <input type="number" name="variant_stock[]" class="block w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" value="0" />
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">SKU</label>
-            <input type="text" name="variant_sku[]" class="block w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Optional" />
-          </div>
-          <div class="flex items-end">
-            <button type="button" onclick="removeVariant(${variantCount})" class="w-full bg-red-50 text-red-600 px-3 py-2.5 rounded-lg hover:bg-red-100 transition border border-red-200">
-              <svg class="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-              </svg>
-            </button>
-          </div>
-        `;
-        variantsContainer.appendChild(row);
-      });
-    }
-
-    // Remove variant function
-    window.removeVariant = function(id) {
-      const variant = document.getElementById(`variant-${id}`);
-      if (variant) {
-        variant.remove();
-      }
-    };
-  });
-</script>
-
-<script>
-  // CKEditor Configuration and Initialization
-  (function() {
-    'use strict';
-
-    // Wait for DOM to be ready
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', initEditor);
-    } else {
-      initEditor();
-    }
-
-    function initEditor() {
-      const descriptionField = document.getElementById('description');
-      
-      if (!descriptionField) {
-        console.warn('Description textarea not found');
-        return;
-      }
-
-      // Wait for CKEditor to be loaded
-      if (typeof CKEDITOR === 'undefined') {
-        console.error('CKEditor library not loaded');
-        return;
-      }
-
-      try {
-        CKEDITOR.replace('description', {
-          height: 300,
-          
-          // Toolbar configuration
-          toolbar: [
-            { 
-              name: 'basicstyles', 
-              items: ['Bold', 'Italic', 'Underline', 'Strike', 'Subscript', 'Superscript'] 
-            },
-            { 
-              name: 'paragraph', 
-              items: [
-                'NumberedList', 'BulletedList', '-',
-                'Outdent', 'Indent', '-',
-                'JustifyLeft', 'JustifyCenter', 'JustifyRight', 'JustifyBlock'
-              ]
-            },
-            { 
-              name: 'styles', 
-              items: ['Styles', 'Format', 'Font', 'FontSize'] 
-            },
-            { 
-              name: 'colors', 
-              items: ['TextColor', 'BGColor'] 
-            },
-            { 
-              name: 'insert', 
-              items: ['Link', 'Unlink', 'Image', 'Table', 'HorizontalRule', 'SpecialChar'] 
-            },
-            { 
-              name: 'tools', 
-              items: ['Maximize', 'RemoveFormat', 'Source'] 
+            if (!hasError) {
+                errorEl.addClass('hidden');
+            } else {
+                $(this).val('');
             }
-          ],
-
-          // Editor configuration
-          removePlugins: 'elementspath',
-          resize_enabled: true,
-          resize_minHeight: 200,
-          resize_maxHeight: 600,
-
-          // Font options
-          font_names: 
-            'Arial/Arial, Helvetica, sans-serif;' +
-            'Comic Sans MS/Comic Sans MS, cursive;' +
-            'Courier New/Courier New, Courier, monospace;' +
-            'Georgia/Georgia, serif;' +
-            'Lucida Sans Unicode/Lucida Sans Unicode, Lucida Grande, sans-serif;' +
-            'Tahoma/Tahoma, Geneva, sans-serif;' +
-            'Times New Roman/Times New Roman, Times, serif;' +
-            'Trebuchet MS/Trebuchet MS, Helvetica, sans-serif;' +
-            'Verdana/Verdana, Geneva, sans-serif',
-
-          // Font size options
-          fontSize_sizes: '10/10px;12/12px;14/14px;16/16px;18/18px;20/20px;22/22px;24/24px;28/28px;32/32px;36/36px',
-
-          // Content formatting
-          format_tags: 'p;h1;h2;h3;h4;h5;h6;pre;address;div',
-          
-          // Allow all content
-          allowedContent: true,
-          
-          // Remove automatic formatting
-          enterMode: CKEDITOR.ENTER_P,
-          shiftEnterMode: CKEDITOR.ENTER_BR,
-
-          // Language
-          language: 'en',
-          
-          // Disable spell checker
-          disableNativeSpellChecker: false,
-
-          // Auto-grow configuration
-          autoGrow_minHeight: 300,
-          autoGrow_maxHeight: 600,
-          autoGrow_bottomSpace: 50
         });
-
-        // Handle editor events
-        CKEDITOR.instances.description.on('instanceReady', function() {
-          console.log('CKEditor initialized successfully for edit form');
-        });
-
-        CKEDITOR.instances.description.on('change', function() {
-          // Update textarea value for form submission
-          CKEDITOR.instances.description.updateElement();
-        });
-
-      } catch (error) {
-        console.error('Error initializing CKEditor:', error);
-      }
     }
 
-    // Cleanup before form submission
-    const form = document.querySelector('form');
-    if (form) {
-      form.addEventListener('submit', function() {
-        if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances.description) {
-          CKEDITOR.instances.description.updateElement();
+    validateFile('#main_image', '#main_image_error');
+    validateFile('#gallery_images', '#gallery_images_error');
+
+    // ---------------------------
+    // 3. Variant Management
+    // ---------------------------
+    let variantCount = 0;
+    $('#addVariantBtn').on('click', function() {
+        variantCount++;
+        const row = $(`
+            <div class="grid grid-cols-1 md:grid-cols-6 gap-4 items-start p-4 bg-gray-50 rounded-lg border border-gray-200" id="variant-${variantCount}">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                    <select name="variant_type[]" class="block w-full border border-gray-300 rounded-lg p-2.5">
+                        <option value="size">Size</option>
+                        <option value="color">Color</option>
+                        <option value="weight">Weight</option>
+                        <option value="storage">Storage</option>
+                        <option value="ram">RAM</option>
+                        <option value="material">Material</option>
+                        <option value="style">Style</option>
+                        <option value="pattern">Pattern</option>
+                        <option value="flavor">Flavor</option>
+                        <option value="other" selected>Other</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                    <input type="text" name="variant_name[]" class="block w-full border border-gray-300 rounded-lg p-2.5" placeholder="e.g., XL, Red" />
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Price Adj. (Rs)</label>
+                    <input type="number" step="0.01" name="variant_price_adjustment[]" class="block w-full border border-gray-300 rounded-lg p-2.5" value="0" />
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Stock</label>
+                    <input type="number" name="variant_stock[]" class="block w-full border border-gray-300 rounded-lg p-2.5" value="0" />
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">SKU</label>
+                    <input type="text" name="variant_sku[]" class="block w-full border border-gray-300 rounded-lg p-2.5" placeholder="Optional" />
+                </div>
+                <div class="flex items-end">
+                    <button type="button" class="w-full bg-red-50 text-red-600 px-3 py-2.5 rounded-lg hover:bg-red-100 transition border border-red-200 remove-variant">Remove</button>
+                </div>
+            </div>
+        `);
+        $('#variantsContainer').append(row);
+    });
+
+    $(document).on('click', '.remove-variant', function() {
+        $(this).closest('div[id^="variant-"]').remove();
+    });
+
+    // ---------------------------
+    // 4. Dynamic Subcategory Loading
+    // ---------------------------
+    function loadSubcategories(categoryId, selectedSubcatId = null) {
+        const subcatSelect = $('select[name="subcategory"]');
+        subcatSelect.empty().append('<option value="">Select subcategory</option>');
+
+        if (categoryId) {
+            $.ajax({
+                url: "{% url 'get_subcategories' 0 %}".replace('0', categoryId),
+                type: 'GET',
+                success: function(data) {
+                    $.each(data, function(_, subcat) {
+                        const selected = (selectedSubcatId && subcat.id == selectedSubcatId) ? 'selected' : '';
+                        subcatSelect.append(`<option value="${subcat.id}" ${selected}>${subcat.name}</option>`);
+                    });
+                },
+                error: function() {
+                  toastr.error('Failed to load subcategories.');
+                }
+            });
         }
-      });
     }
-  })();
+
+    // On category change
+    $('select[name="category"]').on('change', function() {
+        const categoryId = $(this).val();
+        loadSubcategories(categoryId);
+    });
+
+    // Initialize subcategory on page load (edit page)
+    const initialCategory = $('select[name="category"]').val();
+    const initialSubcategory = $('select[name="subcategory"]').data('selected');
+    if (initialCategory) {
+        loadSubcategories(initialCategory, initialSubcategory);
+    }
+
+});
 </script>
+
 {% endblock %}

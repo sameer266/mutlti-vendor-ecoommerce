@@ -41,6 +41,9 @@ urlpatterns = [
     path('products/add/', views.admin_product_add, name='admin_product_add'),
     path('products/<int:pk>/update/', views.admin_product_update, name='admin_product_update'),
     path('products/<int:pk>/delete/', views.admin_product_delete, name='admin_product_delete'),
+    
+    path('subcategories/<int:category_id>/', views.get_subcategories, name='get_subcategories'),
+
 
     # Category Management
     path('categories/', views.admin_categories_list, name='admin_categories_list'),
@@ -48,6 +51,14 @@ urlpatterns = [
     path('categories/<int:pk>/update/', views.admin_category_update, name='admin_category_update'),
     path('categories/<int:pk>/delete/', views.admin_category_delete, name='admin_category_delete'),
 
+    # SubCategory Management
+    path('subcategories/',views.admin_subcategory_list,name='admin_subcategory_list'),
+    path('subcategory/add/',views.admin_subcategory_add,name="admin_subcategory_add"),
+    path('subcategory/edit/<int:subcategory_id>/',views.admin_subcategory_update,name='admin_subcategory_update'),
+    path('subcategory/delete/<int:subcategory_id>/',views.admin_subcategory_delete,name='admin_subcategory_delete'),
+    
+    
+    
     # Order Management
     path('orders/', views.admin_orders_list, name='admin_orders_list'),
     path('odrer-details/<str:order_number>/',views.admin_order_details,name='admin_order_details'),

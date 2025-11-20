@@ -99,7 +99,7 @@
             {% if category.subcategories.exists %}
             <div class="px-2 py-2 max-h-[400px] overflow-y-auto subcategory-scroll">
               {% for subcategory in category.subcategories.all %}
-              <a href="{% url 'category_details' subcategory.slug %}" 
+              <a href="{% url 'subcategory_details' subcategory.slug %}" 
                  class="block px-3 py-2 text-xs text-gray-700 hover:bg-orange-50 hover:text-orange-600 rounded transition-colors duration-150">
                 <i class="fa-solid fa-angle-right text-orange-400 mr-1 text-[10px]"></i>
                 {{ subcategory.name }}
@@ -243,12 +243,16 @@
       </button>
 
       <!-- Quick Category Links -->
-      {% for category in categories|slice:":5" %}
-      <a href="{% url 'category_details' category.slug %}" 
-         class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-xs font-medium hover:bg-orange-100 hover:text-orange-600 transition flex-shrink-0">
-        {{ category.name }}
-      </a>
-      {% endfor %}
+    {% for category in categories|slice:":5" %}
+  {% url 'category_details' category.slug as cat_url %}
+
+  <a href="{{ cat_url }}"
+     class="px-3 py-1.5 rounded-lg text-xs font-medium flex-shrink-0 transition bg-gray-100 text-gray-700 hover:bg-orange-100 hover:text-orange-600
+     {% if request.path == cat_url %} bg-orange-500 text-white {% endif %}">
+      {{ category.name }}
+  </a>
+{% endfor %}
+
     </div>
   </div>
 </div>
@@ -295,7 +299,7 @@
         {% if category.subcategories.exists %}
         <div class="subcategory-list hidden bg-gray-50 px-4 py-2">
           {% for subcategory in category.subcategories.all %}
-          <a href="{% url 'category_details' subcategory.slug %}" 
+          <a href="{% url 'subcategory_details' subcategory.slug %}" 
              class="block px-3 py-2 text-sm text-gray-700 hover:text-orange-600 hover:bg-white rounded transition-colors">
             <i class="fa-solid fa-circle text-[6px] text-orange-400 mr-2"></i>
             {{ subcategory.name }}

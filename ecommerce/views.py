@@ -6,7 +6,7 @@ from dashboard.models import (
     UserProfile,
     Slider,
     Banner,
-    Category,
+    Category,SubCategory,
     Product,Cart,Vendor,ProductVariant,OTPVerification,Order,OrderItem,Coupon,CouponUsage,Contact,Invoice,Review,TaxRate
 )
 from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
@@ -77,7 +77,8 @@ def search_page(request):
         products = products.filter(
             Q(name__icontains=query) |
             Q(description__icontains=query) |
-            Q(category__name__icontains=query)
+            Q(category__name__icontains=query) |
+            Q(category__subcategories__name__icontains=query)
         ).distinct().order_by('-created_at')
 
     # Pagination
@@ -283,6 +284,20 @@ def category_details(request, slug):
         'categories': categories,
     }
     return render(request, 'website/pages/category_details.html', context)
+
+
+# ================================
+# Subcategoru Details
+# =================================
+def category_subcategory_details(request, slug):
+    subcategory = get_object_or_404(SubCategory, slug=slug)
+    products = Product.objects.filter(subcategory=subcategory, is_active=True)
+
+    return render(request, 'website/pages/subcategory_details.html', {
+        'subcategory': subcategory,
+        'products': products
+    })
+
     
 # ==============================
 #   Cart

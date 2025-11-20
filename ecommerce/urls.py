@@ -39,6 +39,7 @@ urlpatterns = [
     path("vendors/<slug:slug>/",views.vendor_details,name="vendor_details"),
     path('product/<slug:slug>/',views.product_details,name="product_details"),
     path("category/<slug:slug>/",views.category_details,name='category_details'),
+    path("category/subcategory/<slug:slug>/",views.category_subcategory_details,name="subcategory_details"),
     
     # Cart Management
     path('cart/',views.carts,name="carts"),
