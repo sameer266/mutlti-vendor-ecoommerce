@@ -1,0 +1,109 @@
+{% extends 'dashboard/components/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="bg-white rounded-xl shadow p-6">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-semibold text-gray-800">Edit Purchase</h1>
+    <a href="{% url 'admin_purchases_list' %}" class="text-sm text-blue-600 hover:text-blue-800">Back to list</a>
+  </div>
+
+  <!-- Purchase Items Display -->
+  <div class="mb-6 bg-gray-50 p-4 rounded-lg">
+    <h2 class="text-lg font-semibold mb-4">Purchase Items</h2>
+    <div class="space-y-2">
+      {% for item in purchase.items.all %}
+      <div class="bg-white p-3 rounded border border-gray-200">
+        <div class="flex justify-between items-center">
+          <div>
+            <span class="font-medium">{{ item.product_name }}</span>
+            {% if item.product_sku %}
+              <span class="text-gray-500">({{ item.product_sku }})</span>
+            {% endif %}
+            <span class="text-gray-600 ml-2">- Qty: {{ item.quantity }} @ Rs. {{ item.purchase_price|floatformat:2 }}</span>
+            <span class="text-green-600 font-semibold ml-2">Total: Rs. {{ item.get_total|floatformat:2 }}</span>
+          </div>
+        </div>
+      </div>
+      {% empty %}
+      <p class="text-gray-500">No items in this purchase.</p>
+      {% endfor %}
+    </div>
+    <p class="text-sm text-gray-600 mt-4">
+      <strong>Note:</strong> To modify items, please delete and recreate the purchase. This form only allows editing purchase details.
+    </p>
+  </div>
+
+  <form method="post" action="{% url 'admin_purchase_update' purchase.id %}" class="space-y-6">
+    {% csrf_token %}
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div class="md:col-span-2">
+        <label class="block text-sm font-medium text-gray-700">Supplier <span class="text-red-500">*</span></label>
+        <select name="supplier" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5" required>
+          <option value="">Select Supplier</option>
+          {% for supplier in suppliers %}
+            <option value="{{ supplier.id }}" {% if purchase.supplier.id == supplier.id %}selected{% endif %}>{{ supplier.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Purchase Date <span class="text-red-500">*</span></label>
+        <input type="date" name="purchase_date" value="{{ purchase.purchase_date|date:'Y-m-d' }}" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5" required>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Supplier Invoice Number</label>
+        <input type="text" name="supplier_invoice_number" value="{{ purchase.supplier_invoice_number }}" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5">
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Purchase Order Number</label>
+        <input type="text" name="purchase_order_number" value="{{ purchase.purchase_order_number }}" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5">
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Tax Amount</label>
+        <input type="number" name="tax_amount" value="{{ purchase.tax_amount }}" step="0.01" min="0" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5">
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Discount</label>
+        <input type="number" name="discount" value="{{ purchase.discount }}" step="0.01" min="0" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5">
+      </div>
+
+      <div class="md:col-span-2">
+        <label class="block text-sm font-medium text-gray-700">Notes</label>
+        <textarea name="notes" rows="3" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5">{{ purchase.notes }}</textarea>
+      </div>
+
+      <div class="md:col-span-2 bg-blue-50 p-4 rounded-lg">
+        <h3 class="font-semibold mb-2">Purchase Summary</h3>
+        <div class="grid grid-cols-2 gap-4 text-sm">
+          <div>
+            <span class="text-gray-600">Subtotal:</span>
+            <span class="font-semibold ml-2">Rs. {{ purchase.subtotal|floatformat:2 }}</span>
+          </div>
+          <div>
+            <span class="text-gray-600">Tax:</span>
+            <span class="font-semibold ml-2">Rs. {{ purchase.tax_amount|floatformat:2 }}</span>
+          </div>
+          <div>
+            <span class="text-gray-600">Discount:</span>
+            <span class="font-semibold text-red-600 ml-2">Rs. {{ purchase.discount|floatformat:2 }}</span>
+          </div>
+          <div>
+            <span class="text-gray-600">Total:</span>
+            <span class="font-semibold text-green-600 text-lg ml-2">Rs. {{ purchase.total_amount|floatformat:2 }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pt-4">
+      <button type="submit" class="bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-lg  transition">Update Purchase</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

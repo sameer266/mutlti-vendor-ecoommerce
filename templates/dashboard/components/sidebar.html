@@ -6,13 +6,16 @@
 
   <!-- Logo -->
   <div class="px-0 py-0 h-16 flex items-center border-b border-gray-200">
-    <a href="{% if request.user.role.role == 'admin' %}{% url 'admin_dashboard' %}{% else %}{% url 'vendor_dashboard' %}{% endif %}"
-       class="flex items-center justify-center w-full h-full" aria-label="Hello Bazar Dashboard">
-      <img src="{{ organization.logo.url }}" alt="Hello Bazar Logo" class="h-full w-full object-contain">
+    <a href="{% url 'admin_dashboard' %}"
+       class="flex items-center justify-center w-full h-full" aria-label="ChanceStore Dashboard">
+       {% if organization.logo %}
+      <img src="{{ organization.logo.url }}" alt=" Logo" class="h-full w-full object-contain">
+
+  
+      {% endif %}
     </a>
   </div>
 
-  {% if request.user.role.role == 'admin' %}
   <!-- ====================== ADMIN ====================== -->
   <nav class="flex-grow overflow-y-auto py-4 text-md" aria-label="Sidebar navigation">
     <ul class="space-y-1 px-2">
@@ -21,16 +24,16 @@
       <li>
         <a href="{% url 'admin_dashboard' %}"
            class="sidebar-link flex items-center px-4 py-2 rounded-md font-medium transition-all duration-200
-                  {% if request.path == '/admin-dashboard/' or request.path == '/' %}bg-blue-50 text-blue-600 font-semibold{% else %}text-gray-600 hover:bg-gray-100{% endif %}">
-          <i class="fas fa-tachometer-alt w-6 text-center mr-3"></i>
+                  {% if request.path == '/admin-dashboard/' or request.path == '/' %}bg-blue-50 text-blue-600 font-semibold{% else %}text-gray-800 hover:bg-gray-100{% endif %}">
+          <i class="fas fa-tachometer-alt w-6 text-center mr-3 text-gray-800"></i>
           <span>Dashboard</span>
         </a>
       </li>
 
       <!-- User Management -->
       <li>
-        <button class="sidebar-dropdown-toggle flex items-center w-full px-4 py-2 rounded-md text-gray-600 font-medium hover:bg-gray-100 transition-all duration-200">
-          <i class="fas fa-users-cog w-6 text-center text-gray-500 mr-3"></i>
+        <button class="sidebar-dropdown-toggle flex items-center w-full px-4 py-2 rounded-md text-gray-800 font-medium hover:bg-gray-100 transition-all duration-200">
+          <i class="fas fa-users-cog w-6 text-center text-black mr-3"></i>
           <span>User</span>
           <i class="dropdown-icon fas fa-chevron-down text-xs ml-auto transition-transform duration-200 {% if '/admin-dashboard/users/' in request.path %}rotate-180{% endif %}"></i>
         </button>
@@ -38,53 +41,21 @@
           <li>
             <a href="{% url 'admin_users_list' %}"
                class="sublink flex items-center px-4 py-2 rounded-md text-sm transition-all duration-200
-                      {% if request.path == '/admin-dashboard/users/' %}bg-blue-50 text-blue-600 font-semibold{% else %}text-gray-600 hover:bg-gray-100{% endif %}">
-              <i class="fas fa-users w-5 text-center mr-3"></i>
+                      {% if request.path == '/admin-dashboard/users/' %}bg-blue-50 text-blue-600 font-semibold{% else %}text-gray-800 hover:bg-gray-100{% endif %}">
+              <i class="fas fa-users w-5 text-center mr-3 text-gray-800"></i>
               All Users
             </a>
           </li>
         </ul>
       </li>
 
-      <!-- Vendor Management -->
-      <li>
-        <button class="sidebar-dropdown-toggle flex items-center w-full px-4 py-2 rounded-md text-gray-600 font-medium hover:bg-gray-100 transition-all duration-200">
-          <i class="fas fa-store-alt w-6 text-center text-gray-500 mr-3"></i>
-          <span>Vendor</span>
-          <i class="dropdown-icon fas fa-chevron-down text-xs ml-auto transition-transform duration-200 {% if '/admin-dashboard/vendors/' in request.path %}rotate-180{% endif %}"></i>
-        </button>
-        <ul class="sidebar-submenu pl-6 mt-1 {% if '/admin-dashboard/vendors/' not in request.path %}hidden{% endif %}">
-          <li>
-            <a href="{% url 'admin_vendors_list' %}"
-               class="sublink flex items-center px-4 py-2 rounded-md text-sm transition-all duration-200
-                      {% if request.path == '/admin-dashboard/vendors/' %}bg-blue-50 text-blue-600 font-semibold{% else %}text-gray-600 hover:bg-gray-100{% endif %}">
-              <i class="fas fa-list w-5 text-center mr-3"></i>
-              All Vendors
-            </a>
-          </li>
-          <li>
-            <a href="{% url 'admin_vendors_pending_kyc' %}"
-               class="sublink flex items-center px-4 py-2 rounded-md text-sm transition-all duration-200
-                      {% if request.path == '/admin-dashboard/vendors/pending-kyc/' %}bg-blue-50 text-blue-600 font-semibold{% else %}text-gray-600 hover:bg-gray-100{% endif %}">
-              <i class="fas fa-hourglass-half w-5 text-center mr-3"></i>
-              Pending Vendors
-            </a>
-          </li>
-          <li>
-            <a href="{% url 'admin_vendors_verified_kyc' %}"
-               class="sublink flex items-center px-4 py-2 rounded-md text-sm transition-all duration-200
-                      {% if request.path == '/admin-dashboard/vendors/verified-kyc/' %}bg-blue-50 text-blue-600 font-semibold{% else %}text-gray-600 hover:bg-gray-100{% endif %}">
-              <i class="fas fa-check-circle w-5 text-center mr-3"></i>
-              Verified Vendors
-            </a>
-          </li>
-        </ul>
-      </li>
+
+ 
 
       <!-- Product Management -->
       <li>
-        <button class="sidebar-dropdown-toggle flex items-center w-full px-4 py-2 rounded-md text-gray-600 font-medium hover:bg-gray-100 transition-all duration-200">
-          <i class="fas fa-box w-6 text-center text-gray-500 mr-3"></i>
+        <button class="sidebar-dropdown-toggle flex items-center w-full px-4 py-2 rounded-md text-gray-800 font-medium hover:bg-gray-100 transition-all duration-200">
+          <i class="fas fa-box w-6 text-center text-black mr-3"></i>
           <span>Product</span>
           <i class="dropdown-icon fas fa-chevron-down text-xs ml-auto transition-transform duration-200 {% if '/admin-dashboard/products/' in request.path %}rotate-180{% endif %}"></i>
         </button>
@@ -92,24 +63,24 @@
           <li>
             <a href="{% url 'admin_products_list' %}"
                class="sublink flex items-center px-4 py-2 rounded-md text-sm transition-all duration-200
-                      {% if request.path == '/admin-dashboard/products/' %}bg-blue-50 text-blue-600 font-semibold{% else %}text-gray-600 hover:bg-gray-100{% endif %}">
-              <i class="fas fa-boxes w-5 text-center mr-3"></i>
+                      {% if request.path == '/admin-dashboard/products/' %}bg-blue-50 text-blue-600 font-semibold{% else %}text-gray-800 hover:bg-gray-100{% endif %}">
+              <i class="fas fa-boxes w-5 text-center mr-3 text-gray-800"></i>
               All Products
             </a>
           </li>
           <li>
             <a href="{% url 'admin_products_featured' %}"
                class="sublink flex items-center px-4 py-2 rounded-md text-sm transition-all duration-200
-                      {% if request.path == '/admin-dashboard/products/featured/' %}bg-blue-50 text-blue-600 font-semibold{% else %}text-gray-600 hover:bg-gray-100{% endif %}">
-              <i class="fas fa-star w-5 text-center mr-3"></i>
+                      {% if request.path == '/admin-dashboard/products/featured/' %}bg-blue-50 text-blue-600 font-semibold{% else %}text-gray-800 hover:bg-gray-100{% endif %}">
+              <i class="fas fa-star w-5 text-center mr-3 text-gray-800"></i>
               Featured Products
             </a>
           </li>
           <li>
             <a href="{% url 'admin_products_low_stock' %}"
                class="sublink flex items-center px-4 py-2 rounded-md text-sm transition-all duration-200
-                      {% if request.path == '/admin-dashboard/products/low-stock/' %}bg-blue-50 text-blue-600 font-semibold{% else %}text-gray-600 hover:bg-gray-100{% endif %}">
-              <i class="fas fa-exclamation-triangle w-5 text-center mr-3"></i>
+                      {% if request.path == '/admin-dashboard/products/low-stock/' %}bg-blue-50 text-blue-600 font-semibold{% else %}text-gray-800 hover:bg-gray-100{% endif %}">
+              <i class="fas fa-exclamation-triangle w-5 text-center mr-3 text-gray-800"></i>
               Low Stock
             </a>
           </li>
@@ -120,91 +91,166 @@
       <li>
         <a href="{% url 'admin_categories_list' %}"
            class="sidebar-link flex items-center px-4 py-2 rounded-md font-medium transition-all duration-200
-                  {% if request.path == '/admin-dashboard/categories/' %}bg-blue-50 text-blue-600 font-semibold{% else %}text-gray-600 hover:bg-gray-100{% endif %}">
-          <i class="fas fa-tags w-6 text-center text-gray-500 mr-3"></i>
+                  {% if request.path == '/admin-dashboard/categories/' %}bg-blue-50 text-blue-600 font-semibold{% else %}text-gray-800 hover:bg-gray-100{% endif %}">
+          <i class="fas fa-tags w-6 text-center text-black mr-3"></i>
           <span>Category</span>
         </a>
       </li>
 
+      <!-- Suppliers & Purchases -->
+      <li>
+        <button class="sidebar-dropdown-toggle flex items-center w-full px-4 py-2 rounded-md text-gray-800 font-medium hover:bg-gray-100 transition-all duration-200">
+          <i class="fas fa-truck w-6 text-center text-black mr-3"></i>
+          <span>Suppliers</span>
+          <i class="dropdown-icon fas fa-chevron-down text-xs ml-auto transition-transform duration-200 {% if '/admin-dashboard/suppliers/' in request.path or '/admin-dashboard/purchases/' in request.path or '/admin-dashboard/purchase-invoices/' in request.path %}rotate-180{% endif %}"></i>
+        </button>
+        <ul class="sidebar-submenu pl-6 mt-1 {% if '/admin-dashboard/suppliers/' not in request.path and '/admin-dashboard/purchases/' not in request.path and '/admin-dashboard/purchase-invoices/' not in request.path %}hidden{% endif %}">
+          <li>
+            <a href="{% url 'admin_suppliers_list' %}"
+               class="sublink flex items-center px-4 py-2 rounded-md text-sm transition-all duration-200
+                      {% if request.path == '/admin-dashboard/suppliers/' %}bg-blue-50 text-blue-600 font-semibold{% else %}text-gray-800 hover:bg-gray-100{% endif %}">
+              <i class="fas fa-truck w-5 text-center mr-3 text-gray-800"></i>
+              All Suppliers
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'admin_purchase_add' %}"
+               class="sublink flex items-center px-4 py-2 rounded-md text-sm transition-all duration-200
+                      {% if request.path == '/admin-dashboard/purchases/add/' %}bg-blue-50 text-blue-600 font-semibold{% else %}text-gray-800 hover:bg-gray-100{% endif %}">
+              <i class="fas fa-plus-circle w-5 text-center mr-3 text-gray-800"></i>
+              Add Purchase
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'admin_purchases_list' %}"
+               class="sublink flex items-center px-4 py-2 rounded-md text-sm transition-all duration-200
+                      {% if request.path == '/admin-dashboard/purchases/' %}bg-blue-50 text-blue-600 font-semibold{% else %}text-gray-800 hover:bg-gray-100{% endif %}">
+              <i class="fas fa-shopping-cart w-5 text-center mr-3 text-gray-800"></i>
+              Purchase History
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'admin_purchase_invoices_list' %}"
+               class="sublink flex items-center px-4 py-2 rounded-md text-sm transition-all duration-200
+                      {% if '/admin-dashboard/purchase-invoices/' in request.path %}bg-blue-50 text-blue-600 font-semibold{% else %}text-gray-800 hover:bg-gray-100{% endif %}">
+              <i class="fas fa-file-invoice w-5 text-center mr-3 text-gray-800"></i>
+              Purchase Invoices
+            </a>
+          </li>
+        </ul>
+      </li>
+
+          <!-- Sales Management -->
+      <li>
+        <button class="sidebar-dropdown-toggle flex items-center w-full px-4 py-2 rounded-md text-gray-800 font-medium hover:bg-gray-100 transition-all duration-200">
+          <i class="fas fa-cash-register w-6 text-center text-black mr-3"></i>
+          <span>Sales</span>
+          <i class="dropdown-icon fas fa-chevron-down text-xs ml-auto transition-transform duration-200 {% if '/admin-dashboard/sales/' in request.path %}rotate-180{% endif %}"></i>
+        </button>
+        <ul class="sidebar-submenu pl-6 mt-1 {% if '/admin-dashboard/sales/' not in request.path %}hidden{% endif %}">
+          <li>
+            <a href="{% url 'admin_sales_list' %}"
+               class="sublink flex items-center px-4 py-2 rounded-md text-sm transition-all duration-200
+                      {% if request.path == '/admin-dashboard/sales/' %}bg-blue-50 text-blue-600 font-semibold{% else %}text-gray-800 hover:bg-gray-100{% endif %}">
+              <i class="fas fa-list w-5 text-center mr-3 text-gray-800"></i>
+              Sales List
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'admin_sales_add' %}"
+               class="sublink flex items-center px-4 py-2 rounded-md text-sm transition-all duration-200
+                      {% if request.path == '/admin-dashboard/sales/add/' %}bg-blue-50 text-blue-600 font-semibold{% else %}text-gray-800 hover:bg-gray-100{% endif %}">
+              <i class="fas fa-plus-circle w-5 text-center mr-3 text-gray-800"></i>
+              Add Sale
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'admin_sales_customers' %}"
+               class="sublink flex items-center px-4 py-2 rounded-md text-sm transition-all duration-200
+                      {% if request.path == '/admin-dashboard/sales/customers/' %}bg-blue-50 text-blue-600 font-semibold{% else %}text-gray-800 hover:bg-gray-100{% endif %}">
+              <i class="fas fa-users w-5 text-center mr-3 text-gray-800"></i>
+              Customer List
+            </a>
+          </li>
+        </ul>
+      </li>
+
+      <!-- Services Management -->
+      <li>
+        <button class="sidebar-dropdown-toggle flex items-center w-full px-4 py-2 rounded-md text-gray-800 font-medium hover:bg-gray-100 transition-all duration-200">
+          <i class="fas fa-concierge-bell w-6 text-center text-black mr-3"></i>
+          <span>Services </span>    <span class="ml-auto inline-block bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-0.5 rounded-full">
+                {{ total_service_bookings_pending }}
+              </span>
+          <i class="dropdown-icon fas fa-chevron-down text-xs ml-auto transition-transform duration-200 {% if '/admin-dashboard/service-bookings/' in request.path or '/admin-dashboard/services/' in request.path %}rotate-180{% endif %}"></i>
+        </button>
+        <ul class="sidebar-submenu pl-6 mt-1 {% if '/admin-dashboard/service-bookings/' not in request.path and '/admin-dashboard/services/' not in request.path %}hidden{% endif %}">
+          <li>
+            <a href="{% url 'admin_services_list' %}"
+               class="sublink flex items-center px-4 py-2 rounded-md text-sm transition-all duration-200
+                      {% if request.path == '/admin-dashboard/services/' %}bg-blue-50 text-blue-600 font-semibold{% else %}text-gray-800 hover:bg-gray-100{% endif %}">
+              <i class="fas fa-concierge-bell w-5 text-center mr-3 text-gray-800"></i>
+              Services
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'admin_service_bookings_list' %}"
+               class="sublink flex items-center px-4 py-2 rounded-md text-sm transition-all duration-200
+                      {% if request.path == '/admin-dashboard/service-bookings/' %}bg-blue-50 text-blue-600 font-semibold{% else %}text-gray-800 hover:bg-gray-100{% endif %}">
+              <i class="fas fa-calendar-check w-5 text-center mr-3 text-gray-800"></i>
+              Service Bookings <span class="ml-auto inline-block bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-0.5 rounded-full">
+                {{ total_service_bookings_pending }}
+              </span>
+            </a>
+          </li>
+        </ul>
+      </li>
+
       <!-- Order Management -->
       <li>
-        <button class="sidebar-dropdown-toggle flex items-center w-full px-4 py-2 rounded-md text-gray-600 font-medium hover:bg-gray-100 transition-all duration-200">
-          <i class="fas fa-shopping-cart w-6 text-center text-gray-500 mr-3"></i>
-          <span>Order</span>
+        <button class="sidebar-dropdown-toggle flex items-center w-full px-4 py-2 rounded-md text-gray-800 font-medium hover:bg-gray-100 transition-all duration-200">
+          <i class="fas fa-shopping-cart w-6 text-center text-black mr-3"></i>
+          <span>Order</span> <span class="ml-auto inline-block bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-0.5 rounded-full">
+                {{ total_pending_orders }}
+              </span>
           <i class="dropdown-icon fas fa-chevron-down text-xs ml-auto transition-transform duration-200 {% if '/admin-dashboard/orders/' in request.path %}rotate-180{% endif %}"></i>
         </button>
         <ul class="sidebar-submenu pl-6 mt-1 {% if '/admin-dashboard/orders/' not in request.path %}hidden{% endif %}">
           <li>
             <a href="{% url 'admin_orders_list' %}"
                class="sublink flex items-center px-4 py-2 rounded-md text-sm transition-all duration-200
-                      {% if request.path == '/admin-dashboard/orders/' %}bg-blue-50 text-blue-600 font-semibold{% else %}text-gray-600 hover:bg-gray-100{% endif %}">
-              <i class="fas fa-list w-5 text-center mr-3"></i>
-              All Orders
+                      {% if request.path == '/admin-dashboard/orders/' %}bg-blue-50 text-blue-600 font-semibold{% else %}text-gray-800 hover:bg-gray-100{% endif %}">
+              <i class="fas fa-list w-5  text-center mr-3 text-gray-800"></i>
+              All Orders  
             </a>
           </li>
           <li>
             <a href="{% url 'admin_orders_pending' %}"
                class="sublink flex items-center px-4 py-2 rounded-md text-sm transition-all duration-200
-                      {% if request.path == '/admin-dashboard/orders/pending/' %}bg-blue-50 text-blue-600 font-semibold{% else %}text-gray-600 hover:bg-gray-100{% endif %}">
-              <i class="fas fa-hourglass-half w-5 text-center mr-3"></i>
-              Pending Orders
+                      {% if request.path == '/admin-dashboard/orders/pending/' %}bg-blue-50 text-blue-600 font-semibold{% else %}text-gray-800 hover:bg-gray-100{% endif %}">
+              <i class="fas fa-hourglass-half w-5 text-center mr-3 text-gray-800"></i>
+              Pending Orders <span class="ml-auto inline-block bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-0.5 rounded-full">
+                {{ total_pending_orders }}
+              </span>
             </a>
           </li>
           <li>
             <a href="{% url 'admin_orders_delivered' %}"
                class="sublink flex items-center px-4 py-2 rounded-md text-sm transition-all duration-200
-                      {% if request.path == '/admin-dashboard/orders/delivered/' %}bg-blue-50 text-blue-600 font-semibold{% else %}text-gray-600 hover:bg-gray-100{% endif %}">
-              <i class="fas fa-check-circle w-5 text-center mr-3"></i>
+                      {% if request.path == '/admin-dashboard/orders/delivered/' %}bg-blue-50 text-blue-600 font-semibold{% else %}text-gray-800 hover:bg-gray-100{% endif %}">
+              <i class="fas fa-check-circle w-5 text-center mr-3 text-gray-800"></i>
               Delivered Orders
             </a>
           </li>
         </ul>
       </li>
 
-      <!-- Payout Requests -->
-      <li>
-        <button class="sidebar-dropdown-toggle flex items-center w-full px-4 py-2 rounded-md text-gray-600 font-medium hover:bg-gray-100 transition-all duration-200">
-          <i class="fas fa-file-invoice-dollar w-6 text-center text-gray-500 mr-3"></i>
-          <span>Payout</span>
-          <i class="dropdown-icon fas fa-chevron-down text-xs ml-auto transition-transform duration-200 {% if '/admin-dashboard/payout-requests/' in request.path %}rotate-180{% endif %}"></i>
-        </button>
-        <ul class="sidebar-submenu pl-6 mt-1 {% if '/admin-dashboard/payout-requests/' not in request.path %}hidden{% endif %}">
-          <li>
-            <a href="{% url 'admin_payout_requests_list' %}"
-               class="sublink flex items-center px-4 py-2 rounded-md text-sm transition-all duration-200
-                      {% if request.path == '/admin-dashboard/payout-requests/' %}bg-blue-50 text-blue-600 font-semibold{% else %}text-gray-600 hover:bg-gray-100{% endif %}">
-              <i class="fas fa-list w-5 text-center mr-3"></i>
-              All Requests
-            </a>
-          </li>
-          <li>
-            <a href="{% url 'admin_payout_requests_pending' %}"
-               class="sublink flex items-center justify-between px-4 py-2 rounded-md text-sm transition-all duration-200
-                      {% if request.path == '/admin-dashboard/payout-requests/pending/' %}bg-blue-50 text-blue-600 font-semibold{% else %}text-gray-600 hover:bg-gray-100{% endif %}">
-              <div class="flex items-center">
-                <i class="fas fa-hourglass-half w-5 text-center mr-3"></i>
-                Pending
-              </div>
-              <span class="bg-blue-600 text-white text-xs font-semibold px-2 py-0.5 rounded-full">
-                {{ total_pending_payouts }}
-              </span>
-            </a>
-          </li>
-          <li>
-            <a href="{% url 'admin_payout_requests_rejected' %}"
-               class="sublink flex items-center px-4 py-2 rounded-md text-sm transition-all duration-200
-                      {% if request.path == '/admin-dashboard/payout-requests/rejected/' %}bg-blue-50 text-blue-600 font-semibold{% else %}text-gray-600 hover:bg-gray-100{% endif %}">
-              <i class="fas fa-times-circle w-5 text-center mr-3"></i>
-              Rejected
-            </a>
-          </li>
-        </ul>
-      </li>
+
 
       <!-- Payments -->
       <li>
-        <button class="sidebar-dropdown-toggle flex items-center w-full px-4 py-2 rounded-md text-gray-600 font-medium hover:bg-gray-100 transition-all duration-200">
-          <i class="fas fa-wallet w-6 text-center text-gray-500 mr-3"></i>
+        <button class="sidebar-dropdown-toggle flex items-center w-full px-4 py-2 rounded-md text-gray-800 font-medium hover:bg-gray-100 transition-all duration-200">
+          <i class="fas fa-wallet w-6 text-center text-black mr-3"></i>
           <span>Payments</span>
           <i class="dropdown-icon fas fa-chevron-down text-xs ml-auto transition-transform duration-200 {% if '/admin-dashboard/payments/' in request.path %}rotate-180{% endif %}"></i>
         </button>
@@ -212,8 +258,8 @@
           <li>
             <a href="{% url 'admin_payments_overview' %}"
                class="sublink flex items-center px-4 py-2 rounded-md text-sm transition-all duration-200
-                      {% if request.path == '/admin-dashboard/payments/' %}bg-blue-50 text-blue-600 font-semibold{% else %}text-gray-600 hover:bg-gray-100{% endif %}">
-              <i class="fas fa-wallet w-5 text-center mr-3"></i>
+                      {% if request.path == '/admin-dashboard/payments/' %}bg-blue-50 text-blue-600 font-semibold{% else %}text-gray-800 hover:bg-gray-100{% endif %}">
+              <i class="fas fa-wallet w-5 text-center mr-3 text-gray-800"></i>
              Payments & Revenue
             </a>
           </li>
@@ -222,8 +268,8 @@
 
       <!-- Content Management -->
       <li>
-        <button class="sidebar-dropdown-toggle flex items-center w-full px-4 py-2 rounded-md text-gray-600 font-medium hover:bg-gray-100 transition-all duration-200">
-          <i class="fas fa-images w-6 text-center text-gray-500 mr-3"></i>
+        <button class="sidebar-dropdown-toggle flex items-center w-full px-4 py-2 rounded-md text-gray-800 font-medium hover:bg-gray-100 transition-all duration-200">
+          <i class="fas fa-images w-6 text-center text-black mr-3"></i>
           <span>Content</span>
           <i class="dropdown-icon fas fa-chevron-down text-xs ml-auto transition-transform duration-200 {% if '/admin-dashboard/sliders/' in request.path or '/admin-dashboard/banners/' in request.path %}rotate-180{% endif %}"></i>
         </button>
@@ -231,85 +277,54 @@
           <li>
             <a href="{% url 'admin_sliders_list' %}"
                class="sublink flex items-center px-4 py-2 rounded-md text-sm transition-all duration-200
-                      {% if request.path == '/admin-dashboard/sliders/' %}bg-blue-50 text-blue-600 font-semibold{% else %}text-gray-600 hover:bg-gray-100{% endif %}">
-              <i class="fas fa-sliders-h w-5 text-center mr-3"></i>
+                      {% if request.path == '/admin-dashboard/sliders/' %}bg-blue-50 text-blue-600 font-semibold{% else %}text-gray-800 hover:bg-gray-100{% endif %}">
+              <i class="fas fa-sliders-h w-5 text-center mr-3 text-gray-800"></i>
               Sliders
             </a>
           </li>
           <li>
             <a href="{% url 'admin_banners_list' %}"
                class="sublink flex items-center px-4 py-2 rounded-md text-sm transition-all duration-200
-                      {% if request.path == '/admin-dashboard/banners/' %}bg-blue-50 text-blue-600 font-semibold{% else %}text-gray-600 hover:bg-gray-100{% endif %}">
-              <i class="fas fa-image w-5 text-center mr-3"></i>
+                      {% if request.path == '/admin-dashboard/banners/' %}bg-blue-50 text-blue-600 font-semibold{% else %}text-gray-800 hover:bg-gray-100{% endif %}">
+              <i class="fas fa-image w-5 text-center mr-3 text-gray-800"></i>
               Banners
             </a>
           </li>
         </ul>
       </li>
 
-      <!-- Contact Management -->
-      <li>
-        <button class="sidebar-dropdown-toggle flex items-center w-full px-4 py-2 rounded-md text-gray-600 font-medium hover:bg-gray-100 transition-all duration-200">
-          <i class="fas fa-envelope w-6 text-center text-gray-500 mr-3"></i>
-          <span>Contact</span>
-          <i class="dropdown-icon fas fa-chevron-down text-xs ml-auto transition-transform duration-200 {% if '/admin-dashboard/contacts/' in request.path %}rotate-180{% endif %}"></i>
-        </button>
-        <ul class="sidebar-submenu pl-6 mt-1 {% if '/admin-dashboard/contacts/' not in request.path %}hidden{% endif %}">
-          <li>
-            <a href="{% url 'admin_contacts_list' %}"
-               class="sublink flex items-center px-4 py-2 rounded-md text-sm transition-all duration-200
-                      {% if request.path == '/admin-dashboard/contacts/' %}bg-blue-50 text-blue-600 font-semibold{% else %}text-gray-600 hover:bg-gray-100{% endif %}">
-              <i class="fas fa-inbox w-5 text-center mr-3"></i>
-              All Contacts
-            </a>
-          </li>
-          <li>
-            <a href="{% url 'admin_contact_unread' %}"
-               class="sublink flex items-center px-4 py-2 rounded-md text-sm transition-all duration-200
-                      {% if request.path == '/admin-dashboard/contacts/unread/' %}bg-blue-50 text-blue-600 font-semibold{% else %}text-gray-600 hover:bg-gray-100{% endif %}">
-              <i class="fas fa-envelope-open w-5 text-center mr-3"></i>
-              Unread Contacts
-            </a>
-          </li>
-        </ul>
-      </li>
+
 
       <!-- Review Management -->
       <li>
         <a href="{% url 'admin_reviews_list' %}"
            class="sidebar-link flex items-center px-4 py-2 rounded-md font-medium transition-all duration-200
-                  {% if request.path == '/admin-dashboard/reviews/' %}bg-blue-50 text-blue-600 font-semibold{% else %}text-gray-600 hover:bg-gray-100{% endif %}">
-          <i class="fas fa-star w-6 text-center text-gray-500 mr-3"></i>
+                  {% if request.path == '/admin-dashboard/reviews/' %}bg-blue-50 text-blue-600 font-semibold{% else %}text-gray-800 hover:bg-gray-100{% endif %}">
+          <i class="fas fa-star w-6 text-center text-black mr-3"></i>
           <span>Review</span>
         </a>
       </li>
 
-      <!-- Shipping Cost -->
+      <!-- Tax Settings (previously Shipping Cost) -->
       <li>
-        <a href="{% url 'admin_shipping_cost' %}"
+        <a href="{% url 'admin_tax_settings' %}"
            class="sidebar-link flex items-center px-4 py-2 rounded-md font-medium transition-all duration-200
-                  {% if request.path == '/admin-dashboard/shipping-cost/' %}bg-blue-50 text-blue-600 font-semibold{% else %}text-gray-600 hover:bg-gray-100{% endif %}">
-          <i class="fas fa-truck w-6 text-center text-gray-500 mr-3"></i>
-          <span>Shipping Cost</span>
+                  {% if request.path == '/admin-dashboard/tax-settings/' %}bg-blue-50 text-blue-600 font-semibold{% else %}text-gray-800 hover:bg-gray-100{% endif %}">
+          <i class="fas fa-percentage w-6 text-center text-black mr-3"></i>
+          <span>Tax Settings</span>
         </a>
       </li>
 
-      <!-- Newsletter -->
-      <li>
-        <a href="{% url 'admin_newsletter_list' %}"
-           class="sidebar-link flex items-center px-4 py-2 rounded-md font-medium transition-all duration-200
-                  {% if request.path == '/admin-dashboard/newsletter/' %}bg-blue-50 text-blue-600 font-semibold{% else %}text-gray-600 hover:bg-gray-100{% endif %}">
-          <i class="fas fa-newspaper w-6 text-center text-gray-500 mr-3"></i>
-          <span>Newsletter</span>
-        </a>
-      </li>
+    
+
+  
 
       <!-- Coupons -->
       <li>
         <a href="{% url 'admin_coupons_list' %}"
            class="sidebar-link flex items-center px-4 py-2 rounded-md font-medium transition-all duration-200
-                  {% if request.path == '/admin-dashboard/coupons/' %}bg-blue-50 text-blue-600 font-semibold{% else %}text-gray-600 hover:bg-gray-100{% endif %}">
-          <i class="fas fa-ticket-alt w-6 text-center text-gray-500 mr-3"></i>
+                  {% if request.path == '/admin-dashboard/coupons/' %}bg-blue-50 text-blue-600 font-semibold{% else %}text-gray-800 hover:bg-gray-100{% endif %}">
+          <i class="fas fa-ticket-alt w-6 text-center text-black mr-3"></i>
           <span>Coupons</span>
         </a>
       </li>
@@ -318,8 +333,8 @@
       <li>
         <a href="{% url 'admin_organization_view' %}"
            class="sidebar-link flex items-center px-4 py-2 rounded-md font-medium transition-all duration-200
-                  {% if request.path == '/admin-dashboard/organization/' %}bg-blue-50 text-blue-600 font-semibold{% else %}text-gray-600 hover:bg-gray-100{% endif %}">
-          <i class="fas fa-building w-6 text-center text-gray-500 mr-3"></i>
+                  {% if request.path == '/admin-dashboard/organization/' %}bg-blue-50 text-blue-600 font-semibold{% else %}text-gray-800 hover:bg-gray-100{% endif %}">
+          <i class="fas fa-building w-6 text-center text-black mr-3"></i>
           <span>Organization</span>
         </a>
       </li>
@@ -328,8 +343,8 @@
       <li>
         <a href="{% url 'admin_profile' %}"
            class="sidebar-link flex items-center px-4 py-2 rounded-md font-medium transition-all duration-200
-                  {% if request.path == '/admin-dashboard/profile/' %}bg-blue-50 text-blue-600 font-semibold{% else %}text-gray-600 hover:bg-gray-100{% endif %}">
-          <i class="fas fa-user w-6 text-center text-gray-500 mr-3"></i>
+                  {% if request.path == '/admin-dashboard/profile/' %}bg-blue-50 text-blue-600 font-semibold{% else %}text-gray-800 hover:bg-gray-100{% endif %}">
+          <i class="fas fa-user w-6 text-center text-black mr-3"></i>
           <span>Profile</span>
         </a>
       </li>
@@ -337,179 +352,7 @@
     </ul>
   </nav>
 
-  {% elif request.user.role.role == 'vendor' %}
-  <!-- ====================== VENDOR ====================== -->
-  <nav class="flex-grow overflow-y-auto py-4 text-md" aria-label="Sidebar navigation">
-    <ul class="space-y-1 px-2">
-
-      <!-- Dashboard -->
-      <li>
-        <a href="{% url 'vendor_dashboard' %}"
-           class="sidebar-link flex items-center px-4 py-2 rounded-md font-medium transition-all duration-200
-                  {% if request.path == '/admin-dashboard/vendor-dashboard/' %}bg-blue-50 text-blue-600 font-semibold{% else %}text-gray-600 hover:bg-gray-100{% endif %}">
-          <i class="fas fa-tachometer-alt w-6 text-center text-gray-500 mr-3"></i>
-          <span>Dashboard</span>
-        </a>
-      </li>
-
-      <!-- Products -->
-      <li>
-        <button class="sidebar-dropdown-toggle flex items-center w-full px-4 py-2 rounded-md text-gray-600 font-medium hover:bg-gray-100 transition-all duration-200">
-          <i class="fas fa-box w-6 text-center text-gray-500 mr-3"></i>
-          <span>Products</span>
-          <i class="dropdown-icon fas fa-chevron-down text-xs ml-auto transition-transform duration-200 {% if '/admin-dashboard/vendor/products/' in request.path %}rotate-180{% endif %}"></i>
-        </button>
-        <ul class="sidebar-submenu pl-6 mt-1 {% if '/admin-dashboard/vendor/products/' not in request.path %}hidden{% endif %}">
-          <li>
-            <a href="{% url 'vendor_products_list' %}"
-               class="sublink flex items-center px-4 py-2 rounded-md text-sm transition-all duration-200
-                      {% if request.path == '/admin-dashboard/vendor/products/' %}bg-blue-50 text-blue-600 font-semibold{% else %}text-gray-600 hover:bg-gray-100{% endif %}">
-              <i class="fas fa-boxes w-5 text-center mr-3"></i>
-              All Products
-            </a>
-          </li>
-          <li>
-            <a href="{% url 'vendor_product_add' %}"
-               class="sublink flex items-center px-4 py-2 rounded-md text-sm transition-all duration-200
-                      {% if request.path == '/admin-dashboard/vendor/products/add/' %}bg-blue-50 text-blue-600 font-semibold{% else %}text-gray-600 hover:bg-gray-100{% endif %}">
-              <i class="fas fa-plus w-5 text-center mr-3"></i>
-              Add Product
-            </a>
-          </li>
-          <li>
-            <a href="{% url 'vendor_products_low_stock' %}"
-               class="sublink flex items-center px-4 py-2 rounded-md text-sm transition-all duration-200
-                      {% if request.path == '/admin-dashboard/vendor/products/low-stock/' %}bg-blue-50 text-blue-600 font-semibold{% else %}text-gray-600 hover:bg-gray-100{% endif %}">
-              <i class="fas fa-exclamation-triangle w-5 text-center mr-3"></i>
-              Low Stock
-            </a>
-          </li>
-        </ul>
-      </li>
-
-      <!-- Orders -->
-      <li>
-        <button class="sidebar-dropdown-toggle flex items-center w-full px-4 py-2 rounded-md text-gray-600 font-medium hover:bg-gray-100 transition-all duration-200">
-          <i class="fas fa-shopping-cart w-6 text-center text-gray-500 mr-3"></i>
-          <span>Orders</span>
-          <i class="dropdown-icon fas fa-chevron-down text-xs ml-auto transition-transform duration-200 {% if '/admin-dashboard/vendor/orders/' in request.path %}rotate-180{% endif %}"></i>
-        </button>
-        <ul class="sidebar-submenu pl-6 mt-1 {% if '/admin-dashboard/vendor/orders/' not in request.path %}hidden{% endif %}">
-          <li>
-            <a href="{% url 'vendor_orders_list' %}"
-               class="sublink flex items-center px-4 py-2 rounded-md text-sm transition-all duration-200
-                      {% if request.path == '/admin-dashboard/vendor/orders/' %}bg-blue-50 text-blue-600 font-semibold{% else %}text-gray-600 hover:bg-gray-100{% endif %}">
-              <i class="fas fa-list w-5 text-center mr-3"></i>
-              All Orders
-            </a>
-          </li>
-          <li>
-            <a href="{% url 'vendor_orders_pending' %}"
-               class="sublink flex items-center justify-between px-4 py-2 rounded-md text-sm transition-all duration-200
-                      {% if request.path == '/admin-dashboard/vendor/orders/pending/' %}bg-blue-50 text-blue-600 font-semibold{% else %}text-gray-600 hover:bg-gray-100{% endif %}">
-              <div class="flex items-center">
-                <i class="fas fa-hourglass-half w-5 text-center mr-3"></i>
-                Pending Orders
-              </div>
-              <span class="bg-blue-600 text-white text-xs font-semibold px-2 py-0.5 rounded-full">
-                {{ total_vendor_pending_orders }}
-              </span>
-            </a>
-          </li>
-          <li>
-            <a href="{% url 'vendor_orders_delivered' %}"
-               class="sublink flex items-center px-4 py-2 rounded-md text-sm transition-all duration-200
-                      {% if request.path == '/admin-dashboard/vendor/orders/delivered/' %}bg-blue-50 text-blue-600 font-semibold{% else %}text-gray-600 hover:bg-gray-100{% endif %}">
-              <i class="fas fa-check-circle w-5 text-center mr-3"></i>
-              Delivered Orders
-            </a>
-          </li>
-        </ul>
-      </li>
-
-      <!-- Payouts -->
-      <li>
-        <button class="sidebar-dropdown-toggle flex items-center w-full px-4 py-2 rounded-md text-gray-600 font-medium hover:bg-gray-100 transition-all duration-200">
-          <i class="fas fa-file-invoice-dollar w-6 text-center text-gray-500 mr-3"></i>
-          <span>Payout</span>
-          <i class="dropdown-icon fas fa-chevron-down text-xs ml-auto transition-transform duration-200 {% if '/admin-dashboard/vendor/payout-lists/' in request.path or '/admin-dashboard/vendor/payouts/' in request.path %}rotate-180{% endif %}"></i>
-        </button>
-        <ul class="sidebar-submenu pl-6 mt-1 {% if '/admin-dashboard/vendor/payout-lists/' not in request.path and '/admin-dashboard/vendor/payouts/' not in request.path %}hidden{% endif %}">
-          <li>
-            <a href="{% url 'vendor_payout_list' %}"
-               class="sublink flex items-center px-4 py-2 rounded-md text-sm transition-all duration-200
-                      {% if request.path == '/admin-dashboard/vendor/payout-lists/' %}bg-blue-50 text-blue-600 font-semibold{% else %}text-gray-600 hover:bg-gray-100{% endif %}">
-              <i class="fas fa-list w-5 text-center mr-3"></i>
-              All Requests
-            </a>
-          </li>
-          <li>
-            <a href="{% url 'vendor_pending_payout' %}"
-               class="sublink flex items-center justify-between px-4 py-2 rounded-md text-sm transition-all duration-200
-                      {% if request.path == '/admin-dashboard/vendor/payouts/pending/' %}bg-blue-50 text-blue-600 font-semibold{% else %}text-gray-600 hover:bg-gray-100{% endif %}">
-              <div class="flex items-center">
-                <i class="fas fa-hourglass-half w-5 text-center mr-3"></i>
-                Pending
-              </div>
-              <span class="bg-blue-600 text-white text-xs font-semibold px-2 py-0.5 rounded-full">
-                {{ total_vendor_pending_payouts }}
-              </span>
-            </a>
-          </li>
-          <li>
-            <a href="{% url 'vendor_rejected_payout' %}"
-               class="sublink flex items-center px-4 py-2 rounded-md text-sm transition-all duration-200
-                      {% if request.path == '/admin-dashboard/vendor/payouts/rejected/' %}bg-blue-50 text-blue-600 font-semibold{% else %}text-gray-600 hover:bg-gray-100{% endif %}">
-              <i class="fas fa-times-circle w-5 text-center mr-3"></i>
-              Rejected
-            </a>
-          </li>
-        </ul>
-      </li>
-
-      <!-- Wallets -->
-      <li>
-        <a href="{% url 'vendor_wallet_view' %}"
-           class="sidebar-link flex items-center px-4 py-2 rounded-md font-medium transition-all duration-200
-                  {% if request.path == '/admin-dashboard/vendor/wallet/' %}bg-blue-50 text-blue-600 font-semibold{% else %}text-gray-600 hover:bg-gray-100{% endif %}">
-          <i class="fas fa-wallet w-6 text-center text-gray-500 mr-3"></i>
-          <span>Wallets</span>
-        </a>
-      </li>
-
-      <!-- Invoices -->
-      <li>
-        <a href="{% url 'vendor_invoices_list' %}"
-           class="sidebar-link flex items-center px-4 py-2 rounded-md font-medium transition-all duration-200
-                  {% if request.path == '/admin-dashboard/vendor/invoice/' %}bg-blue-50 text-blue-600 font-semibold{% else %}text-gray-600 hover:bg-gray-100{% endif %}">
-          <i class="fas fa-file-invoice w-6 text-center text-gray-500 mr-3"></i>
-          <span>Invoices</span>
-        </a>
-      </li>
-
-      <!-- Review -->
-      <li>
-        <a href="{% url 'vendor_reviews_list' %}"
-           class="sidebar-link flex items-center px-4 py-2 rounded-md font-medium transition-all duration-200
-                  {% if request.path == '/admin-dashboard/vendor/reviews/' %}bg-blue-50 text-blue-600 font-semibold{% else %}text-gray-600 hover:bg-gray-100{% endif %}">
-          <i class="fas fa-star w-6 text-center text-gray-500 mr-3"></i>
-          <span>Review</span>
-        </a>
-      </li>
-
-      <!-- Profile -->
-      <li>
-        <a href="{% url 'vendor_profile' %}"
-           class="sidebar-link flex items-center px-4 py-2 rounded-md font-medium transition-all duration-200
-                  {% if request.path == '/admin-dashboard/vendor/profile/' %}bg-blue-50 text-blue-600 font-semibold{% else %}text-gray-600 hover:bg-gray-100{% endif %}">
-          <i class="fas fa-user w-6 text-center text-gray-500 mr-3"></i>
-          <span>Profile</span>
-        </a>
-      </li>
-
-    </ul>
-  </nav>
-  {% endif %}
+ 
 
   <!-- Bottom – Logout (common) -->
   <div class="border-t border-gray-200 pt-2 px-2">
@@ -517,7 +360,7 @@
       <li>
         <a href="{% url 'logout' %}"
            class="flex items-center px-4 py-2 rounded-md text-red-600 font-medium hover:bg-red-50 transition-all duration-200">
-          <i class="fas fa-sign-out-alt w-6 text-center mr-3"></i>
+          <i class="fas fa-sign-out-alt w-6 text-center mr-3 text-gray-800"></i>
           Logout
         </a>
       </li>

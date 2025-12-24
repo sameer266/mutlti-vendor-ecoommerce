@@ -75,8 +75,9 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'ecommerce.context_processors.global_context',
-                'ecommerce.context_processors.nepal_locations',
+                
+                'ecommerce.context_processors.global_context_processor',
+        
                 
             ],
         },

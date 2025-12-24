@@ -1,0 +1,48 @@
+{% extends 'dashboard/components/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="bg-white rounded-xl shadow p-6">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-semibold text-gray-800">
+      <i class="fas fa-percentage mr-2"></i>Tax Settings
+    </h1>
+    {% if tax_setting %}
+    <a href="{% url 'admin_tax_settings_update' tax_setting.id %}" 
+       class="bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+       Edit
+    </a>
+    {% else %}
+    <span class="text-sm text-gray-500">Create a tax setting to enable checkout tax calculations.</span>
+    {% endif %}
+  </div>
+
+    {% if tax_setting %}
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div class="p-4 border rounded-lg text-center bg-gray-50">
+        <h3 class="text-lg font-semibold text-gray-700">Tax</h3>
+        <p class="text-2xl font-bold text-gray-900 mt-2">{{ tax_setting.tax|floatformat:2 }}%</p>
+      </div>
+      <div class="p-4 border rounded-lg text-center bg-gray-50">
+        <h3 class="text-lg font-semibold text-gray-700">Notes</h3>
+        <p class="text-sm text-gray-500">Shipping is set per-product. Tax is applied globally during checkout.</p>
+      </div>
+      <div class="p-4 border rounded-lg text-center bg-gray-50">
+        <h3 class="text-lg font-semibold text-gray-700">Example</h3>
+        <p class="text-2xl font-bold text-green-600 mt-2">Tax will be applied to subtotal + per-product shipping.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 🔹 Add Edit button below the cards -->
+    <div class="flex justify-center mt-8">
+      <a href="{% url 'admin_tax_settings_update' tax_setting.id %}" 
+         class="bg-gray-900 hover:bg-gray-800 text-white px-6 py-2 rounded-lg transition">
+        <i class="fas fa-edit mr-2"></i>Edit Tax Setting
+      </a>
+    </div>
+  {% else %}
+  <p class="text-gray-500 text-center">No tax settings available yet.</p>
+  {% endif %}
+</div>
+{% endblock %}

@@ -26,51 +26,13 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('admin-dashboard/',include('dashboard.urls')),
     
-    # Main Pages
-    path('',views.home_page,name="home"),
-    path('search/',views.search_page,name='search'),
-    path('all-collections/',views.all_collections,name="all_collections"),
-    path("new-arrivals/",views.new_arrivals_page,name="new_arrivals"),
 
-    # Vendor & Product URLs
-    path("vendors/",views.vendors,name="vendors"),
-    path("vendors/<slug:slug>/",views.vendor_details,name="vendor_details"),
-    path('product/<slug:slug>/',views.product_details,name="product_details"),
-    path("category/<slug:slug>/",views.category_details,name='category_details'),
-    
-    # Cart Management
-    path('cart/',views.carts,name="carts"),
-    path('api/cart/add/',views.add_to_cart,name="add_to_cart"),
-    path('api/cart/update/',views.update_cart_item,name="update_cart_item"),
-    path('api/cart/remove/',views.remove_from_cart,name="remove_from_cart"),
-    
-    # Checkout & Orders
-    path('checkout/', views.checkout, name='checkout_page'),
-    path('api/apply-coupon/', views.apply_coupon, name='apply_coupon'),
-    path('order-confirmation/<int:order_id>/', views.order_confirmation, name='order_confirmation'),
-    
     # Authentication URLs
-    path("login/",views.login_page,name="login_page"),
-    path("signup/",views.signup_page,name='signup_page'),
-    path("forget-password/",views.forget_password,name="forget_password"),
-    path('set-password',views.set_password_view,name="set_password"),
-    path("logout",views.logout_view,name="logout"),
-    path('contact/',views.contact_view,name='contact'),
-    path('verify-otp/', views.verify_otp_page, name='verify_otp_page'),
-    
-    # Customer Dashboard
-    path("customer-profile/",views.customer_profile,name='customer_profile'),
-    path("dashboard/customer/edit/profile/",views.edit_profile,name='edit_profile'),
-    path("dashboard/customer/orders/",views.customer_orders,name='customer_orders'),
-    path("dashboard/customer/order/<str:order_number>/",views.customer_order_detail,name='customer_order_detail'),
-    
-    path("dashboard/customer/invoices/",views.customer_invoices,name='customer_invoices'),
-    path('dashboard/customer/invoice/<str:invoice_number>/', views.customer_invoice_detail, name='customer_invoice_detail'),
-
+    path("",views.login_page,name="login_page"),
+     path("logout",views.logout_view,name="logout"),
     # Rich Text Editor
     path('ckeditor/', include('ckeditor_uploader.urls')),
-    
-    
+
     # API URLs
     path('api/', include('api.urls')),
     

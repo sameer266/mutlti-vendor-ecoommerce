@@ -2,133 +2,166 @@
 {% load static %}
 
 {% block content %}
-<div class="bg-white rounded-xl shadow p-6">
+<div class="max-w-7xl mx-auto p-4 sm:p-6">
   <!-- Header -->
-  <div class="flex justify-between items-center mb-6">
-    <h1 class="text-2xl font-semibold text-gray-800"><i class="fas fa-box"></i> Products</h1>
-    <a href="{% url 'admin_product_add' %}" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center gap-2">
-      <i class="fas fa-plus"></i> Add Product
-    </a>
+  <div class="mb-6">
+    <div class="flex items-center justify-between">
+      <div>
+        <h1 class="text-2xl font-semibold text-gray-900">Products</h1>
+        <p class="text-sm text-gray-500 mt-1">Manage product inventory</p>
+      </div>
+      <a href="{% url 'admin_product_add' %}" class="bg-gray-900 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-800 transition-colors">
+        <i class="fas fa-plus mr-1"></i> Add Product
+      </a>
+    </div>
   </div>
 
   <!-- Filter Form -->
-  <form method="get" class="mb-4 grid grid-cols-1 md:grid-cols-4 gap-4">
-    <input type="text" name="search" value="{{ request.GET.search }}" placeholder="Search by name, SKU, brand..." class="border border-gray-300 rounded-lg p-2.5" />
-    <select name="category" class="border border-gray-300 rounded-lg p-2.5">
-      <option value="">All Categories</option>
-      {% for c in categories %}
-        <option value="{{ c.id }}" {% if request.GET.category|default:'' == c.id|stringformat:'s' %}selected{% endif %}>{{ c.name }}</option>
-      {% endfor %}
-    </select>
-    <select name="vendor" class="border border-gray-300 rounded-lg p-2.5">
-      <option value="">All Vendors</option>
-      {% for v in vendors %}
-        <option value="{{ v.id }}" {% if request.GET.vendor|default:'' == v.id|stringformat:'s' %}selected{% endif %}>{{ v.shop_name }}</option>
-      {% endfor %}
-    </select>
-    <div class="md:col-span-1 flex gap-2">
-      <button class="bg-gray-800 text-white px-4 py-2 rounded-lg flex-1 hover:bg-gray-900 transition">Filter</button>
-      <a href="?" class="border border-gray-300 px-4 py-2 rounded-lg flex-1 text-center text-gray-700 hover:bg-gray-100 transition">Reset</a>
-    </div>
-  </form>
+  <div class="bg-white border border-gray-200 rounded-lg p-4 mb-4">
+    <form method="get">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+        <input type="text" name="search" value="{{ request.GET.search }}" placeholder="Search products..." class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent" />
+        
+        <select name="category" class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent">
+          <option value="">All Categories</option>
+          {% for c in categories %}
+            <option value="{{ c.id }}" {% if request.GET.category|default:'' == c.id|stringformat:'s' %}selected{% endif %}>{{ c.name }}</option>
+          {% endfor %}
+        </select>
+        
+        <div class="md:col-span-2 flex gap-2">
+          <button class="bg-gray-900 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-800 transition-colors flex-1">Filter</button>
+          <a href="?" class="bg-gray-100 text-gray-700 px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-200 transition-colors flex-1 text-center">Reset</a>
+        </div>
+      </div>
+    </form>
+  </div>
 
   <!-- Products Table -->
-  <div class="overflow-x-auto">
-    <table id="productsTable" class="display w-full border border-gray-200 rounded-lg text-sm">
-      <thead class="bg-gray-100">
-        <tr>
-          <th class="px-4 py-3 text-left">ID</th>
-          <th class="px-4 py-3 text-left">Image</th>
-          <th class="px-4 py-3 text-left">Name</th>
-          <th class="px-4 py-3 text-left">Category</th>
-          <th class="px-4 py-3 text-left">Vendor</th>
-          <th class="px-4 py-3 text-left">Price</th>
-          <th class="px-4 py-3 text-left">Stock</th>
-          <th class="px-4 py-3 text-left">Featured</th>
-          <th class="px-4 py-3 text-left">Gallery</th>
-          <th class="px-4 py-3 text-left">Variants</th>
-          <th class="px-4 py-3 text-center">Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for product in products %}
-        <tr class="hover:bg-gray-50">
-          <td class="px-4 py-3">{{ product.id }}</td>
+  <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+    <div class="overflow-x-auto">
+      <table id="productsTable" class="w-full border-collapse">
+        <thead class="bg-gray-50 border-b border-gray-200">
+          <tr>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-700 border-b border-gray-200">ID</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-700 border-b border-gray-200">Image</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-700 border-b border-gray-200">Name</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-700 border-b border-gray-200">Category</th>
+            <th class="px-4 py-3 text-right text-xs font-medium text-gray-700 border-b border-gray-200">Price</th>
+            <th class="px-4 py-3 text-right text-xs font-medium text-gray-700 border-b border-gray-200">Shipping</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-700 border-b border-gray-200">ETA</th>
+            <th class="px-4 py-3 text-center text-xs font-medium text-gray-700 border-b border-gray-200">Stock</th>
+            <th class="px-4 py-3 text-center text-xs font-medium text-gray-700 border-b border-gray-200">Featured</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-700 border-b border-gray-200">Gallery</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-700 border-b border-gray-200">Variants</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-700 border-b border-gray-200">Payment</th>
+            <th class="px-4 py-3 text-center text-xs font-medium text-gray-700 border-b border-gray-200">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for product in products %}
+          <tr class="hover:bg-gray-50 border-b border-gray-200">
+            <td class="px-4 py-3 text-sm text-gray-900">{{ product.id }}</td>
 
-          <!-- Main Image -->
-          <td class="px-4 py-3">
-            {% if product.main_image %}
-              <img src="{{ product.main_image.url }}" alt="{{ product.name }}" class="h-10 w-10 object-cover rounded"/>
-            {% else %}
-              <span class="text-gray-400">No image</span>
-            {% endif %}
-          </td>
+            <!-- Main Image -->
+            <td class="px-4 py-3">
+              {% if product.main_image %}
+                <img src="{{ product.main_image.url }}" alt="{{ product.name }}" class="h-10 w-10 object-cover rounded border border-gray-200"/>
+              {% else %}
+                <div class="h-10 w-10 bg-gray-100 rounded border border-gray-200 flex items-center justify-center">
+                  <i class="fas fa-image text-gray-400 text-xs"></i>
+                </div>
+              {% endif %}
+            </td>
 
-          <td class="px-4 py-3 font-medium">{{ product.name|truncatechars:25 }}</td>
-          <td class="px-4 py-3">{{ product.category.name }}</td>
-          <td class="px-4 py-3">{{ product.vendor.shop_name }}</td>
-          <td class="px-4 py-3">Rs. {{ product.price }}</td>
-          <td class="px-4 py-3">{{ product.stock }}</td>
+            <td class="px-4 py-3 text-sm font-medium text-gray-900">{{ product.name|truncatechars:25 }}</td>
+            <td class="px-4 py-3 text-sm text-gray-900">{{ product.category.name }}</td>
+            <td class="px-4 py-3 text-sm text-right text-gray-900">Rs. {{ product.price }}</td>
+            <td class="px-4 py-3 text-sm text-right text-gray-900">Rs. {{ product.shipping_cost|default:0 }}</td>
+            <td class="px-4 py-3 text-sm text-gray-900">{{ product.estimated_days|default:'-' }}</td>
+            <td class="px-4 py-3 text-sm text-center text-gray-900">{{ product.stock }}</td>
 
-          <!-- Featured Badge -->
-          <td class="px-4 py-3">
-            {% if product.is_featured %}
-              <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
-                <i class="fas fa-star mr-1"></i> Yes
-              </span>
-            {% else %}
-              <span class="text-gray-400 text-xs">No</span>
-            {% endif %}
-          </td>
+            <!-- Featured Badge -->
+            <td class="px-4 py-3 text-center">
+              {% if product.is_featured %}
+                <i class="fas fa-star text-gray-900 text-sm"></i>
+              {% else %}
+                <span class="text-gray-400 text-xs">-</span>
+              {% endif %}
+            </td>
 
-          <!-- Gallery Images -->
-          <td class="px-4 py-3">
-            <div class="flex items-center space-x-1">
-              {% for img in product.images.all %}
-                <img src="{{ img.image.url }}" alt="img" class="h-8 w-8 object-cover rounded"/>
-              {% empty %}
-                <span class="text-gray-400">-</span>
-              {% endfor %}
-            </div>
-          </td>
-
-          <!-- Variants -->
-          <td class="px-4 py-3">
-            {% if product.variants.all %}
-              <div class="space-y-1">
-                {% for v in product.variants.all %}
-                  <div class="text-xs text-gray-700">
-                    <span class="font-medium">{{ v.get_variant_type_display|default:v.variant_type }}:</span> {{ v.name }}
-                    {% if v.price_adjustment and v.price_adjustment|floatformat != '0' %}
-                      <span class="text-gray-500">(+{{ v.price_adjustment }})</span>
-                    {% endif %}
-                  </div>
+            <!-- Gallery Images -->
+            <td class="px-4 py-3">
+              <div class="flex items-center gap-1">
+                {% for img in product.images.all %}
+                  <img src="{{ img.image.url }}" alt="img" class="h-8 w-8 object-cover rounded border border-gray-200"/>
+                {% empty %}
+                  <span class="text-xs text-gray-400">-</span>
                 {% endfor %}
               </div>
-            {% else %}
-              <span class="text-gray-400">-</span>
-            {% endif %}
-          </td>
+            </td>
 
-          <!-- Actions with Icons -->
-          <td class="px-4 py-3 text-center">
-            <div class="inline-flex items-center space-x-3 justify-center">
-              <a href="{% url 'admin_product_update' product.id %}" class="text-blue-600 hover:text-blue-800" title="Edit">
-                <i class="fas fa-edit"></i>
-              </a>
-              <a href="{% url 'admin_product_delete' product.id %}" class="text-red-600 hover:text-red-800" title="Delete" onclick="return confirm('Delete this product?')">
-                <i class="fas fa-trash-alt"></i>
-              </a>
-            </div>
-          </td>
-        </tr>
-        {% empty %}
-        <tr>
-          <td colspan="11" class="text-center text-gray-500 py-6">No products found.</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+            <!-- Variants -->
+            <td class="px-4 py-3">
+              {% if product.variants.all %}
+                <div class="space-y-1">
+                  {% for v in product.variants.all %}
+                    <div class="text-xs text-gray-900">
+                      <span class="font-medium">{{ v.get_variant_type_display|default:v.variant_type }}:</span> {{ v.name }}
+                      {% if v.price_adjustment and v.price_adjustment|floatformat != '0' %}
+                        <span class="text-gray-500">(+{{ v.price_adjustment }})</span>
+                      {% endif %}
+                    </div>
+                  {% endfor %}
+                </div>
+              {% else %}
+                <span class="text-xs text-gray-400">-</span>
+              {% endif %}
+            </td>
+
+            <!-- Supplier Payment Status -->
+            <td class="px-4 py-3">
+              {% if product.pending_supplier_total %}
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-900 border border-gray-300">
+                  <i class="fas fa-exclamation-circle"></i>
+                  Rs. {{ product.pending_supplier_total|floatformat:2 }}
+                </span>
+              {% elif product.has_pending_supplier_payment %}
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600 border border-gray-300">
+                  <i class="fas fa-clock"></i>
+                  Pending
+                </span>
+              {% else %}
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-900 border border-gray-300">
+                  <i class="fas fa-check-circle"></i>
+                  Settled
+                </span>
+              {% endif %}
+            </td>
+
+            <!-- Actions with Icons -->
+            <td class="px-4 py-3">
+              <div class="flex items-center justify-center gap-2">
+                <a href="{% url 'admin_product_update' product.id %}" class="text-gray-600 hover:text-gray-900 p-1.5" title="Edit">
+                  <i class="fas fa-edit text-sm"></i>
+                </a>
+                <a href="{% url 'admin_product_delete' product.id %}" class="text-gray-600 hover:text-red-600 p-1.5" title="Delete" onclick="return confirm('Delete this product?')">
+                  <i class="fas fa-trash-alt text-sm"></i>
+                </a>
+              </div>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="13" class="px-4 py-12 text-center">
+              <i class="fas fa-box text-gray-400 text-4xl mb-2"></i>
+              <p class="text-sm text-gray-500">No products found</p>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
   </div>
 </div>
 {% endblock %}
@@ -136,6 +169,7 @@
 {% block extra_js %}
 <script>
   $(document).ready(function () {
+    // Datatable Initialization
     $('#productsTable').DataTable({
       pageLength: 10,
       lengthChange: true,
@@ -144,11 +178,14 @@
       responsive: true,
       language: {
         search: "_INPUT_",
-        searchPlaceholder: "Search products..."
+        searchPlaceholder: "Search..."
       },
       columnDefs: [
-        { orderable: false, targets: [1, 8, 9, 10] } // Disable sorting on images, gallery, variants, actions
-      ]
+        { orderable: false, targets: [1, 9, 10, 11, 12] }
+      ],
+      drawCallback: function() {
+        $('#productsTable tbody tr').addClass('border-b border-gray-200');
+      }
     });
   });
 </script>

@@ -2,7 +2,7 @@
 #     Mobile App API Views
 # ========================================
 from django.shortcuts import get_object_or_404
-from dashboard.models import UserProfile,UserRole,Vendor,OTPVerification,Slider, Product,ProductVariant,ProductImage,Category,Cart, Order,UserProfile, OrderItem
+from dashboard.models import UserProfile,UserRole,OTPVerification,Slider, Product,ProductVariant,ProductImage,Category,Cart, Order,UserProfile, OrderItem, TaxCost
 from django.contrib.auth.models import User
 
 
@@ -15,6 +15,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 import random
 from django.core.mail import send_mail
 from django.db.models import F
+from decimal import Decimal
 
 
 
@@ -62,7 +63,6 @@ class LoginApiView(APIView):
             password=request.data.get('password')
             try:
                 user=User.objects.get(email=email,is_active=True)
-                print(user)
             except User.DoesNotExist:
                 return Response({'success':False,'error':'User not found'},status=400)
             if not user.check_password(password):
@@ -370,6 +370,8 @@ class HomeApiView(APIView):
                     'in_stock':product.in_stock,
                     'category':product.category.name,
                     'main_image':product.main_image.url,
+                    'shipping_cost': getattr(product, 'shipping_cost', 0),
+                    'estimated_days': getattr(product, 'estimated_days', None),
                 })
             
             for product in best_offers:
@@ -381,6 +383,8 @@ class HomeApiView(APIView):
                     'in_stock':product.in_stock,
                     'category':product.category.name,
                     'main_image':product.main_image.url,
+                    'shipping_cost': getattr(product, 'shipping_cost', 0),
+                    'estimated_days': getattr(product, 'estimated_days', None),
                 })
             return Response({'success':True,'sliders':slider_data,'categories':category_data,'featured_products':featured_product_data,'best_offers_products':best_offers_product_data},status=200)
         except Exception as e:
@@ -402,6 +406,8 @@ class AllCollectionsApiView(APIView):
                 'in_stock':product.in_stock,
                 'category':product.category.name,
                 'main_image':product.main_image.url,
+                'shipping_cost': getattr(product, 'shipping_cost', 0),
+                'estimated_days': getattr(product, 'estimated_days', None),
             })
         return Response({'success':True,'products':product_data},status=200)
     
@@ -423,28 +429,11 @@ class NewArrivalsApiView(APIView):
                 'in_stock':product.in_stock,
                 'category':product.category.name,
                 'main_image':product.main_image.url,
+                'shipping_cost': getattr(product, 'shipping_cost', 0),
+                'estimated_days': getattr(product, 'estimated_days', None),
             })
         return Response({'success':True,'new_arrivals':product_data},status=200)
-    
-
-
-
-# ==========Vendor Page =============
-class VendorsApiView(APIView):
-    def get(self,request):
-        vendors=Vendor.objects.filter(is_active=True).order_by('-created_at')
-        vendor_data=[]
-        for vendor in vendors:
-            vendor_data.append({
-                'id':vendor.id,
-                'name':vendor.shop_name,
-                'banner':vendor.shop_banner.url if vendor.shop_banner else None,
-                'logo':vendor.shop_logo.url if vendor.shop_logo else None,
-                'description':vendor.description,
-            })
-        return Response({'success':True,'vendors':vendor_data},status=200)
-    
-    
+   
 
         
         
@@ -482,6 +471,8 @@ class FilterProductsApiView(APIView):
                     'in_stock': product.in_stock,
                     'category': product.category.name,
                     'main_image': product.main_image.url,
+                    'shipping_cost': getattr(product, 'shipping_cost', 0),
+                    'estimated_days': getattr(product, 'estimated_days', None),
                 })
 
             return Response({'success': True, 'products': product_data}, status=200)
@@ -507,6 +498,8 @@ class ProductDetailsApiView(APIView):
                 'in_stock': product.in_stock,
                 'category': product.category.name,
                 'main_image': product.main_image.url if product.main_image else None,
+                'shipping_cost': getattr(product, 'shipping_cost', 0),
+                'estimated_days': getattr(product, 'estimated_days', None),
             }
 
             # Get product gallery images
@@ -546,6 +539,8 @@ class CategoryProductsApiView(APIView):
                     'in_stock':product.in_stock,
                     'category':product.category.name,
                     'main_image':product.main_image.url,
+                    'shipping_cost': getattr(product, 'shipping_cost', 0),
+                    'estimated_days': getattr(product, 'estimated_days', None),
                 })
             return Response({'success':True,'featured_category':category.name,'products':product_data},status=200)
         except Exception as e:
@@ -584,7 +579,6 @@ class AddToCartApiView(APIView):
 
 # ========== View Cart =============
 class ViewCartApiView(APIView):
-    permission_classes=[IsAuthenticated]
     authentication_classes=[JWTAuthentication]
     
     def get(self,request):
@@ -592,18 +586,49 @@ class ViewCartApiView(APIView):
             user=request.user
             cart_items=Cart.objects.filter(user=user)
             cart_data=[]
+            subtotal = Decimal('0.00')
+            shipping_total = Decimal('0.00')
             for item in cart_items:
+                # compute base price (variant included)
+                unit_price = item.product.price
+                if item.variant:
+                    unit_price += item.variant.price_adjustment
+                line_total = unit_price * item.quantity
+                item_shipping = (item.product.shipping_cost or Decimal('0.00')) * item.quantity
+
+                subtotal += line_total
+                shipping_total += item_shipping
+
                 cart_data.append({
                     'id':item.id,
                     'product_id':item.product.id,
                     'product_name':item.product.name,
                     'quantity':item.quantity,
-                    'price':item.product.price,
-                    'total_price':item.product.price * item.quantity,
+                    'price':str(unit_price),
+                    'shipping_cost': str(item.product.shipping_cost or 0),
+                    'estimated_days': item.product.estimated_days or None,
+                    'total_price': str(line_total),
                 })
-            return Response({'success':True,'cart_items':cart_data},status=200)
+
+            # global tax
+            try:
+                tax_setting = TaxCost.objects.first()
+                tax_pct = Decimal(tax_setting.tax) if tax_setting else Decimal('0.00')
+            except Exception:
+                tax_pct = Decimal('0.00')
+
+            tax_amount = ((subtotal + shipping_total) * (tax_pct / Decimal('100.0'))).quantize(Decimal('0.01'))
+            total = subtotal + shipping_total + tax_amount
+            return Response({'success':True,'cart_items':cart_data,'summary':{
+                'subtotal': str(subtotal),
+                'shipping_total': str(shipping_total),
+                'tax_amount': str(tax_amount),
+                'total': str(total)
+            }},status=200)
         except Exception as e:
             return Response({'success':False,'error':str(e)},status=400)
+        
+        # unreachable: kept for clarity
         
         
         
@@ -712,9 +737,14 @@ class CustomerOrderHistoryApiView(APIView):
                         'product_name':item.product.name,
                         'quantity':item.quantity,
                         'price':item.price,
+                        'shipping_cost': getattr(item, 'shipping_cost', 0),
+                        'estimated_days': getattr(item, 'estimated_days', None),
                     } for item in OrderItem.objects.filter(order=order)],
                     'order_number':order.order_number,
                     'total_amount':order.total,
+                    'shipping_total': getattr(order, 'shipping_cost', 0),
+                    'tax_amount': getattr(order, 'tax', 0),
+                    'estimated_days': getattr(order, 'estimated_days', None),
                     'status':order.status,
                     'created_at':order.created_at,
                 })
@@ -739,9 +769,14 @@ class CustomerOrderDetailsApiView(APIView):
                     'product_name':item.product.name,
                     'quantity':item.quantity,
                     'price':item.price,
+                    'shipping_cost': getattr(item, 'shipping_cost', 0),
+                    'estimated_days': getattr(item, 'estimated_days', None),
                 } for item in OrderItem.objects.filter(order=order)],
                 'order_number':order.order_number,
                 'total_amount':order.total,
+                'shipping_total': getattr(order, 'shipping_cost', 0),
+                'tax_amount': getattr(order, 'tax', 0),
+                'estimated_days': getattr(order, 'estimated_days', None),
                 'status':order.status,
                 'created_at':order.created_at,
             }

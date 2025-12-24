@@ -24,7 +24,6 @@ class UserRole(models.Model):
     """Define user roles in the system"""
     ROLE_CHOICES = [
         ('customer', 'Customer'),
-        ('vendor', 'Vendor'),
         ('admin', 'Admin'),
     ]
     
@@ -38,8 +37,6 @@ class UserRole(models.Model):
     def is_customer(self):
         return self.role == 'customer'
     
-    def is_vendor(self):
-        return self.role == 'vendor'
     
     def is_admin(self):
         return self.role == 'admin'
@@ -54,7 +51,7 @@ class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE,related_name="profile")
     phone = models.CharField(max_length=15,null=True,blank=True)
     avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)
-    gender=models.CharField(choices=GENDER_CHOICES,null=True,blank=True)
+    gender=models.CharField(max_length=10, choices=GENDER_CHOICES,null=True,blank=True)
     # Address
     address = models.TextField(blank=True)
     city = models.CharField(max_length=100, blank=True)
@@ -81,164 +78,6 @@ class UserProfile(models.Model):
             return 'No Role Assigned'
 
 
-# -------------------------
-# Vendor Management with KYC
-# -------------------------
-class Vendor(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE,related_name='vendor')
-    
-    # Shop Info
-    shop_name = models.CharField(max_length=200)
-    slug = models.SlugField(unique=True, blank=True)
-    shop_logo = models.ImageField(upload_to='vendor_logos/', blank=True, null=True)
-    shop_banner = models.ImageField(upload_to='vendor_banners/', blank=True, null=True)
-    description = models.TextField(blank=True)
-    
-    # Contact Info
-    phone = models.CharField(max_length=15)
-    address = models.TextField()
-    city = models.CharField(max_length=100)
-    
-    PROVINCE_CHOICES = [
-        ('province1', 'Koshi Province'),
-        ('madhesh', 'Madhesh Province'),
-        ('bagmati', 'Bagmati Province'),
-        ('gandaki', 'Gandaki Province'),
-        ('lumbini', 'Lumbini Province'),
-        ('karnali', 'Karnali Province'),
-        ('sudurpashchim', 'Sudurpashchim Province'),
-    ]
-    province = models.CharField(max_length=20, choices=PROVINCE_CHOICES)
-    
-    # PAN (Permanent Account Number) - Required
-    pan_number = models.CharField(max_length=15, unique=True)
-    pan_document = models.FileField(
-        upload_to='kyc/pan/',
-        validators=[FileExtensionValidator(['pdf', 'jpg', 'jpeg', 'png'])],
-        help_text='Upload PAN certificate (PDF/Image)'
-    )
-    
-    # Citizenship or Company Registration
-    citizenship_number = models.CharField(max_length=20, blank=True, help_text='For individuals')
-    citizenship_front = models.FileField(
-        upload_to='kyc/citizenship/',
-        blank=True,
-        validators=[FileExtensionValidator(['jpg', 'jpeg', 'png'])],
-        help_text='Front side of citizenship'
-    )
-    citizenship_back = models.FileField(
-        upload_to='kyc/citizenship/',
-        blank=True,
-        validators=[FileExtensionValidator(['jpg', 'jpeg', 'png'])],
-        help_text='Back side of citizenship'
-    )
-    
-    # For Company Registration
-    company_registration = models.FileField(
-        upload_to='kyc/company/',
-        blank=True,
-        validators=[FileExtensionValidator(['pdf'])],
-        help_text='For companies: Company registration certificate'
-    )
-    
-    # Bank Details for Payment
-    qr_image = models.ImageField(upload_to='vendor_qr/', blank=True, null=True)
-    # Status & Verification
-    VERIFICATION_STATUS = [
-        ('pending', 'Pending Verification'),
-        ('verified', 'Verified'),
-        ('rejected', 'Rejected'),
-    ]
-    verification_status = models.CharField(max_length=20, choices=VERIFICATION_STATUS, default='pending')
-    rejection_reason = models.TextField(blank=True)
-    is_active = models.BooleanField(default=False)
-    
-    verified_at = models.DateTimeField(null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    
-    def save(self, *args, **kwargs):
-        if not self.slug:
-            base_slug = slugify(self.shop_name)
-            slug = base_slug
-            counter = 1
-            while Vendor.objects.filter(slug=slug).exists():
-                slug = f"{base_slug}-{counter}"
-                counter += 1
-            self.slug = slug
-        
-        # Automatically set user role to vendor
-        if self.user:
-            user_role, created = UserRole.objects.get_or_create(user=self.user)
-            user_role.role = 'vendor'
-            user_role.save()
-        
-        super().save(*args, **kwargs)
-    
-    def __str__(self):
-        return self.shop_name
-
-
-class VendorCommission(models.Model):
-    rate = models.DecimalField(
-        max_digits=5,
-        decimal_places=2,
-        default=Decimal('0.10'),  # Default 10% commission
-        help_text='Commission rate as a decimal (e.g. 0.10 for 10%)'
-    )
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    def __str__(self):
-        percent = float(self.rate) * 100
-        return f"{percent:.0f}%"
-    
-    
-class VendorPayoutRequest(models.Model):
-    STATUS_CHOICES = [
-        ('pending', 'Pending'),
-        ('rejected', 'Rejected'),
-        ('paid', 'Paid'),
-    ]
-
-    vendor = models.ForeignKey('Vendor', on_delete=models.CASCADE, related_name='payout_requests')
-    requested_amount = models.DecimalField(max_digits=12, decimal_places=2)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
-    admin_response = models.TextField(blank=True, help_text="Admin notes or reason for approval/rejection")
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        ordering = ['-created_at']
-
-    def __str__(self):
-        return f"{self.vendor.shop_name} - {self.requested_amount} ({self.get_status_display()})"
-
- 
-            
-            
-# -------------------------
-#  Wallet Management
-# -------------------------
-class VendorWallet(models.Model):
-    vendor = models.OneToOneField('Vendor', on_delete=models.CASCADE, related_name='wallet')
-    balance = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    def __str__(self):
-        return f"{self.vendor.shop_name} - Wallet Balance: {self.balance}"
-
-    def credit(self, amount):
-        """Add amount to wallet"""
-        self.balance += Decimal(amount)
-        self.save()
-
-    def debit(self, amount):
-        """Subtract amount from wallet if sufficient balance"""
-        if self.balance >= Decimal(amount):
-            self.balance -= Decimal(amount)
-            self.save()
-            return True
-        return False
 
 # -------------------------
 # Category Management (Hierarchical)
@@ -278,7 +117,6 @@ class Category(models.Model):
 # -------------------------
 
 class Product(models.Model):
-    vendor = models.ForeignKey(Vendor, on_delete=models.CASCADE, related_name='products')
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, related_name='products')
     
     # Basic Info
@@ -288,7 +126,7 @@ class Product(models.Model):
     
     # Pricing
     price = models.DecimalField(max_digits=10, decimal_places=2)
-    cost_price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True, help_text='For vendor tracking')
+    cost_price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True, help_text='For  tracking')
     
     # Stock Management
     sku = models.CharField(max_length=100, unique=True, blank=True, null=True, help_text='Stock Keeping Unit')
@@ -298,9 +136,12 @@ class Product(models.Model):
     # Product Details
     brand = models.CharField(max_length=100, blank=True)
     weight = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True, help_text='Weight in kg')
+    # Per-product shipping and delivery estimate
+    shipping_cost = models.DecimalField(max_digits=10, decimal_places=2, default=0, help_text='Shipping cost per unit for this product')
+    estimated_days = models.CharField(max_length=50, blank=True, null=True, help_text='Estimated delivery time (days or string like "2-4 days")')
     
     # Images
-    main_image = models.ImageField(upload_to='products/')
+    main_image = models.ImageField(upload_to='products/', blank=True, null=True)
     
     # Status & Stats
     is_active = models.BooleanField(default=True)
@@ -327,21 +168,20 @@ class Product(models.Model):
             
         super().save(*args, **kwargs)
     
-    @property
+ 
     def in_stock(self):
         return self.stock > 0
     
-    @property
+ 
     def is_low_stock(self):
         return 0 < self.stock <= self.low_stock_alert
     
-    @property
+
     def discount_percentage(self):
         if self.cost_price and self.cost_price > self.price:
             return int(((self.cost_price - self.price) / self.cost_price) * 100)
         return 0
-    
-    @property
+
     def average_rating(self):
         reviews = self.reviews.all()
         if reviews:
@@ -493,6 +333,8 @@ class Order(models.Model):
         null=True, blank=True,
         help_text="Calculated expected delivery date"
     )
+    # Human readable estimated delivery summary preserved at order creation
+    estimated_days = models.CharField(max_length=100, blank=True, null=True, help_text='Estimated delivery summary (e.g. 2-4 days)')
     
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
@@ -508,6 +350,47 @@ class Order(models.Model):
     def __str__(self):
         return f"Order {self.order_number}"
 
+    def calculate_totals(self):
+        """Re-calculate subtotal, shipping_cost, tax and total for this order
+        based on current items snapshot and global TaxCost setting.
+        This stores the calculated values on the order record (does not create items).
+        """
+        items = self.items.all()
+        subtotal = sum((item.price * item.quantity) for item in items) if items else Decimal('0.00')
+        shipping_total = sum((item.shipping_cost * item.quantity) for item in items) if items else Decimal('0.00')
+
+        # Global tax percentage (TaxCost) – apply to (subtotal + shipping)
+        try:
+            tax_setting = TaxCost.objects.first()
+            tax_pct = Decimal(tax_setting.tax) if tax_setting else Decimal('0.00')
+        except Exception:
+            tax_pct = Decimal('0.00')
+
+        tax_amount = ((subtotal + shipping_total) * (tax_pct / Decimal('100.0'))).quantize(Decimal('0.01'))
+
+        total_val = subtotal + shipping_total + tax_amount - (self.discount or Decimal('0.00'))
+
+        # Update using update() to avoid recursion and signals being re-fired
+        Order.objects.filter(pk=self.pk).update(
+            subtotal=subtotal,
+            shipping_cost=shipping_total,
+            tax=tax_amount,
+            total=total_val
+        )
+        # Keep the instance in sync
+        self.subtotal = subtotal
+        self.shipping_cost = shipping_total
+        self.tax = tax_amount
+        self.total = total_val
+        # store a readable estimated_days summary for the order
+        try:
+            estimates = list({(it.estimated_days or '').strip() for it in items if (it.estimated_days or '').strip()})
+            est_text = ', '.join(sorted(estimates)) if estimates else None
+            Order.objects.filter(pk=self.pk).update(estimated_days=est_text)
+            self.estimated_days = est_text
+        except Exception:
+            pass
+
 
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')
@@ -517,10 +400,31 @@ class OrderItem(models.Model):
  
     quantity = models.PositiveIntegerField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
+    # Snapshot the per-item shipping cost and estimated delivery at time of order placement
+    shipping_cost = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    estimated_days = models.CharField(max_length=50, blank=True, null=True)
     
 
     def get_total(self):
         return self.quantity * self.price
+
+    def save(self, *args, **kwargs):
+        """
+        Ensure we store a snapshot of per-product shipping_cost and estimated_days
+        when an OrderItem is saved (created) so later changes to the Product
+        don't affect historical orders.
+        """
+        if self.product:
+            # If shipping_cost is zero or not set, copy from product
+            try:
+                if (self.shipping_cost is None or self.shipping_cost == 0) and hasattr(self.product, 'shipping_cost'):
+                    self.shipping_cost = self.product.shipping_cost or 0
+                if (not self.estimated_days) and hasattr(self.product, 'estimated_days'):
+                    self.estimated_days = self.product.estimated_days
+            except Exception:
+                # Keep existing values on lookup issues
+                pass
+        super().save(*args, **kwargs)
     
     def __str__(self):
         return f"{self.quantity} x {self.product.name}"
@@ -574,7 +478,6 @@ class Coupon(models.Model):
     
     # Restrictions
     categories = models.ManyToManyField('Category', blank=True, help_text='Applicable categories')
-    vendors = models.ManyToManyField('Vendor', blank=True, help_text='Applicable vendors')
     
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -631,16 +534,20 @@ class CouponUsage(models.Model):
 # -------------------------
 # Shipping Zones
 # -------------------------
-class ShippingCost(models.Model):
+class TaxCost(models.Model):
+    """Global tax configuration used for checkout/order tax calculations.
 
-    cost = models.DecimalField(max_digits=10, decimal_places=2)
+    We removed the concept of a single global shipping cost (shipping is per-product)
+    and keep a single global TaxCost (percentage) to apply to order totals.
+    """
     tax = models.DecimalField(max_digits=5, decimal_places=2, default=0.00, help_text="Tax percentage (e.g. 13 for 13%)")
 
     class Meta:
-        ordering = ['cost']
-    
+        verbose_name = 'Tax Setting'
+        verbose_name_plural = 'Tax Settings'
+
     def __str__(self):
-        return f" Rs. {self.cost}"
+        return f"Tax: {self.tax}%"
 
 
 # -------------------------
@@ -649,7 +556,6 @@ class ShippingCost(models.Model):
 class Invoice(models.Model):
     invoice_number = models.CharField(max_length=20,null=True, unique=True, editable=False)
     order = models.ForeignKey('Order', on_delete=models.CASCADE, related_name='invoices')
-    vendor = models.ForeignKey('Vendor', on_delete=models.CASCADE, related_name='invoices')
     customer = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     
     created_at = models.DateTimeField(auto_now_add=True)
@@ -814,66 +720,535 @@ class Banner(models.Model):
         return self.title or f"Banner {self.id}"
 
 
+# -------------------------
+# Supplier Management
+# -------------------------
+class Supplier(models.Model):
+    name = models.CharField(max_length=200)
+    contact_person = models.CharField(max_length=100, blank=True)
+    email = models.EmailField(blank=True)
+    phone = models.CharField(max_length=15, blank=True)
+    address = models.TextField(blank=True)
+    city = models.CharField(max_length=100, blank=True)
+    notes = models.TextField(blank=True, help_text='Additional notes about the supplier')
+    
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['name']
+    
+    def __str__(self):
+        return self.name
+
+
+# -------------------------
+# Purchase History (from Suppliers)
+# -------------------------
+
+
+class Purchase(models.Model):
+    supplier = models.ForeignKey(
+        Supplier,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='purchases'
+    )
+
+    purchase_date = models.DateField(default=timezone.now)
+    supplier_invoice_number = models.CharField(
+        max_length=100,
+        blank=True,
+        help_text='Supplier invoice number'
+    )
+    purchase_order_number = models.CharField(max_length=100, blank=True)
+    notes = models.TextField(blank=True)
+
+    subtotal = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    tax_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    discount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-purchase_date', '-created_at']
+
+    def save(self, *args, **kwargs):
+        # 🔹 If supplier invoice number is not provided
+        if not self.supplier_invoice_number:
+            today = timezone.now().strftime('%Y%m%d')
+            last_purchase = Purchase.objects.order_by('-id').first()
+            next_id = (last_purchase.id + 1) if last_purchase else 1
+
+            self.supplier_invoice_number = f"SUP-INV-{today}-{next_id:04d}"
+            
+        super().save(*args, **kwargs)
+        
+    def get_total_quantity(self):
+        return sum(item.quantity for item in self.items.all())
+
+
+class PurchaseItem(models.Model):
+    """Individual product items in a purchase order"""
+    purchase = models.ForeignKey(Purchase, on_delete=models.CASCADE, related_name='items')
+    
+    # Product reference (optional - product might be deleted)
+    product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True, blank=True, related_name='purchase_items')
+    
+    # Snapshot of product details at purchase time (to preserve history even if product changes)
+    product_name = models.CharField(max_length=255, help_text='Product name at time of purchase')
+    product_sku = models.CharField(max_length=100, blank=True, null=True, help_text='Product SKU at time of purchase')
+    product_image = models.ImageField(upload_to='purchases/products/', blank=True, null=True, help_text='Product image at time of purchase')
+    purchase_price = models.DecimalField(max_digits=10, decimal_places=2, help_text='Price per unit paid to supplier')
+    quantity = models.PositiveIntegerField()
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['id']
+    
+    def get_total(self):
+        """Calculate total for this item"""
+        return self.purchase_price * self.quantity
+    
+    def save(self, *args, **kwargs):
+        # If product is linked, capture current product details as snapshot
+        if self.product:
+            if not self.product_name:
+                self.product_name = self.product.name
+            if not self.product_sku:
+                self.product_sku = self.product.sku or ''
+            # Note: product_image should be uploaded separately, not copied from product
+            # This preserves the image that was uploaded at purchase time
+        # Save the item first
+        super().save(*args, **kwargs)
+        # Recalculate purchase totals (only if purchase exists and is saved)
+        # Use update_fields to avoid recursion
+        if self.purchase and self.purchase.pk:
+            try:
+                # Refresh purchase from DB to ensure we have latest data
+                self.purchase.refresh_from_db()
+                self.purchase.calculate_totals()
+            except Exception as e:
+                # Log error but don't fail the save
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.error(f"Error calculating purchase totals: {e}")
+    
+    def delete(self, *args, **kwargs):
+        purchase = self.purchase
+        super().delete(*args, **kwargs)
+        # Recalculate purchase totals after deletion
+        if purchase:
+            purchase.calculate_totals()
+    
+    def __str__(self):
+        return f"{self.product_name} x{self.quantity} - Rs. {self.get_total()}"
+
+
+# -------------------------
+# Purchase Invoice (for Supplier Purchases)
+# -------------------------
+class PurchaseInvoice(models.Model):
+    """Invoice for purchases from suppliers - stores historical product and supplier data"""
+    invoice_number = models.CharField(max_length=50, unique=True, editable=False)
+    purchase = models.OneToOneField(Purchase, on_delete=models.CASCADE, related_name='invoice')
+    
+    # Supplier snapshot (preserved even if supplier details change)
+    supplier_name = models.CharField(max_length=200, help_text='Supplier name at time of purchase')
+    supplier_email = models.EmailField(blank=True)
+    supplier_phone = models.CharField(max_length=15, blank=True)
+    supplier_address = models.TextField(blank=True)
+    supplier_city = models.CharField(max_length=100, blank=True)
+    
+    # Purchase details snapshot
+    subtotal = models.DecimalField(max_digits=10, decimal_places=2)
+    tax_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    discount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    
+    # Invoice details
+    purchase_date = models.DateField()
+    supplier_invoice_number = models.CharField(max_length=100, blank=True, help_text='Supplier invoice number')
+    purchase_order_number = models.CharField(max_length=100, blank=True, help_text='Purchase order number')
+    
+    PAYMENT_STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('paid', 'Paid'),
+        ('partial', 'Partially Paid'),
+        ('overdue', 'Overdue'),
+    ]
+    payment_status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, default='pending')
+    payment_date = models.DateField(null=True, blank=True)
+    notes = models.TextField(blank=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-purchase_date', '-created_at']
+    
+    def save(self, *args, **kwargs):
+        if not self.invoice_number:
+            # Format: PINV20250113123456
+            self.invoice_number = f"PINV{timezone.now().strftime('%Y%m%d%H%M%S')}"
+        super().save(*args, **kwargs)
+    
+    def __str__(self):
+        return f"Purchase Invoice {self.invoice_number} - {self.supplier_name}"
+
+
+class PurchaseInvoiceItem(models.Model):
+    """Individual items in purchase invoice - stores historical product data"""
+    invoice = models.ForeignKey(PurchaseInvoice, on_delete=models.CASCADE, related_name='items')
+    
+    # Product snapshot (preserved even if product details change)
+    product_name = models.CharField(max_length=255, help_text='Product name at time of purchase')
+    product_sku = models.CharField(max_length=100, blank=True, null=True, help_text='Product SKU at time of purchase')
+    product_image = models.ImageField(upload_to='purchase_invoice_items/', blank=True, null=True, help_text='Product image at time of purchase')
+    quantity = models.PositiveIntegerField()
+    unit_price = models.DecimalField(max_digits=10, decimal_places=2, help_text='Price per unit at time of purchase')
+    total = models.DecimalField(max_digits=10, decimal_places=2)
+    
+    class Meta:
+        ordering = ['id']
+    
+    def __str__(self):
+        return f"{self.product_name} x{self.quantity}"
+
+
 # ===========================
 #   Signals 
 # ===========================
 
 
 @receiver(post_save, sender=Order)
-def credit_vendor_wallet_on_order_complete(sender, instance, **kwargs):
+def handle_order_payment_status_change(sender, instance, created, **kwargs):
     """
-    Credit vendor wallet when an order is delivered.
-    Deducts admin commission using VendorCommission.
+    Handle order payment status changes:
+    1. Auto-update order status to 'delivered' when payment is marked as 'paid'
+    2. Sync invoice payment status with order payment status
+    
+    Uses update() to prevent signal recursion.
     """
-    if instance.status == 'delivered':
-        for item in instance.items.all():
-            vendor = item.product.vendor
-            if vendor:
-                # Get vendor-specific commission rate, or default if not set
-                vc = VendorCommission.objects.first()
-                rate = vc.rate
-                total_amount = Decimal(item.get_total())
-                admin_commission = (total_amount * rate).quantize(Decimal('0.01'))
-                vendor_earning = (total_amount - admin_commission).quantize(Decimal('0.01'))
+    # Skip if this is a new order to avoid unnecessary processing
+    if created:
+        return
+    
+    # Auto-update order status to 'delivered' when payment is marked as 'paid'
+    if instance.payment_status == 'paid':
+        # Only update to delivered if order is not already cancelled or refunded or delivered
+        if instance.status not in ['cancelled', 'refunded', 'delivered']:
+            # Use update() to avoid triggering signals again (prevents recursion)
+            Order.objects.filter(pk=instance.pk).update(
+                status='delivered',
+                delivered_at=timezone.now() if not instance.delivered_at else instance.delivered_at
+            )
+    
+    # Sync invoice payment status with order payment status
+    try:
+        if instance.user:
+            invoice = Invoice.objects.filter(order=instance, customer=instance.user).first()
+            if invoice:
+                invoice_status_map = {
+                    "unpaid": "pending",
+                    "paid": "paid",
+                    "failed": "failed",
+                    "refunded": "failed"
+                }
+                new_invoice_status = invoice_status_map.get(instance.payment_status, invoice.payment_status)
+                if invoice.payment_status != new_invoice_status:
+                    invoice.payment_status = new_invoice_status
+                    invoice.save(update_fields=['payment_status'])
+    except Exception:
+        # Silently fail if invoice doesn't exist or other error
+        pass
 
-                # Credit vendor wallet
-                wallet, _ = VendorWallet.objects.get_or_create(vendor=vendor)
-                wallet.credit(vendor_earning)
+
+@receiver(post_save, sender=OrderItem)
+def update_order_totals_on_item_change(sender, instance, created, **kwargs):
+    """Recalculate Order totals whenever an OrderItem is created/updated."""
+    try:
+        if instance.order_id:
+            instance.order.calculate_totals()
+    except Exception:
+        pass
 
 
+from django.db.models.signals import post_delete
 
-@receiver(post_save, sender=VendorPayoutRequest)
-def process_vendor_payout_request(sender, instance, **kwargs):
+
+@receiver(post_delete, sender=OrderItem)
+def update_order_totals_on_item_delete(sender, instance, **kwargs):
+    try:
+        if instance.order_id:
+            order = Order.objects.filter(pk=instance.order_id).first()
+            if order:
+                order.calculate_totals()
+    except Exception:
+        pass
+
+
+@receiver(post_save, sender=Order)
+def ensure_order_items_snapshots(sender, instance, created, **kwargs):
+    """Make sure any newly added order items have shipping snapshot filled.
+
+    This is a best-effort to keep historical consistency for systems that
+    create items directly after the order is saved.
     """
-    Process vendor payout request by debiting vendor wallet if approved.
+    try:
+        for it in instance.items.all():
+            if (not it.shipping_cost or it.shipping_cost == 0) or not it.estimated_days:
+                it.save()
+    except Exception:
+        pass
+
+
+
+
+@receiver(post_save, sender=Purchase)
+def create_purchase_invoice(sender, instance, created, **kwargs):
     """
-    if instance.status == 'paid':
-        wallet, _ = VendorWallet.objects.get_or_create(vendor=instance.vendor)
-        wallet.debit(instance.requested_amount)
-
-
-
-@receiver(post_save,sender=Order)
-def change_invoice_payment_status_with_order(sender,instance,**kwargs):
+    Automatically create a purchase invoice when a purchase is created or updated with items.
+    Stores snapshot of supplier and product details.
     """
-    Sync payment status of invoices with the order's payment status.
-    Creates an invoice per vendor if not already created.
-
-    """
+    # Check if invoice already exists
+    if hasattr(instance, 'invoice'):
+        return
+    
+    # Only create invoice if purchase has items
+    if not instance.items.exists():
+        return
+    
+    # Capture supplier details snapshot
+    supplier_name = instance.supplier.name if instance.supplier else 'Unknown Supplier'
+    supplier_email = instance.supplier.email if instance.supplier else ''
+    supplier_phone = instance.supplier.phone if instance.supplier else ''
+    supplier_address = instance.supplier.address if instance.supplier else ''
+    supplier_city = instance.supplier.city if instance.supplier else ''
+    
+    # Create invoice with totals from purchase
+    invoice = PurchaseInvoice.objects.create(
+        purchase=instance,
+        supplier_name=supplier_name,
+        supplier_email=supplier_email,
+        supplier_phone=supplier_phone,
+        supplier_address=supplier_address,
+        supplier_city=supplier_city,
+        subtotal=instance.subtotal,
+        tax_amount=instance.tax_amount,
+        discount=instance.discount,
+        total_amount=instance.total_amount,
+        purchase_date=instance.purchase_date,
+        supplier_invoice_number=instance.supplier_invoice_number,
+        purchase_order_number=instance.purchase_order_number,
+        notes=instance.notes,
+        payment_status='pending',
+    )
+    
+    # Create invoice items from purchase items
     for item in instance.items.all():
-        vendor=item.product.vendor
-        customer=instance.user
-        
-        invoice=Invoice.objects.get(order=instance,vendor=vendor,customer=customer)
-        if instance.payment_status=="unpaid":
-            invoice.payment_status="pending"
-        elif instance.payment_status=="paid":
-            invoice.payment_status="paid"
-        elif instance.payment_status=="failed":
-            invoice.payment_status="failed"
-        instance.save()
+        PurchaseInvoiceItem.objects.create(
+            invoice=invoice,
+            product_name=item.product_name,
+            product_sku=item.product_sku or '',
+            product_image=item.product_image,  # Copy image if available
+            quantity=item.quantity,
+            unit_price=item.purchase_price,
+            total=item.get_total(),
+        )
         
             
             
         
+
+
+@receiver(post_save, sender=User)
+def create_user_role_and_profile(sender, instance, created, **kwargs):
+    """
+    Automatically creates a UserRole and UserProfile
+    when a new user (including superuser) is created.
+    """
+
+    # Run only when a new user is created
+    if created and instance.is_superuser:
+        UserRole.objects.get_or_create(role="admin",user=instance)
+        UserProfile.objects.get_or_create(user=instance)
+        print("created")
+
+
+# ===========================
+#   Sales Management (Physical/Offline)
+# ===========================
+
+
+# -------------------------
+# Services Module
+# -------------------------
+class Service(models.Model):
+    name = models.CharField(max_length=150)
+    description = models.TextField(blank=True)
+    price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.name
+
+
+class ServiceBooking(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('completed', 'Completed'),
+    ]
+
+    customer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='service_bookings')
+    service = models.ForeignKey(Service, on_delete=models.SET_NULL, null=True, related_name='bookings')
+    booking_date = models.DateField()
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.service} - {self.customer.username} on {self.booking_date}"
+
+
+class SaleCustomer(models.Model):
+    """Customer records for offline/physical sales"""
+    name = models.CharField(max_length=255)
+    email = models.EmailField(blank=True, null=True)
+    phone = models.CharField(max_length=20, blank=True, null=True)
+    address = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return self.name
+    
+    
+    def total_sales_amount(self):
+        """Total amount of all sales for this customer"""
+        return self.sales.aggregate(total=models.Sum('total_amount'))['total'] or Decimal('0.00')
+    
+    def total_paid_amount(self):
+        """Total amount paid for this customer"""
+        return self.sales.aggregate(total=models.Sum('paid_amount'))['total'] or Decimal('0.00')
+
+    def total_outstanding_amount(self):
+        """Total outstanding amount for this customer"""
+        return self.sales.aggregate(total=models.Sum('outstanding_amount'))['total'] or Decimal('0.00')
+
+    def sales_count(self):
+        """Number of sales for this customer"""
+        return self.sales.count()
+    
+    def payment_status(self):
+        """Overall payment status"""
+        if self.total_outstanding_amount == 0 and self.total_sales_amount > 0:
+            return 'paid'
+        elif self.total_outstanding_amount > 0 and self.total_paid_amount > 0:
+            return 'partially_paid'
+        elif self.total_outstanding_amount > 0:
+            return 'unpaid'
+        return 'unpaid'
+
+
+class Sale(models.Model):
+    """Offline/Physical Sales Record"""
+    PAYMENT_STATUS_CHOICES = [
+        ('paid', 'Paid'),
+        ('partially_paid', 'Partially Paid'),
+        ('unpaid', 'Unpaid'),
+    ]
+    
+    PAYMENT_METHOD_CHOICES = [
+        ('cash', 'Cash'),
+        ('check', 'Check'),
+        ('bank_transfer', 'Bank Transfer'),
+        ('credit', 'Credit'),
+    ]
+    
+    customer = models.ForeignKey(SaleCustomer, on_delete=models.CASCADE, related_name='sales')
+    invoice_number = models.CharField(max_length=50, unique=True)
+    sale_date = models.DateTimeField(auto_now_add=True)
+    
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    paid_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    outstanding_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    
+    payment_status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, default='unpaid')
+    payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES, blank=True, null=True)
+    payment_notes = models.TextField(blank=True, null=True)
+    
+    notes = models.TextField(blank=True, null=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"Sale #{self.invoice_number} - {self.customer.name}"
+    
+    def save(self, *args, **kwargs):
+        """Auto-calculate outstanding amount and update payment status"""
+        if not self.invoice_number:
+            # Generate invoice number
+            from django.utils import timezone
+            timestamp = timezone.now().strftime('%Y%m%d%H%M%S')
+            self.invoice_number = f"SALE-{timestamp}"
         
+        # Calculate outstanding amount
+        self.outstanding_amount = self.total_amount - self.paid_amount
+        
+        # Update payment status
+        if self.outstanding_amount <= 0:
+            self.payment_status = 'paid'
+        elif self.paid_amount > 0:
+            self.payment_status = 'partially_paid'
+        else:
+            self.payment_status = 'unpaid'
+        
+        super().save(*args, **kwargs)
+
+
+class SaleItem(models.Model):
+    """Individual items in a sale"""
+    sale = models.ForeignKey(Sale, on_delete=models.CASCADE, related_name='items')
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    quantity = models.IntegerField(default=1)
+    unit_price = models.DecimalField(max_digits=10, decimal_places=2)
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"{self.product.name} x {self.quantity}"
+    
+    def save(self, *args, **kwargs):
+        """Auto-calculate total amount"""
+        self.total_amount = self.quantity * self.unit_price
+        super().save(*args, **kwargs)
+
+
+class SalePayment(models.Model):
+    """Payment records for sales"""
+    sale = models.ForeignKey(Sale, on_delete=models.CASCADE, related_name='payments')
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    payment_method = models.CharField(max_length=20, choices=Sale.PAYMENT_METHOD_CHOICES)
+    notes = models.TextField(blank=True, null=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"Payment of Rs.{self.amount} for Sale #{self.sale.invoice_number}"

@@ -1,0 +1,132 @@
+{% extends 'dashboard/components/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="bg-white rounded-xl shadow p-6 max-w-5xl mx-auto mt-8">
+  
+  <!-- Header & Back Button -->
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-semibold text-gray-800"><i class="fas fa-shopping-cart"></i> Order Details</h1>
+    <div class="flex gap-2">
+      <a href="{% url 'admin_orders_list' %}" class="bg-gray-900 hover:bg-gray-800  p-2 rounded-md text-white font-medium">
+        <i class="fas fa-arrow-left mr-1"></i> Back
+      </a>
+      {% if order.status == 'delivered' or order.status == 'cancelled' or order.status == 'refunded' %}
+        <a href="{% url 'admin_order_delete' order.order_number %}" class="bg-red-600 hover:bg-red-800 p-2 rounded-md text-white font-medium" onclick="return confirm('Delete this order? This action cannot be undone.')">
+          <i class="fas fa-trash mr-1"></i> Delete Order
+        </a>
+      {% else %}
+        <span class="bg-gray-400 cursor-not-allowed p-2 rounded-md text-white font-medium" title="Cannot delete orders with status: {{ order.get_status_display }}. Only delivered, cancelled, or refunded orders can be deleted.">
+          <i class="fas fa-trash mr-1"></i> Delete Order
+        </span>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Customer Info -->
+  <div class="mb-6">
+    <h2 class="text-lg font-semibold mb-2">Customer Info</h2>
+    <p><strong>Name:</strong> {{ order.full_name }}</p>
+    <p><strong>Email:</strong> {{ order.email }}</p>
+    <p><strong>Phone:</strong> {{ order.phone }}</p>
+    <p><strong>Address:</strong> {{ order.address }}, {{ order.city }}, {{ order.province }}, {{ order.postal_code }}</p>
+  </div>
+
+  <!-- Order Info -->
+  <div class="mb-6">
+    <h2 class="text-lg font-semibold mb-2">Order Info</h2>
+    <p><strong>Order Number:</strong> {{ order.order_number }}</p>
+    <p><strong>Status:</strong> {{ order.get_status_display }}</p>
+    <p><strong>Payment Method:</strong> {{ order.payment_method }}</p>
+    <p><strong>Payment Status:</strong> {{ order.get_payment_status_display }}</p>
+    <p><strong>Transaction ID:</strong> {{ order.transaction_id|default:"-" }}</p>
+    <p><strong>Estimated Delivery:</strong> {{ order.estimated_delivery_date|date:"Y-m-d"|default:"No Date" }}</p>
+    <p><strong>Delivered At:</strong> {{ order.delivered_at|date:"Y-m-d h:i A"|default:"-" }}</p>
+    <p><strong>Created At:</strong> {{ order.created_at|date:"Y-m-d h:i A" }}</p>
+  </div>
+
+  <!-- Items Table -->
+  <div class="mb-6 overflow-x-auto">
+    <h2 class="text-lg font-semibold mb-2">Order Items</h2>
+    <table class="w-full border border-gray-200 rounded-lg text-sm">
+      <thead class="bg-gray-100">
+        <tr>
+          <th class="border px-4 py-2">Product</th>
+          <th class="border px-4 py-2">Variant</th>
+          <th class="border px-4 py-2">Quantity</th>
+          <th class="border px-4 py-2">Price</th>
+          <th class="border px-4 py-2">Shipping</th>
+          <th class="border px-4 py-2">ETA</th>
+          <th class="border px-4 py-2">Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in order.items.all %}
+        <tr>
+          <td class="border px-4 py-2">{{ item.product.name }}</td>
+         <td class="border px-4 py-2">
+  {% if item.variant %}
+    {{ item.variant.name }}
+  {% else %}
+    -
+  {% endif %}
+</td>
+
+          <td class="border px-4 py-2">{{ item.quantity }}</td>
+          <td class="border px-4 py-2">Rs {{ item.price }}</td>
+          <td class="border px-4 py-2">Rs {{ item.shipping_cost }}</td>
+          <td class="border px-4 py-2">{{ item.estimated_days|default:'-' }}</td>
+          <td class="border px-4 py-2">Rs {{ item.get_total }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="5" class="text-center py-4 text-gray-500">No items found</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pricing Summary -->
+  <div class="mb-6">
+    <h2 class="text-lg font-semibold mb-2">Pricing Summary</h2>
+    <p><strong>Subtotal:</strong> Rs {{ order.subtotal }}</p>
+    <p><strong>Shipping:</strong> Rs {{ order.shipping_cost }}</p>
+    <p><strong>Discount:</strong> Rs {{ order.discount }}</p>
+    <p><strong>Tax:</strong> Rs {{ order.tax }}</p>
+    <p class="text-lg font-semibold"><strong>Total:</strong> Rs {{ order.total }}</p>
+  </div>
+
+  <!-- Vendor-specific invoices (if needed) -->
+  {% if order.invoices.exists %}
+  <div class="mb-6">
+    <h2 class="text-lg font-semibold mb-2">Invoices</h2>
+    <table class="w-full border border-gray-200 rounded-lg text-sm">
+      <thead class="bg-gray-100">
+        <tr>
+          <th class="border px-4 py-2">Invoice #</th>
+          <th class="border px-4 py-2">Payment Status</th>
+          <th class="border px-4 py-2">Total</th>
+          <th class="border px-4 py-2">Created At</th>
+          <th class="border px-4 py-2">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for invoice in order.invoices.all %}
+        <tr>
+          <td class="border px-4 py-2">{{ invoice.invoice_number }}</td>
+          <td class="border px-4 py-2">{{ invoice.payment_status | capfirst }}</td>
+          <td class="border px-4 py-2">Rs {{ invoice.total }}</td>
+          <td class="border px-4 py-2">{{ invoice.created_at|date:"Y-m-d h:i A" }}</td>
+          <td class="border px-4 py-2">
+            <a href="{% url 'admin_invoice_detail' invoice.invoice_number %}" class="text-blue-600 hover:text-blue-800">View</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

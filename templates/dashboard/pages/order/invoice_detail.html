@@ -7,7 +7,7 @@
   <!-- Header with Back & Print -->
   <div class="flex justify-between items-center mb-6 print:hidden">
     <a href="{% url 'admin_orders_invoice_list' invoice.order.order_number %}" 
-       class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-500 transition flex items-center gap-2">
+       class="bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-lg  transition flex items-center gap-2">
       <i class="fa-solid fa-arrow-left"></i> Back
     </a>
     <button onclick="printInvoice()" 
@@ -32,20 +32,12 @@
       </div>
     </div>
 
-    <!-- Vendor & Customer -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-      <div class="bg-gray-50 p-4 rounded-lg">
-        <h3 class="font-semibold text-gray-700 mb-2">Vendor</h3>
-        <p>{{ invoice.vendor.shop_name }}</p>
-        <p>{{ invoice.vendor.email }}</p>
-        <p>{{ invoice.vendor.phone }}</p>
-      </div>
-      <div class="bg-gray-50 p-4 rounded-lg">
-        <h3 class="font-semibold text-gray-700 mb-2">Customer</h3>
-        <p>{{ invoice.customer.get_full_name }}</p>
-        <p>{{ invoice.customer.email }}</p>
-        <p>{{ invoice.customer.profile.phone }}</p>
-      </div>
+    <!-- Customer -->
+    <div class="bg-gray-50 p-4 rounded-lg mb-6">
+      <h3 class="font-semibold text-gray-700 mb-2">Customer</h3>
+      <p>{{ invoice.customer.get_full_name }}</p>
+      <p>{{ invoice.customer.email }}</p>
+      <p>{{ invoice.customer.profile.phone }}</p>
     </div>
 
     <!-- Dates & Payment -->
@@ -70,11 +62,13 @@
       <table class="min-w-full border border-gray-200 text-sm">
         <thead class="bg-gray-100 uppercase text-gray-600 text-xs">
           <tr>
-            <th class="px-4 py-2 text-left">Product</th>
-            <th class="px-4 py-2 text-left">Qty</th>
-            <th class="px-4 py-2 text-left">Price</th>
-            <th class="px-4 py-2 text-left">Total</th>
-          </tr>
+              <th class="px-4 py-2 text-left">Product</th>
+              <th class="px-4 py-2 text-left">Qty</th>
+              <th class="px-4 py-2 text-left">Price</th>
+              <th class="px-4 py-2 text-left">Shipping</th>
+              <th class="px-4 py-2 text-left">ETA</th>
+              <th class="px-4 py-2 text-left">Total</th>
+            </tr>
         </thead>
         <tbody class="divide-y divide-gray-200">
           {% for item in invoice.order.items.all %}
@@ -82,6 +76,8 @@
             <td class="px-4 py-2">{{ item.product.name }}</td>
             <td class="px-4 py-2">{{ item.quantity }}</td>
             <td class="px-4 py-2">Rs {{ item.price }}</td>
+            <td class="px-4 py-2">Rs {{ item.shipping_cost|default:0 }}</td>
+            <td class="px-4 py-2">{{ item.estimated_days|default:'-' }}</td>
             <td class="px-4 py-2 font-semibold">Rs {{ item.get_total }}</td>
           </tr>
           {% endfor %}
@@ -132,14 +128,47 @@
 {% endblock %}
 
 {% block extra_js %}
+{% block extra_js %}
 <script>
+/**
+ * Open a print-only window with the invoice content and styles copied from the current page.
+ * This avoids replacing the page body (which can break CSS) and ensures predictable printed output.
+ */
 function printInvoice() {
-  const invoiceContent = document.getElementById('invoiceArea').innerHTML;
-  const originalContent = document.body.innerHTML;
-  document.body.innerHTML = invoiceContent;
-  window.print();
-  document.body.innerHTML = originalContent;
-  location.reload();
+  const invoiceEl = document.getElementById('invoiceArea');
+  if (!invoiceEl) return window.print();
+
+  // Make a copy of stylesheet links and inline styles so the print window looks the same
+  const headEls = Array.from(document.querySelectorAll('link[rel="stylesheet"], style'))
+    .map(el => el.outerHTML).join('\n');
+
+  const win = window.open('', '_blank', 'noopener');
+  const title = 'Invoice - ' + ("{{ invoice.invoice_number|escapejs }}" || 'Invoice');
+
+  const printStyles = `
+    /* Tight printable layout */
+    body { background: #fff; color:#111; font-family: -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial, sans-serif; }
+    .invoice-print { max-width: 800px; margin: 0 auto; padding: 18px; }
+    #invoiceArea { box-shadow: none !important; border: 1px solid #ddd !important; }
+    table { width:100%; border-collapse: collapse; }
+    th, td { border: 1px solid #e5e7eb; padding: 6px 8px; }
+    thead th { background: #f3f4f6; }
+    .no-print, .print\\:hidden { display: none !important; }
+    @media print { @page { margin: 10mm; size: A4; } }
+  `;
+
+  win.document.open();
+  win.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${title}</title>${headEls}<style>${printStyles}</style></head><body><div class="invoice-print">${invoiceEl.outerHTML}</div></body></html>`);
+  win.document.close();
+
+  // Give the new window a moment to load assets, then print and close
+  win.focus();
+  setTimeout(() => {
+    try { win.print(); } catch (e) { console.warn('print failed', e); }
+    // don't close the print preview immediately on some browsers, wait a little
+    setTimeout(() => win.close(), 700);
+  }, 250);
 }
 </script>
+{% endblock %}
 {% endblock %}

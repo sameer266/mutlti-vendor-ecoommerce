@@ -27,7 +27,6 @@ urlpatterns = [
     path('home/', views.HomeApiView.as_view()),
     path('all-collections/', views.AllCollectionsApiView.as_view()),
     path('new-arrivals/', views.NewArrivalsApiView.as_view()),
-    path('vendors/', views.VendorsApiView.as_view()),
     path('search-products/', views.FilterProductsApiView.as_view()),
     
     

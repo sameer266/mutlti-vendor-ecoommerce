@@ -1,0 +1,318 @@
+{% extends 'dashboard/components/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto p-4 sm:p-6">
+  <!-- Header -->
+  <div class="mb-6">
+    <div class="flex items-center justify-between">
+      <div>
+        <h1 class="text-2xl font-semibold text-gray-900">Purchase History</h1>
+        <p class="text-sm text-gray-500 mt-1">View and manage all purchases</p>
+      </div>
+      <div class="flex gap-2">
+        <a href="{% url 'admin_purchase_invoices_list' %}" class="bg-gray-100 text-gray-700 px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-200 transition-colors">
+          <i class="fas fa-file-invoice mr-1"></i> Invoices
+        </a>
+        <a href="{% url 'admin_purchase_add' %}" class="bg-gray-900 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-800 transition-colors">
+          <i class="fas fa-plus mr-1"></i> Add Purchase
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Summary Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+    <div class="bg-white border border-gray-200 p-4 rounded-lg">
+      <div class="text-xs text-gray-600 mb-1">Total Purchases</div>
+      <div class="text-xl font-semibold text-gray-900">{{ purchases|length }}</div>
+    </div>
+    <div class="bg-white border border-gray-200 p-4 rounded-lg">
+      <div class="text-xs text-gray-600 mb-1">Total Quantity</div>
+      <div class="text-xl font-semibold text-gray-900">{{ total_quantity }}</div>
+    </div>
+    <div class="bg-white border border-gray-200 p-4 rounded-lg">
+      <div class="text-xs text-gray-600 mb-1">Total Amount</div>
+      <div class="text-xl font-semibold text-gray-900">Rs. {{ total_amount|floatformat:2 }}</div>
+    </div>
+    <div class="bg-white border border-gray-200 p-4 rounded-lg">
+      <div class="text-xs text-gray-600 mb-1">Paid Amount</div>
+      <div class="text-xl font-semibold text-gray-900">Rs. {{ paid_amount|floatformat:2 }}</div>
+    </div>
+    <div class="bg-white border border-gray-200 p-4 rounded-lg">
+      <div class="text-xs text-gray-600 mb-1">Pending Amount</div>
+      <div class="text-xl font-semibold text-gray-900">Rs. {{ pending_amount|floatformat:2 }}</div>
+    </div>
+  </div>
+
+  <!-- Filter Form -->
+  <div class="bg-white border border-gray-200 rounded-lg p-4 mb-4">
+    <form method="get">
+      <div class="grid grid-cols-1 md:grid-cols-6 gap-3">
+        <input type="text" name="search" value="{{ request.GET.search }}" placeholder="Search purchases..." class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent" />
+        
+        <select name="supplier" class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent">
+          <option value="">All Suppliers</option>
+          {% for s in suppliers %}
+            <option value="{{ s.id }}" {% if request.GET.supplier|default:'' == s.id|stringformat:'s' %}selected{% endif %}>{{ s.name }}</option>
+          {% endfor %}
+        </select>
+        
+        <select name="payment_status" class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent">
+          <option value="">Payment Status</option>
+          <option value="pending" {% if request.GET.payment_status == 'pending' %}selected{% endif %}>Pending</option>
+          <option value="paid" {% if request.GET.payment_status == 'paid' %}selected{% endif %}>Paid</option>
+          <option value="partial" {% if request.GET.payment_status == 'partial' %}selected{% endif %}>Partial</option>
+          <option value="overdue" {% if request.GET.payment_status == 'overdue' %}selected{% endif %}>Overdue</option>
+        </select>
+        
+        <input type="date" name="date_from" value="{{ request.GET.date_from }}" placeholder="From Date" class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent" />
+        
+        <input type="date" name="date_to" value="{{ request.GET.date_to }}" placeholder="To Date" class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent" />
+        
+        <div class="flex gap-2">
+          <button class="bg-gray-900 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-800 transition-colors flex-1">Filter</button>
+          <a href="?" class="bg-gray-100 text-gray-700 px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-200 transition-colors flex-1 text-center">Reset</a>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- Purchases Table -->
+  <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+    <div class="overflow-x-auto">
+      <table id="purchasesTable" class="w-full">
+        <thead class="bg-gray-50 border-b border-gray-200">
+          <tr>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-700">ID</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-700">Date</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-700">Supplier</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-700">Items</th>
+            <th class="px-4 py-3 text-center text-xs font-medium text-gray-700">Qty</th>
+            <th class="px-4 py-3 text-right text-xs font-medium text-gray-700">Amount</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-700">Supplier Invoice</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-700">Invoice</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-700">Payment</th>
+            <th class="px-4 py-3 text-center text-xs font-medium text-gray-700">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200">
+          {% for purchase in purchases %}
+          <tr class="hover:bg-gray-50">
+            <td class="px-4 py-3 text-sm text-gray-900">{{ purchase.id }}</td>
+            <td class="px-4 py-3">
+              <div class="text-sm text-gray-900">{{ purchase.purchase_date|date:"M d, Y" }}</div>
+              <div class="text-xs text-gray-500">{{ purchase.created_at|date:"g:i A" }}</div>
+            </td>
+            <td class="px-4 py-3 text-sm text-gray-900">
+              {% if purchase.supplier %}
+                {{ purchase.supplier.name }}
+              {% else %}
+                <span class="text-gray-400">-</span>
+              {% endif %}
+            </td>
+            <td class="px-4 py-3">
+              <div class="space-y-2">
+                {% for item in purchase.items.all %}
+                  <div class="flex items-center gap-2">
+                    {% if item.product_image %}
+                      <img src="{{ item.product_image.url }}" alt="{{ item.product_name }}" class="h-10 w-10 object-cover rounded border border-gray-200">
+                    {% elif item.product and item.product.main_image %}
+                      <img src="{{ item.product.main_image.url }}" alt="{{ item.product_name }}" class="h-10 w-10 object-cover rounded border border-gray-200">
+                    {% else %}
+                      <div class="h-10 w-10 bg-gray-100 rounded border border-gray-200 flex items-center justify-center">
+                        <i class="fas fa-image text-gray-400 text-xs"></i>
+                      </div>
+                    {% endif %}
+                    <div class="text-sm">
+                      <div class="text-gray-900">{{ item.product_name }}</div>
+                      <div class="text-xs text-gray-500">
+                        {% if item.product_sku %}{{ item.product_sku }} • {% endif %}
+                        Qty: {{ item.quantity }} @ Rs. {{ item.purchase_price|floatformat:2 }}
+                      </div>
+                    </div>
+                  </div>
+                {% empty %}
+                  <span class="text-sm text-gray-400">No items</span>
+                {% endfor %}
+              </div>
+            </td>
+            <td class="px-4 py-3 text-sm text-center text-gray-900">{{ purchase.get_total_quantity }}</td>
+            <td class="px-4 py-3 text-sm text-right font-medium text-gray-900">Rs. {{ purchase.total_amount|floatformat:2 }}</td>
+            <td class="px-4 py-3 text-sm text-gray-900">{{ purchase.supplier_invoice_number|default:"-" }}</td>
+            <td class="px-4 py-3">
+              {% if purchase.invoice %}
+                <a href="{% url 'admin_purchase_invoice_detail' purchase.invoice.invoice_number %}" class="text-sm text-gray-900 hover:text-gray-700 underline">
+                  {{ purchase.invoice.invoice_number }}
+                </a>
+              {% else %}
+                <span class="text-sm text-gray-400">-</span>
+              {% endif %}
+            </td>
+            <td class="px-4 py-3">
+              {% if purchase.invoice %}
+                <select class="payment-status-select border border-gray-300 rounded px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent" 
+                        data-invoice-number="{{ purchase.invoice.invoice_number }}"
+                        data-current-status="{{ purchase.invoice.payment_status }}">
+                  <option value="pending" {% if purchase.invoice.payment_status == 'pending' %}selected{% endif %}>Pending</option>
+                  <option value="paid" {% if purchase.invoice.payment_status == 'paid' %}selected{% endif %}>Paid</option>
+                  <option value="partial" {% if purchase.invoice.payment_status == 'partial' %}selected{% endif %}>Partial</option>
+                  <option value="overdue" {% if purchase.invoice.payment_status == 'overdue' %}selected{% endif %}>Overdue</option>
+                </select>
+              {% else %}
+                <span class="text-sm text-gray-400">-</span>
+              {% endif %}
+            </td>
+            <td class="px-4 py-3">
+              <div class="flex items-center justify-center gap-2">
+                {% if purchase.invoice %}
+                  <a href="{% url 'admin_purchase_invoice_detail' purchase.invoice.invoice_number %}" class="text-gray-600 hover:text-gray-900 p-1.5" title="View Invoice">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                    </svg>
+                  </a>
+                {% endif %}
+                <a href="{% url 'admin_purchase_update' purchase.id %}" class="text-gray-600 hover:text-gray-900 p-1.5" title="Edit">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                  </svg>
+                </a>
+                <a href="{% url 'admin_purchase_delete' purchase.id %}" class="text-gray-600 hover:text-red-600 p-1.5" title="Delete" onclick="return confirm('Delete this purchase? This will also update product stock.')">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                  </svg>
+                </a>
+              </div>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="10" class="px-4 py-12 text-center">
+              <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
+              </svg>
+              <p class="text-sm text-gray-500 mt-2">No purchases found</p>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  $(document).ready(function () {
+    // Datatable Initialization
+    $('#purchasesTable').DataTable({
+      order: [[1, 'desc']],
+      pageLength: 10,
+      lengthChange: true,
+      searching: true,
+      ordering: true,
+      responsive: true,
+      language: {
+        search: "_INPUT_",
+        searchPlaceholder: "Search..."
+      },
+      columnDefs: [
+        { orderable: false, targets: [-1, -2] }
+      ]
+    });
+
+    // Handle payment status change
+    $('.payment-status-select').on('change', function() {
+      const select = $(this);
+      const invoiceNumber = select.data('invoice-number');
+      const newStatus = select.val();
+      const currentStatus = select.data('current-status');
+      
+      if (newStatus === currentStatus) {
+        return;
+      }
+      
+      Swal.fire({
+        title: 'Confirm Change',
+        text: `Change payment status to "${newStatus}"?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#111827',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'Yes, change it',
+        cancelButtonText: 'Cancel'
+      }).then((result) => {
+        if (!result.isConfirmed) {
+          select.val(currentStatus);
+          return;
+        }
+        
+        select.prop('disabled', true);
+        
+        Swal.fire({
+          title: 'Updating...',
+          text: 'Please wait',
+          allowOutsideClick: false,
+          allowEscapeKey: false,
+          didOpen: () => {
+            Swal.showLoading();
+          }
+        });
+        
+        const csrfToken = document.querySelector('[name=csrf-token]')?.content || 
+                          document.querySelector('input[name=csrfmiddlewaretoken]')?.value ||
+                          '{{ csrf_token }}';
+        
+        $.ajax({
+          url: `/admin-dashboard/api/purchase-invoices/${invoiceNumber}/payment-status/`,
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': csrfToken,
+            'Content-Type': 'application/json',
+          },
+          data: JSON.stringify({
+            payment_status: newStatus,
+            payment_date: newStatus === 'paid' ? new Date().toISOString().split('T')[0] : ''
+          }),
+          success: function(response) {
+            if (response.success) {
+              select.data('current-status', newStatus);
+              select.prop('disabled', false);
+              
+              Swal.fire({
+                icon: 'success',
+                title: 'Success',
+                text: 'Payment status updated',
+                timer: 2000,
+                showConfirmButton: false
+              });
+            } else {
+              select.val(currentStatus);
+              select.prop('disabled', false);
+              
+              Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: response.error || 'Failed to update'
+              });
+            }
+          },
+          error: function(xhr) {
+            select.val(currentStatus);
+            select.prop('disabled', false);
+            const errorMsg = xhr.responseJSON?.error || 'Failed to update';
+            
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: errorMsg
+            });
+          }
+        });
+      });
+    });
+  });
+</script>
+{% endblock %}

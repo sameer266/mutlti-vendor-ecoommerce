@@ -4,7 +4,6 @@ from .models import *
 # Register all models
 admin.site.register(UserRole)
 admin.site.register(UserProfile)
-admin.site.register(Vendor)
 admin.site.register(Category)
 admin.site.register(Product)
 admin.site.register(ProductImage)
@@ -19,14 +18,16 @@ admin.site.register(Organization)
 admin.site.register(Newsletter)
 admin.site.register(Contact)
 admin.site.register(Notification)
-admin.site.register(VendorCommission)
-admin.site.register(ShippingCost)
 
-admin.site.register(VendorPayoutRequest)
-admin.site.register(VendorWallet)
 
 admin.site.register(Slider)
 admin.site.register(Banner)
 
+admin.site.register(Supplier)
+admin.site.register(Purchase)
+admin.site.register(PurchaseItem)
+admin.site.register(PurchaseInvoice)
+admin.site.register(PurchaseInvoiceItem)
 
 admin.site.register(OTPVerification)
+admin.site.register(TaxCost)

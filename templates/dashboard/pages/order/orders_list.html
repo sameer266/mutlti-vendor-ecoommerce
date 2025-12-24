@@ -6,132 +6,413 @@
 {% endblock %}
 
 {% block content %}
-<div class="bg-white rounded-xl shadow p-6">
-  <div class="flex justify-between items-center mb-6">
-    <h1 class="text-2xl font-semibold text-gray-800"><i class="fas fa-shopping-cart"></i> Orders</h1>
-    <a href="#" class="opacity-60 cursor-not-allowed text-sm">Add Order (disabled)</a>
+<div class="max-w-7xl mx-auto p-4 sm:p-6">
+  
+  <!-- Header -->
+  <div class="mb-6">
+    <div class="flex items-center justify-between">
+      <div>
+        <h1 class="text-2xl font-semibold text-gray-900">Orders</h1>
+        <p class="text-sm text-gray-500 mt-1">Manage customer orders and status</p>
+      </div>
+      <span class="text-sm text-gray-400 cursor-not-allowed">Add Order (disabled)</span>
+    </div>
   </div>
 
-  <form method="get" class="mb-4 grid grid-cols-1 md:grid-cols-4 gap-4">
-    <input type="text" name="search" value="{{ request.GET.search }}" placeholder="Search #, name, email, phone" class="border border-gray-300 rounded-lg p-2.5" />
-    
-    <select name="status" class="border border-gray-300 rounded-lg p-2.5">
-      <option value="">All Status</option>
-      {% for value,label in order_model.STATUS_CHOICES %}
-        <option value="{{ value }}" {% if request.GET.status == value %}selected{% endif %}>{{ label }}</option>
-      {% endfor %}
-    </select>
-    
-    <select name="payment_status" class="border border-gray-300 rounded-lg p-2.5">
-      <option value="">All Payment</option>
-      {% for value,label in order_model.PAYMENT_STATUS_CHOICES %}
-        <option value="{{ value }}" {% if request.GET.payment_status == value %}selected{% endif %}>{{ label }}</option>
-      {% endfor %}
-    </select>
-    
-    <div>
-      <button class="bg-gray-800 text-white px-4 py-2 rounded-lg w-full">Filter</button>
-    </div>
-  </form>
+  <!-- Filters -->
+  <div class="bg-white border border-gray-200 rounded-lg p-4 mb-4">
+    <form method="get">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+        <input type="text" name="search" value="{{ request.GET.search }}" placeholder="Search #, name, email, phone" class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent" />
+        
+        <select name="status" class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent">
+          <option value="">All Status</option>
+          {% for value,label in order_model.STATUS_CHOICES %}
+            <option value="{{ value }}" {% if request.GET.status == value %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+        
+        <select name="payment_status" class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent">
+          <option value="">All Payment</option>
+          {% for value,label in order_model.PAYMENT_STATUS_CHOICES %}
+            <option value="{{ value }}" {% if request.GET.payment_status == value %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+        
+        <div class="flex gap-2">
+          <button class="bg-gray-900 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-800 transition-colors flex-1">Filter</button>
+          <a href="?" class="bg-gray-100 text-gray-700 px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-200 transition-colors flex-1 text-center">Reset</a>
+        </div>
+      </div>
+    </form>
+  </div>
 
-  <div class="overflow-x-auto">
-    <table id="ordersTable" class="display w-full border border-gray-200 rounded-lg text-sm">
-      <thead class="bg-gray-100">
-        <tr>
-          <th>Order #</th>
-          <th>Customer</th>
-          <th>Contact</th>
-          <th>Total</th>
-          <th>Payment</th>
-          <th>Status</th>
-          <th>Estimated Delivery Date</th>
-          <th>Delivered At</th>
-          <th>Created</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for order in orders %}
-        <tr>
-          <td>{{ order.order_number }}</td>
-          <td>{{ order.full_name }}</td>
-          <td>
-            {{ order.email }}<br>
-            <span class="text-xs text-gray-500">{{ order.phone }}</span>
-          </td>
-          <td>Rs {{ order.total }}</td>
-          <td>
-            {% for value,label in order_model.PAYMENT_STATUS_CHOICES %}
-              {% if order.payment_status == value %}
-                {{ label }}
+  <!-- Orders Table -->
+  <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+    <div class="overflow-x-auto">
+      <table id="ordersTable" class="w-full border-collapse">
+        <thead class="bg-gray-50 border-b border-gray-200">
+          <tr>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-700 border-b border-gray-200">Order #</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-700 border-b border-gray-200">Customer</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-700 border-b border-gray-200">Contact</th>
+            <th class="px-4 py-3 text-right text-xs font-medium text-gray-700 border-b border-gray-200">Total</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-700 border-b border-gray-200">Payment</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-700 border-b border-gray-200">Status</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-700 border-b border-gray-200">Est. Delivery</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-700 border-b border-gray-200">Delivered At</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-700 border-b border-gray-200">Created</th>
+            <th class="px-4 py-3 text-center text-xs font-medium text-gray-700 border-b border-gray-200">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for order in orders %}
+          <tr class="hover:bg-gray-50 border-b border-gray-200">
+            <td class="px-4 py-3 text-sm text-gray-900">#{{ order.order_number }}</td>
+            <td class="px-4 py-3 text-sm font-medium text-gray-900">{{ order.full_name }}</td>
+            <td class="px-4 py-3 text-sm text-gray-900">
+              {{ order.email }}<br>
+              <span class="text-xs text-gray-500">{{ order.phone }}</span>
+            </td>
+            <td class="px-4 py-3 text-sm text-right text-gray-900">Rs {{ order.total }}</td>
+            <td class="px-4 py-3">
+              <select class="payment-status-select border border-gray-300 rounded-md px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent" 
+                      data-order-number="{{ order.order_number }}"
+                      data-current-status="{{ order.payment_status }}">
+                {% for value,label in order_model.PAYMENT_STATUS_CHOICES %}
+                  <option value="{{ value }}" {% if order.payment_status == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+              </select>
+            </td>
+            <td class="px-4 py-3">
+              <select class="status-select border border-gray-300 rounded-md px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent" data-id="{{ order.order_number }}">
+                {% for value,label in order_model.STATUS_CHOICES %}
+                  <option value="{{ value }}" {% if order.status == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+              </select>
+            </td>
+            <td class="px-4 py-3 text-sm text-gray-900">
+              <div>{{ order.estimated_delivery_date|date:"Y-m-d"|default:"-" }}</div>
+              {% if order.estimated_days %}
+                <div class="text-xs text-gray-500">{{ order.estimated_days }}</div>
               {% endif %}
-            {% endfor %}
-          </td>
-          <td>
-            <select class="status-select border rounded p-1" data-id="{{ order.order_number }}">
-              {% for value,label in order_model.STATUS_CHOICES %}
-                <option value="{{ value }}" {% if order.status == value %}selected{% endif %}>{{ label }}</option>
-              {% endfor %}
-            </select>
-          </td>
-          <td>{{ order.estimated_shipping_date|date:"Y-m-d"|default:"No Date" }}</td>
-          <td>{{ order.delivered_at|date:"Y-m-d h:i A" }}</td>
-          <td>{{ order.created_at|date:"Y-m-d h:i A" }}</td>
-          <td class="text-center flex justify-center gap-3">
-            <!-- View Items -->
-            <button class="view-items-btn flex items-center gap-2 text-blue-600 hover:text-blue-800 font-medium" data-id="{{ order.order_number }}">
-              <i class="fa-solid fa-eye"></i>
-            </button>
-            <!-- View Invoices -->
-            <a href="{% url 'admin_orders_invoice_list' order.order_number %}" class="flex items-center gap-2 text-green-600 hover:text-green-800 font-medium">
-              <i class="fa-solid fa-file-invoice"></i>
-            </a>
-            <!-- Delete -->
-            <a href="{% url 'admin_order_delete' order.order_number %}" class="flex items-center gap-2 text-red-600 hover:text-red-800 font-medium" onclick="return confirm('Delete this order?')">
-              <i class="fa-solid fa-trash"></i>
-            </a>
-          </td>
-        </tr>
-        {% empty %}
-        <tr>
-          <td colspan="10" class="text-center text-gray-500 py-6">No orders found.</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+            </td>
+            <td class="px-4 py-3 text-sm text-gray-900">{{ order.delivered_at|date:"Y-m-d h:i A"|default:"-" }}</td>
+            <td class="px-4 py-3 text-sm text-gray-900">{{ order.created_at|date:"Y-m-d h:i A" }}</td>
+            <td class="px-4 py-3">
+              <div class="flex items-center justify-center gap-2">
+                <a href="{% url 'admin_order_details' order.order_number %}" class="text-gray-600 hover:text-gray-900 p-1.5" title="View">
+                  <i class="fas fa-eye text-sm"></i>
+                </a>
+                <a href="{% url 'admin_orders_invoice_list' order.order_number %}" class="text-gray-600 hover:text-gray-900 p-1.5" title="Invoice">
+                  <i class="fas fa-file-invoice text-sm"></i>
+                </a>
+                {% if order.status == 'delivered' or order.status == 'cancelled' or order.status == 'refunded' %}
+                  <a href="{% url 'admin_order_delete' order.order_number %}" class="text-gray-600 hover:text-red-600 p-1.5" title="Delete" onclick="return confirm('Delete this order? This action cannot be undone.')">
+                    <i class="fas fa-trash text-sm"></i>
+                  </a>
+                {% else %}
+                  <span class="text-gray-300 cursor-not-allowed p-1.5" title="Cannot delete orders with status: {{ order.get_status_display }}. Only delivered, cancelled, or refunded orders can be deleted.">
+                    <i class="fas fa-trash text-sm"></i>
+                  </span>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="10" class="px-4 py-12 text-center">
+              <i class="fas fa-shopping-cart text-gray-400 text-4xl mb-2"></i>
+              <p class="text-sm text-gray-500">No orders found</p>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
   </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
-
-
 <script>
+/**
+ * AJAX API Helper for updating order payment status
+ */
+/**
+ * AJAX API Helper for updating order payment status
+ */
+function updateOrderPaymentStatus(orderNumber, paymentStatus, transactionId = null, notes = null) {
+    return new Promise((resolve, reject) => {
+        // Get CSRF token (Django sets it in cookies for AJAX requests)
+        const csrftoken = getCookieForPayment('csrftoken') || 
+                         document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+        
+        if (!csrftoken) {
+            reject(new Error('CSRF token not found. Please refresh the page.'));
+            return;
+        }
+        
+        // Prepare request data
+        const data = {
+            payment_status: paymentStatus
+        };
+        
+        if (transactionId) {
+            data.transaction_id = transactionId;
+        }
+        
+        if (notes) {
+            data.notes = notes;
+        }
+        
+        // Make AJAX request
+        fetch(`/admin-dashboard/api/orders/${orderNumber}/payment-status/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(err => {
+                    throw new Error(err.error || 'Request failed');
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                resolve(data);
+            } else {
+                reject(new Error(data.error || 'Update failed'));
+            }
+        })
+        .catch(error => {
+            reject(error);
+        });
+    });
+}
+
+// Helper function to get CSRF token from cookies
+function getCookieForPayment(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+    return null;
+}
+
+// Handle payment status change
+document.addEventListener('DOMContentLoaded', function() {
+    // Payment status dropdown change handler
+    document.querySelectorAll('.payment-status-select').forEach(select => {
+        select.addEventListener('change', function() {
+            const orderNumber = this.dataset.orderNumber;
+            const currentStatus = this.dataset.currentStatus;
+            const newStatus = this.value;
+            
+            // Don't make request if status hasn't changed
+            if (newStatus === currentStatus) {
+                return;
+            }
+            
+            // Show loading state
+            const originalValue = this.value;
+            this.disabled = true;
+            this.style.opacity = '0.6';
+            
+            // Show confirmation for paid status
+            if (newStatus === 'paid') {
+                Swal.fire({
+                    title: 'Confirm Payment',
+                    text: `Mark order ${orderNumber} as paid? This will automatically set the order status to "Delivered".`,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#10b981',
+                    cancelButtonColor: '#6b7280',
+                    confirmButtonText: 'Yes, mark as paid',
+                    cancelButtonText: 'Cancel'
+                }).then((result) => {
+                    if (!result.isConfirmed) {
+                        this.value = currentStatus;
+                        this.disabled = false;
+                        this.style.opacity = '1';
+                        return;
+                    }
+                    
+                    // Proceed with update
+                    updatePaymentStatus.call(this, orderNumber, newStatus, currentStatus);
+                });
+            } else {
+                // Update directly for other statuses
+                updatePaymentStatus.call(this, orderNumber, newStatus, currentStatus);
+            }
+        });
+    });
+    
+    function updatePaymentStatus(orderNumber, newStatus, currentStatus) {
+        const selectElement = this;
+        
+        // Update payment status via API
+        updateOrderPaymentStatus(orderNumber, newStatus)
+            .then(response => {
+                // Update UI
+                selectElement.dataset.currentStatus = newStatus;
+                selectElement.disabled = false;
+                selectElement.style.opacity = '1';
+                
+                // Show success message with SweetAlert2
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Payment Status Updated',
+                    text: 'Payment status updated successfully!',
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true
+                });
+                
+                // If order status was auto-updated, refresh the page to show changes
+                if (response.data.order_status === 'delivered' && response.data.previous_order_status !== 'delivered') {
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1500);
+                }
+            })
+            .catch(error => {
+                // Revert selection on error
+                selectElement.value = currentStatus;
+                selectElement.disabled = false;
+                selectElement.style.opacity = '1';
+                
+                // Show error message with SweetAlert2
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Update Failed',
+                    text: error.message || 'Failed to update payment status',
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 4000,
+                    timerProgressBar: true
+                });
+                console.error('Payment status update error:', error);
+            });
+    }
+});
+
+// DataTable initialization
 $(document).ready(function() {
     $('#ordersTable').DataTable({
         pageLength: 10,
         lengthMenu: [5, 10, 25, 50],
         ordering: true,
-        order: [[8, 'desc']], // Default sorting by Created date
-        columnDefs: [
-            { orderable: false, targets: 9 } // Actions column not sortable
-        ],
-        searching: false 
+        order: [[8, 'desc']],
+        columnDefs: [{ orderable: false, targets: 9 }],
+        searching: false,
+        drawCallback: function() {
+            $('#ordersTable tbody tr').addClass('border-b border-gray-200');
+        }
     });
 });
 
-
-// AJAX for status/payment change
+// CSRF Helper for order status
 function getCookie(name) {
     const value = `; ${document.cookie}`;
     const parts = value.split(`; ${name}=`);
     if (parts.length === 2) return parts.pop().split(';').shift();
 }
 
+// AJAX for order status update
 $(document).on('change', '.status-select', function(){
-    const row = $(this).closest('tr');
     const orderNumber = $(this).data('id');
-    const status = row.find('.status-select').val();
+    const status = $(this).val();
+    const selectElement = $(this);
+    
+    // Show loading state
+    selectElement.prop('disabled', true).css('opacity', '0.6');
+
+    $.ajax({
+        url: `/admin-dashboard/orders/${orderNumber}/status/`,
+        type: 'POST',
+        data: { status },
+        headers: { 'X-CSRFToken': getCookie('csrftoken') },
+        success: function(resp){
+            selectElement.prop('disabled', false).css('opacity', '1');
+            
+            if(resp.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Status Updated',
+                    text: 'Order status updated successfully!',
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true
+                }).then(() => {
+                    location.reload();
+                });
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Update Failed',
+                    text: 'Failed to update order status',
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true
+                });
+            }
+        },
+        error: function(){
+            selectElement.prop('disabled', false).css('opacity', '1');
+            
+            Swal.fire({
+                icon: 'error',
+                title: 'Server Error',
+                text: 'Server error updating order status',
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true
+            });
+        }
+    });
+});
+</script>
+<script>
+$(document).ready(function() {
+    $('#ordersTable').DataTable({
+        pageLength: 10,
+        lengthMenu: [5, 10, 25, 50],
+        ordering: true,
+        order: [[8, 'desc']],
+        columnDefs: [{ orderable: false, targets: 9 }],
+        searching: false,
+        drawCallback: function() {
+            $('#ordersTable tbody tr').addClass('border-b border-gray-200');
+        }
+    });
+});
+
+// CSRF Helper
+function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+}
+
+// AJAX for status update
+$(document).on('change', '.status-select', function(){
+    const orderNumber = $(this).data('id');
+    const status = $(this).val();
 
     $.ajax({
         url: `{% url 'admin_order_change_status' 'ORD00000000000000' %}`.replace('ORD00000000000000', orderNumber),
@@ -139,7 +420,7 @@ $(document).on('change', '.status-select', function(){
         data: { status },
         headers: { 'X-CSRFToken': getCookie('csrftoken') },
         success: function(resp){
-            if (resp.success) location.reload();
+            if(resp.success) location.reload();
             else alert('Failed to update order');
         },
         error: function(){ alert('Server error updating order'); }

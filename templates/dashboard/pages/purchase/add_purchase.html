@@ -1,0 +1,582 @@
+{% extends 'dashboard/components/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto p-4 sm:p-6">
+  <!-- Header -->
+  <div class="mb-6">
+    <div class="flex items-center justify-between">
+      <div>
+        <h1 class="text-2xl font-semibold text-gray-900">Create Purchase Order</h1>
+        <p class="text-sm text-gray-500 mt-1">Add products from supplier</p>
+      </div>
+      <a href="{% url 'admin_purchases_list' %}" class="text-sm text-gray-600 hover:text-gray-900">
+        ← Back
+      </a>
+    </div>
+  </div>
+
+  <!-- Supplier Info -->
+  <div class="bg-white border border-gray-200 rounded-lg p-6 mb-4">
+    <h2 class="text-sm font-medium text-gray-900 mb-4">Supplier Information</h2>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div>
+        <label class="block text-xs font-medium text-gray-700 mb-1.5">
+          Supplier <span class="text-red-500">*</span>
+        </label>
+        <select id="supplierId" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent" required>
+          <option value="">Select supplier</option>
+          {% for supplier in suppliers %}
+            <option value="{{ supplier.id }}">{{ supplier.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-gray-700 mb-1.5">
+          Purchase Date <span class="text-red-500">*</span>
+        </label>
+        <input type="date" id="purchaseDate" value="{% now 'Y-m-d' %}" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent" required>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-gray-700 mb-1.5">Notes</label>
+        <input type="text" id="notes" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent" placeholder="Optional">
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Product -->
+  <div class="bg-white border border-gray-200 rounded-lg p-6 mb-4">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-sm font-medium text-gray-900">Add Product</h2>
+      <span id="editMode" class="hidden text-xs bg-gray-100 px-2 py-1 rounded">Editing</span>
+    </div>
+    
+    <div class="space-y-4">
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
+        <div class="md:col-span-3">
+          <label class="block text-xs font-medium text-gray-700 mb-1.5">Link Product</label>
+          <select id="productSelect" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent">
+            <option value="">Select to auto-fill</option>
+            {% for product in products %}
+              <option value="{{ product.id }}" 
+                      data-name="{{ product.name }}" 
+                      data-cost-price="{{ product.cost_price|default:'0' }}"
+                      data-price="{{ product.price|default:'0' }}"
+                      data-eta="{{ product.estimated_days|default:'' }}"
+                      data-category="{{ product.category_id|default:'' }}"
+                      data-image="{{ product.main_image.url|default:'' }}">
+                {{ product.name }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="md:col-span-3">
+          <label class="block text-xs font-medium text-gray-700 mb-1.5">
+            Product Name <span class="text-red-500">*</span>
+          </label>
+          <input type="text" id="productName" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent" placeholder="Enter name">
+        </div>
+        <div class="md:col-span-2">
+          <label class="block text-xs font-medium text-gray-700 mb-1.5">
+            Category <span class="text-red-500">*</span>
+          </label>
+          <select id="productCategory" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent">
+            <option value="">Select</option>
+            {% for category in categories %}
+              <option value="{{ category.id }}">{{ category.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="md:col-span-1">
+          <label class="block text-xs font-medium text-gray-700 mb-1.5">
+            Qty <span class="text-red-500">*</span>
+          </label>
+          <input type="number" id="productQty" min="1" value="1" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent">
+        </div>
+        <div class="md:col-span-1.5">
+          <label class="block text-xs font-medium text-gray-700 mb-1.5">
+            Cost <span class="text-red-500">*</span>
+          </label>
+          <input type="number" id="productCostPrice" min="0" step="0.01" value="0" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent">
+        </div>
+        <div class="md:col-span-1.5">
+          <label class="block text-xs font-medium text-gray-700 mb-1.5">
+            Sales Price <span class="text-red-500">*</span>
+          </label>
+          <input type="number" id="productPrice" min="0" step="0.01" value="0" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent">
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div>
+          <label class="block text-xs font-medium text-gray-700 mb-1.5">
+            ETA (days) <span class="text-red-500">*</span>
+          </label>
+          <input type="text" required  id="productETA" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent" placeholder="e.g., 2-4 days">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-700 mb-1.5">
+            Product Image <span class="text-red-500">*</span>
+          </label>
+          <input type="file" id="productImage" accept="image/*" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent file:mr-3 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200">
+        </div>
+        <div id="imagePreview" class="hidden">
+          <p class="text-xs font-medium text-gray-700 mb-1.5">Preview</p>
+          <div class="relative inline-block">
+            <img id="previewImg" src="" alt="Preview" class="h-20 w-20 object-cover rounded border border-gray-300">
+            <button type="button" id="removeImageBtn" class="absolute -top-1.5 -right-1.5 bg-gray-900 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-gray-700">
+              ×
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <button type="button" id="addProductBtn" class="w-full bg-gray-900 text-white px-4 py-2.5 rounded-md text-sm font-medium hover:bg-gray-800 transition-colors">
+        Add Product
+      </button>
+    </div>
+  </div>
+
+  <!-- Products Table -->
+  <div class="mb-4">
+    <div class="flex justify-between items-center mb-3">
+      <h2 class="text-sm font-medium text-gray-900">
+        Products <span id="itemCount" class="text-xs text-gray-500">(0)</span>
+      </h2>
+      <button type="button" id="clearAllBtn" class="hidden text-xs text-gray-600 hover:text-gray-900">
+        Clear All
+      </button>
+    </div>
+    
+    <div id="emptyState" class="text-center py-16 bg-gray-50 border border-gray-200 rounded-lg">
+      <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
+      </svg>
+      <p class="text-sm text-gray-500 mt-2">No products added</p>
+    </div>
+
+    <div id="tableContainer" class="hidden overflow-x-auto border border-gray-200 rounded-lg">
+      <table class="w-full">
+        <thead class="bg-gray-50 border-b border-gray-200">
+          <tr>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-700">#</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-700">Image</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-700">Product</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-700">Category</th>
+            <th class="px-4 py-3 text-center text-xs font-medium text-gray-700">Qty</th>
+            <th class="px-4 py-3 text-right text-xs font-medium text-gray-700">Cost</th>
+            <th class="px-4 py-3 text-right text-xs font-medium text-gray-700">Price</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-700">ETA</th>
+            <th class="px-4 py-3 text-right text-xs font-medium text-gray-700">Total</th>
+            <th class="px-4 py-3 text-center text-xs font-medium text-gray-700">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="productsTableBody" class="bg-white divide-y divide-gray-200">
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Summary -->
+  <div id="summarySection" class="hidden bg-white border border-gray-200 rounded-lg p-6 mb-4">
+    <h3 class="text-sm font-medium text-gray-900 mb-4">Order Summary</h3>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+      <div>
+        <label class="block text-xs font-medium text-gray-700 mb-1.5">Tax (%)</label>
+        <input type="number" id="taxPercent" step="0.01" min="0" value="13" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent">
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-gray-700 mb-1.5">Discount (Rs.)</label>
+        <input type="number" id="discountAmount" step="0.01" min="0" value="0" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent">
+      </div>
+    </div>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 p-4 bg-gray-50 rounded-lg">
+      <div>
+        <span class="text-xs text-gray-600 block mb-1">Subtotal</span>
+        <span id="subtotalDisplay" class="font-semibold text-gray-900">Rs. 0.00</span>
+      </div>
+      <div>
+        <span class="text-xs text-gray-600 block mb-1">Tax</span>
+        <span id="taxDisplay" class="font-semibold text-gray-900">Rs. 0.00</span>
+      </div>
+      <div>
+        <span class="text-xs text-gray-600 block mb-1">Discount</span>
+        <span id="discountDisplay" class="font-semibold text-gray-900">Rs. 0.00</span>
+      </div>
+      <div>
+        <span class="text-xs text-gray-600 block mb-1">Total</span>
+        <span id="totalDisplay" class="font-semibold text-gray-900 text-lg">Rs. 0.00</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div class="flex gap-3">
+    <button type="button" id="savePurchaseBtn" class="bg-gray-900 text-white px-6 py-2.5 rounded-md text-sm font-medium hover:bg-gray-800 transition-colors">
+      Save Purchase Order
+    </button>
+    <a href="{% url 'admin_purchases_list' %}" class="bg-gray-100 text-gray-700 px-6 py-2.5 rounded-md text-sm font-medium hover:bg-gray-200 transition-colors">
+      Cancel
+    </a>
+  </div>
+</div>
+
+<script>
+$(document).ready(function() {
+  let products = [];
+  let editingIndex = -1;
+
+  function showToast(message, type = 'success') {
+    const icons = { success: 'success', error: 'error', info: 'info' };
+    Swal.fire({
+      toast: true,
+      position: 'top-end',
+      icon: icons[type],
+      title: message,
+      showConfirmButton: false,
+      timer: 3000,
+      timerProgressBar: true
+    });
+  }
+
+  $('#productImage').on('change', function() {
+    const file = this.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        $('#previewImg').attr('src', e.target.result);
+        $('#imagePreview').removeClass('hidden');
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+
+  $('#removeImageBtn').on('click', function() {
+    $('#productImage').val('');
+    $('#imagePreview').addClass('hidden');
+  });
+
+  $('#productSelect').on('change', function() {
+    const $option = $(this).find('option:selected');
+    if ($option.val()) {
+      $('#productName').val($option.data('name') || '');
+      $('#productCategory').val($option.data('category') || '');
+      $('#productCostPrice').val($option.data('cost-price') || 0);
+      $('#productPrice').val($option.data('price') || 0);
+      $('#productETA').val($option.data('eta') || '');
+      
+      const imageUrl = $option.data('image');
+      if (imageUrl) {
+        $('#previewImg').attr('src', imageUrl);
+        $('#imagePreview').removeClass('hidden');
+      }
+      showToast('Product loaded', 'info');
+    }
+  });
+
+  $('#addProductBtn').on('click', function() {
+    const productId = $('#productSelect').val();
+    const name = $('#productName').val().trim();
+    const category = $('#productCategory').val();
+    const categoryName = $('#productCategory option:selected').text();
+    const qty = parseFloat($('#productQty').val()) || 0;
+    const costPrice = parseFloat($('#productCostPrice').val()) || 0;
+    const price = parseFloat($('#productPrice').val()) || 0;
+    const eta = $('#productETA').val().trim();
+    const imageFile = $('#productImage')[0].files[0];
+    const existingImage = $('#previewImg').attr('src');
+
+    if (!name) {
+      showToast('Enter product name', 'error');
+      $('#productName').focus();
+      return;
+    }
+    if (!category) {
+      showToast('Select category', 'error');
+      $('#productCategory').focus();
+      return;
+    }
+    if (qty <= 0) {
+      showToast('Enter valid quantity', 'error');
+      $('#productQty').focus();
+      return;
+    }
+    if (costPrice <= 0) {
+      showToast('Enter valid cost price', 'error');
+      $('#productCostPrice').focus();
+      return;
+    }
+    if (price <= 0) {
+      showToast('Enter valid selling price', 'error');
+      $('#productPrice').focus();
+      return;
+    }
+    if (!imageFile && !existingImage) {
+      showToast('Upload product image', 'error');
+      $('#productImage').focus();
+      return;
+    }
+
+    const product = {
+      productId: productId,
+      name: name,
+      category: category,
+      categoryName: categoryName,
+      quantity: qty,
+      costPrice: costPrice,
+      price: price,
+      eta: eta,
+      total: qty * costPrice,
+      image: existingImage,
+      imageFile: imageFile
+    };
+
+    if (editingIndex >= 0) {
+      products[editingIndex] = product;
+      editingIndex = -1;
+      $('#addProductBtn').text('Add Product');
+      $('#editMode').addClass('hidden');
+      showToast('Product updated', 'success');
+    } else {
+      products.push(product);
+      showToast('Product added', 'success');
+    }
+
+    renderTable();
+    resetForm();
+    calculateTotals();
+  });
+
+  function renderTable() {
+    const $tbody = $('#productsTableBody');
+    $tbody.empty();
+
+    if (products.length === 0) {
+      $('#emptyState').removeClass('hidden');
+      $('#tableContainer').addClass('hidden');
+      $('#summarySection').addClass('hidden');
+      $('#clearAllBtn').addClass('hidden');
+      $('#itemCount').text('(0)');
+      return;
+    }
+
+    $('#emptyState').addClass('hidden');
+    $('#tableContainer').removeClass('hidden');
+    $('#summarySection').removeClass('hidden');
+    $('#clearAllBtn').removeClass('hidden');
+    $('#itemCount').text(`(${products.length})`);
+
+    products.forEach((product, index) => {
+      const row = `
+        <tr class="hover:bg-gray-50">
+          <td class="px-4 py-3 text-xs text-gray-600">${index + 1}</td>
+          <td class="px-4 py-3">
+            <img src="${product.image}" alt="${product.name}" class="h-12 w-12 object-cover rounded border border-gray-200">
+          </td>
+          <td class="px-4 py-3 text-sm text-gray-900">${product.name}</td>
+          <td class="px-4 py-3 text-xs text-gray-600">${product.categoryName}</td>
+          <td class="px-4 py-3 text-sm text-center text-gray-900">${product.quantity}</td>
+          <td class="px-4 py-3 text-sm text-right text-gray-900">Rs. ${product.costPrice.toFixed(2)}</td>
+          <td class="px-4 py-3 text-sm text-right text-gray-900">Rs. ${product.price.toFixed(2)}</td>
+          <td class="px-4 py-3 text-xs text-gray-600">${product.eta || '-'}</td>
+          <td class="px-4 py-3 text-sm text-right font-medium text-gray-900">Rs. ${product.total.toFixed(2)}</td>
+          <td class="px-4 py-3 text-center">
+            <button type="button" class="edit-btn text-gray-600 hover:text-gray-900 p-1.5" data-index="${index}">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+              </svg>
+            </button>
+            <button type="button" class="remove-btn text-gray-600 hover:text-red-600 p-1.5" data-index="${index}">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+              </svg>
+            </button>
+          </td>
+        </tr>
+      `;
+      $tbody.append(row);
+    });
+  }
+
+  $(document).on('click', '.edit-btn', function() {
+    const index = $(this).data('index');
+    const product = products[index];
+
+    $('#productSelect').val(product.productId || '');
+    $('#productName').val(product.name);
+    $('#productCategory').val(product.category);
+    $('#productQty').val(product.quantity);
+    $('#productCostPrice').val(product.costPrice);
+    $('#productPrice').val(product.price);
+    $('#productETA').val(product.eta);
+    $('#previewImg').attr('src', product.image);
+    $('#imagePreview').removeClass('hidden');
+
+    editingIndex = index;
+    $('#addProductBtn').text('Update Product');
+    $('#editMode').removeClass('hidden');
+    
+    $('html, body').animate({ scrollTop: $('#productName').offset().top - 100 }, 300);
+    showToast('Editing mode', 'info');
+  });
+
+  $(document).on('click', '.remove-btn', function() {
+    const index = $(this).data('index');
+    const product = products[index];
+    
+    Swal.fire({
+      title: 'Remove Product?',
+      text: `Remove "${product.name}"?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#111827',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Remove',
+      cancelButtonText: 'Cancel'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        products.splice(index, 1);
+        renderTable();
+        calculateTotals();
+        showToast('Product removed', 'info');
+      }
+    });
+  });
+
+  $('#clearAllBtn').on('click', function() {
+    Swal.fire({
+      title: 'Clear All?',
+      text: 'Remove all products?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#111827',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Clear All',
+      cancelButtonText: 'Cancel'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        products = [];
+        renderTable();
+        calculateTotals();
+        showToast('All cleared', 'info');
+      }
+    });
+  });
+
+  function resetForm() {
+    $('#productSelect').val('');
+    $('#productName').val('');
+    $('#productCategory').val('');
+    $('#productQty').val('1');
+    $('#productCostPrice').val('0');
+    $('#productPrice').val('0');
+    $('#productETA').val('');
+    $('#productImage').val('');
+    $('#imagePreview').addClass('hidden');
+    editingIndex = -1;
+    $('#addProductBtn').text('Add Product');
+    $('#editMode').addClass('hidden');
+  }
+
+  function calculateTotals() {
+    let subtotal = 0;
+    products.forEach(p => subtotal += p.total);
+
+    const taxPercent = parseFloat($('#taxPercent').val()) || 0;
+    const taxAmount = (subtotal * taxPercent) / 100;
+    const discount = parseFloat($('#discountAmount').val()) || 0;
+    const total = subtotal + taxAmount - discount;
+
+    $('#subtotalDisplay').text(`Rs. ${subtotal.toFixed(2)}`);
+    $('#taxDisplay').text(`Rs. ${taxAmount.toFixed(2)}`);
+    $('#discountDisplay').text(`Rs. ${discount.toFixed(2)}`);
+    $('#totalDisplay').text(`Rs. ${total.toFixed(2)}`);
+  }
+
+  $('#taxPercent, #discountAmount').on('input', calculateTotals);
+
+  $('#savePurchaseBtn').on('click', function() {
+    const $btn = $(this);
+    
+    if (!$('#supplierId').val()) {
+      showToast('Select supplier', 'error');
+      $('#supplierId').focus();
+      return;
+    }
+    if (!$('#purchaseDate').val()) {
+      showToast('Select date', 'error');
+      $('#purchaseDate').focus();
+      return;
+    }
+    if (products.length === 0) {
+      showToast('Add at least one product', 'error');
+      return;
+    }
+
+    $btn.prop('disabled', true).text('Saving...');
+
+    Swal.fire({
+      title: 'Saving...',
+      text: 'Please wait',
+      allowOutsideClick: false,
+      didOpen: () => { Swal.showLoading(); }
+    });
+
+    const formData = new FormData();
+    formData.append('supplier', $('#supplierId').val());
+    formData.append('purchase_date', $('#purchaseDate').val());
+    formData.append('notes', $('#notes').val());
+    
+    const subtotal = products.reduce((sum, p) => sum + p.total, 0);
+    const taxPercent = parseFloat($('#taxPercent').val()) || 0;
+    const taxAmount = (subtotal * taxPercent) / 100;
+    
+    formData.append('tax_amount', taxAmount.toFixed(2));
+    formData.append('discount', $('#discountAmount').val());
+
+    products.forEach((product, index) => {
+      formData.append('product_id[]', product.productId || '');
+      formData.append('product_name[]', product.name);
+      formData.append('product_category[]', product.category);
+      formData.append('quantity[]', product.quantity);
+      formData.append('purchase_price[]', product.costPrice);
+      formData.append('selling_price[]', product.price);
+      formData.append('estimated_days[]', product.eta);
+      formData.append('product_sku[]', '');
+      
+      if (product.imageFile) {
+        formData.append('product_image[]', product.imageFile);
+      }
+    });
+
+    $.ajax({
+      url: "{% url 'admin_purchase_add' %}",
+      type: 'POST',
+      data: formData,
+      processData: false,
+      contentType: false,
+      headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+      success: function(response) {
+        Swal.fire({
+          icon: 'success',
+          title: 'Success',
+          text: 'Purchase order saved',
+          timer: 2000,
+          showConfirmButton: false
+        }).then(() => {
+          window.location.href = "{% url 'admin_purchases_list' %}";
+        });
+      },
+      error: function(xhr) {
+        $btn.prop('disabled', false).text('Save Purchase Order');
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'Failed to save. Try again.'
+        });
+      }
+    });
+  });
+});
+</script>
+{% endblock %}

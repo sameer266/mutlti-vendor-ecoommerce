@@ -1,8 +1,6 @@
 {% extends 'dashboard/components/base.html' %}
 {% load static %}
 
-
-
 {% block content %}
 <div class="bg-white rounded-xl shadow p-6">
   <!-- Header -->
@@ -20,7 +18,7 @@
     </div>
 
     <a href="{% url 'admin_orders_list' %}"
-       class="inline-flex items-center gap-2 bg-blue-600 border border-gray-200 text-white px-4 py-2 rounded-lg hover:bg-blue-500 transition">
+       class="inline-flex items-center gap-2 bg-gray-900 hover:bg-gray-800 border border-gray-200 text-white px-4 py-2 rounded-lg transition">
       <i class="fa-solid fa-arrow-left"></i> Back to Orders
     </a>
   </div>
@@ -31,7 +29,6 @@
       <thead class="bg-gray-100">
         <tr>
           <th class="px-4 py-3 text-left">Invoice #</th>
-          <th class="px-4 py-3 text-left">Vendor</th>
           <th class="px-4 py-3 text-left">Customer</th>
           <th class="px-4 py-3 text-left">Subtotal</th>
           <th class="px-4 py-3 text-left">Tax</th>
@@ -45,11 +42,6 @@
         {% for invoice in invoices %}
         <tr class="hover:bg-gray-50">
           <td class="px-4 py-3 font-medium">{{ invoice.invoice_number }}</td>
-          
-          <td class="px-4 py-3">
-            {{ invoice.vendor.shop_name }}<br>
-            <span class="text-xs text-gray-500">{{ invoice.vendor.email }}</span>
-          </td>
 
           <td class="px-4 py-3">
             {{ invoice.customer.get_full_name }}<br>
@@ -81,7 +73,7 @@
         </tr>
         {% empty %}
         <tr>
-          <td colspan="9" class="text-center text-gray-500 py-6">
+          <td colspan="8" class="text-center text-gray-500 py-6">
             No invoices found for this order.
           </td>
         </tr>
@@ -93,14 +85,12 @@
 {% endblock %}
 
 {% block extra_js %}
-
-
 <script>
   $(document).ready(function () {
     $('#invoiceTable').DataTable({
       responsive: true,
       pageLength: 10,
-      order: [[7, 'desc']], // sort by Date column
+      order: [[6, 'desc']], // sort by Date column
       language: {
         search: "_INPUT_",
         searchPlaceholder: "Search invoices...",
@@ -109,7 +99,7 @@
         zeroRecords: "No matching invoices found"
       },
       columnDefs: [
-        { orderable: false, targets: [8] } // disable sorting on Actions
+        { orderable: false, targets: [7] } // disable sorting on Actions
       ]
     });
   });

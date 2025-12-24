@@ -1,0 +1,64 @@
+{% extends 'dashboard/components/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="bg-white rounded-xl shadow p-6">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-semibold text-gray-800">Edit Supplier</h1>
+    <a href="{% url 'admin_suppliers_list' %}" class="text-sm text-blue-600 hover:text-blue-800">Back to list</a>
+  </div>
+
+  <form method="post" action="{% url 'admin_supplier_update' supplier.id %}" class="space-y-6">
+    {% csrf_token %}
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div class="md:col-span-2">
+        <label class="block text-sm font-medium text-gray-700">Supplier Name <span class="text-red-500">*</span></label>
+        <input type="text" name="name" value="{{ supplier.name }}" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5" required>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Contact Person</label>
+        <input type="text" name="contact_person" value="{{ supplier.contact_person }}" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5">
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Email</label>
+        <input type="email" name="email" value="{{ supplier.email }}" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5">
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Phone</label>
+        <input type="text" name="phone" value="{{ supplier.phone }}" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5">
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700">City</label>
+        <input type="text" name="city" value="{{ supplier.city }}" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5">
+      </div>
+
+      <div class="md:col-span-2">
+        <label class="block text-sm font-medium text-gray-700">Address</label>
+        <textarea name="address" rows="3" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5">{{ supplier.address }}</textarea>
+      </div>
+
+      <div class="md:col-span-2">
+        <label class="block text-sm font-medium text-gray-700">Notes</label>
+        <textarea name="notes" rows="3" class="mt-1 block w-full border border-gray-300 rounded-lg p-2.5">{{ supplier.notes }}</textarea>
+      </div>
+
+      <div class="md:col-span-2 pt-2">
+        <label class="inline-flex items-center text-sm text-gray-700">
+          <input type="checkbox" name="is_active" class="mr-2" {% if supplier.is_active %}checked{% endif %}>
+          Active Supplier
+        </label>
+      </div>
+    </div>
+
+    <div class="pt-4">
+      <button type="submit" class="bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-lg  transition">Update Supplier</button>
+    </div>
+  </form>
+</div>
+{% endblock %}
+

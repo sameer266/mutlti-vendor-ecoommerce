@@ -1,0 +1,778 @@
+{% extends 'dashboard/components/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto p-4 sm:p-6">
+  <!-- Breadcrumb -->
+  <nav class="mb-6">
+    <ol class="flex items-center space-x-2 text-sm text-gray-500">
+      <li>
+        <a href="" class="hover:text-gray-700">Suppliers</a>
+      </li>
+      <li class="flex items-center">
+        <i class="fas fa-chevron-right mx-2 text-xs"></i>
+      </li>
+      <li class="text-gray-900 font-medium">{{ supplier.name }}</li>
+    </ol>
+  </nav>
+
+  <!-- Header with Stats -->
+  <div class="mb-8">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div>
+        <div class="flex items-center gap-3">
+          <h1 class="text-2xl font-bold text-gray-900">{{ supplier.name }}</h1>
+          {% if supplier.is_active %}
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+              Active
+            </span>
+          {% else %}
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+              Inactive
+            </span>
+          {% endif %}
+        </div>
+        <p class="text-sm text-gray-500 mt-1">
+          Supplier ID: {{ supplier.id }} • Created: {{ supplier.created_at|date:"M d, Y" }}
+        </p>
+      </div>
+      <div class="flex gap-2">
+        {% if stats.outstanding_amount > 0 %}
+        <button id="payOutstandingBtn" 
+           class="px-4 py-2 bg-red-600 text-white rounded-md text-sm font-medium hover:bg-red-700 transition-colors">
+          <i class="fas fa-credit-card mr-1"></i> Pay Outstanding
+        </button>
+        {% endif %}
+        <a href="{% url 'admin_supplier_update' supplier.id %}" 
+           class="px-4 py-2 bg-gray-900 text-white rounded-md text-sm font-medium hover:bg-gray-800 transition-colors">
+          <i class="fas fa-edit mr-1"></i> Edit
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+    <div class="bg-white border border-gray-200 rounded-lg p-5">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm text-gray-500">Total Purchases</p>
+          <p class="text-2xl font-bold text-gray-900 mt-1">{{ stats.purchase_count }}</p>
+        </div>
+        <div class="p-2 bg-gray-100 rounded-lg">
+          <i class="fas fa-shopping-cart text-gray-600"></i>
+        </div>
+      </div>
+    </div>
+    
+    <div class="bg-white border border-gray-200 rounded-lg p-5">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm text-gray-500">Total Amount</p>
+          <p class="text-2xl font-bold text-gray-900 mt-1">Rs. {{ stats.total_amount|floatformat:2 }}</p>
+        </div>
+        <div class="p-2 bg-gray-100 rounded-lg">
+          <i class="fas fa-money-bill-wave text-gray-600"></i>
+        </div>
+      </div>
+    </div>
+    
+    <div class="bg-white border border-gray-200 rounded-lg p-5">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm text-gray-500">Paid Amount</p>
+          <p class="text-2xl font-bold text-green-600 mt-1">Rs. {{ stats.paid_amount|floatformat:2 }}</p>
+        </div>
+        <div class="p-2 bg-green-50 rounded-lg">
+          <i class="fas fa-check-circle text-green-600"></i>
+        </div>
+      </div>
+    </div>
+    
+    <div class="bg-white border border-gray-200 rounded-lg p-5">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm text-gray-500">Outstanding</p>
+          <p class="text-2xl font-bold text-red-600 mt-1" id="totalOutstandingAmount">
+            Rs. {{ stats.outstanding_amount|floatformat:2 }}
+          </p>
+        </div>
+        <div class="p-2 bg-red-50 rounded-lg">
+          <i class="fas fa-exclamation-triangle text-red-600"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Payment Modal -->
+  <div id="paymentModal" class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
+      <div class="px-6 py-4 border-b border-gray-200">
+        <h3 class="text-lg font-medium text-gray-900">Pay Outstanding Amount</h3>
+      </div>
+      <form id="paymentForm" method="post" action="{% url 'admin_supplier_payment_update' %}">
+        {% csrf_token %}
+        <div class="px-6 py-4 space-y-4">
+          <input type="hidden" id="supplierId" name="supplier_id" value="{{ supplier.id }}">
+          <input type="hidden" name="supplier_detail" value="true">
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Supplier</label>
+            <input type="text" value="{{ supplier.name }}" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm bg-gray-50" readonly>
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Total Outstanding</label>
+            <div class="flex items-center">
+              <span class="text-lg font-semibold text-red-600">Rs.</span>
+              <input type="text" id="modalOutstandingAmount" value="{{ stats.outstanding_amount|floatformat:2 }}" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm bg-gray-50 ml-2 font-semibold" readonly>
+            </div>
+          </div>
+          
+          <div>
+            <label for="paymentAmount" class="block text-sm font-medium text-gray-700 mb-1">Payment Amount (Rs.)</label>
+            <input type="number" id="paymentAmount" name="amount" step="0.01" min="0.01" max="{{ stats.outstanding_amount }}" 
+                   class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent" 
+                   required placeholder="Enter amount to pay" value="{{ stats.outstanding_amount|floatformat:2 }}">
+            <p class="text-xs text-gray-500 mt-1">Enter partial or full payment amount</p>
+          </div>
+     
+          
+          <div>
+            <label for="paymentReference" class="block text-sm font-medium text-gray-700 mb-1">Note (Optional)</label>
+            <input type="text" id="paymentReference" name="notes" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent" placeholder="Payment reference or note">
+          </div>
+          
+          <div id="paymentWarning" class="hidden p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+            <p class="text-sm text-yellow-700">
+              <i class="fas fa-exclamation-triangle mr-1"></i>
+              Payment amount exceeds outstanding balance
+            </p>
+          </div>
+        </div>
+        <div class="px-6 py-4 bg-gray-50 rounded-b-lg flex justify-end gap-3">
+          <button type="button" id="cancelPayment" class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+            Cancel
+          </button>
+          <button type="submit" id="submitPayment" class="px-4 py-2 bg-gray-900 text-white rounded-md text-sm font-medium hover:bg-gray-800 transition-colors">
+            Process Payment
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Main Content Grid -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Left Column: Supplier Info -->
+    <div class="lg:col-span-1">
+      <div class="bg-white border border-gray-200 rounded-lg p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">Supplier Information</h2>
+        
+        <div class="space-y-4">
+          {% if supplier.contact_person %}
+          <div>
+            <p class="text-sm text-gray-500">Contact Person</p>
+            <p class="text-sm font-medium text-gray-900">{{ supplier.contact_person }}</p>
+          </div>
+          {% endif %}
+          
+          {% if supplier.email %}
+          <div>
+            <p class="text-sm text-gray-500">Email</p>
+            <p class="text-sm font-medium text-gray-900">{{ supplier.email }}</p>
+          </div>
+          {% endif %}
+          
+          {% if supplier.phone %}
+          <div>
+            <p class="text-sm text-gray-500">Phone</p>
+            <p class="text-sm font-medium text-gray-900">{{ supplier.phone }}</p>
+          </div>
+          {% endif %}
+          
+          {% if supplier.city %}
+          <div>
+            <p class="text-sm text-gray-500">City</p>
+            <p class="text-sm font-medium text-gray-900">{{ supplier.city }}</p>
+          </div>
+          {% endif %}
+          
+          {% if supplier.address %}
+          <div>
+            <p class="text-sm text-gray-500">Address</p>
+            <p class="text-sm font-medium text-gray-900">{{ supplier.address|linebreaksbr }}</p>
+          </div>
+          {% endif %}
+          
+          {% if supplier.notes %}
+          <div>
+            <p class="text-sm text-gray-500">Notes</p>
+            <p class="text-sm text-gray-900">{{ supplier.notes|linebreaksbr }}</p>
+          </div>
+          {% endif %}
+        </div>
+        
+        <div class="mt-6 pt-4 border-t border-gray-200 space-y-2">
+          <a href="{% url 'admin_purchase_add' %}?supplier={{ supplier.id }}" 
+             class="w-full px-4 py-2 bg-gray-900 text-white rounded-md text-sm font-medium hover:bg-gray-800 transition-colors flex items-center justify-center">
+            <i class="fas fa-plus mr-2"></i> Add New Purchase
+          </a>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: Tabs for Purchases, Products, Invoices -->
+    <div class="lg:col-span-2">
+      <!-- Tabs -->
+      <div class="mb-4">
+        <div class="border-b border-gray-200">
+          <nav class="-mb-px flex space-x-8">
+            <button id="purchasesTab" class="tab-button border-b-2 border-gray-900 py-3 px-1 text-sm font-medium text-gray-900" data-tab="purchases">
+              Purchases
+            </button>
+            <button id="productsTab" class="tab-button border-b-2 border-transparent py-3 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="products">
+              Products
+            </button>
+            <button id="invoicesTab" class="tab-button border-b-2 border-transparent py-3 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="invoices">
+              Invoices
+            </button>
+          </nav>
+        </div>
+      </div>
+
+      <!-- Tab Content -->
+      <div id="tabContent">
+        <!-- Purchases Tab -->
+        <div id="purchasesContent" class="tab-content">
+          <div class="bg-white border border-gray-200 rounded-lg">
+            <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+              <div>
+                <h2 class="text-lg font-semibold text-gray-900">All Purchases</h2>
+                <p class="text-sm text-gray-500 mt-1">{{ purchases.count }} total purchases</p>
+              </div>
+              <a href="{% url 'admin_purchase_add' %}?supplier={{ supplier.id }}" 
+                 class="px-4 py-2 bg-gray-900 text-white rounded-md text-sm font-medium hover:bg-gray-800 transition-colors">
+                <i class="fas fa-plus mr-1"></i> Add Purchase
+              </a>
+            </div>
+            
+            {% if purchases %}
+            <div class="p-4">
+              <table id="purchasesTable" class="display w-full" style="width:100%">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Invoice No.</th>
+                    <th>Items</th>
+                    <th>Subtotal</th>
+                    <th>Tax</th>
+                    <th>Discount</th>
+                    <th>Total</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for purchase in purchases %}
+                  <tr>
+                    <td>{{ purchase.purchase_date|date:"Y-m-d" }}</td>
+                    <td>{{ purchase.supplier_invoice_number|default:"-" }}</td>
+                    <td>{{ purchase.items.count }}</td>
+                    <td>Rs. {{ purchase.subtotal|floatformat:2 }}</td>
+                    <td>Rs. {{ purchase.tax_amount|floatformat:2 }}</td>
+                    <td>Rs. {{ purchase.discount|floatformat:2 }}</td>
+                    <td>Rs. {{ purchase.total_amount|floatformat:2 }}</td>
+                    <td>
+                      {% if purchase.invoice %}
+                        <span class="status-badge status-{{ purchase.invoice.payment_status }}">
+                          {{ purchase.invoice.payment_status|title }}
+                        </span>
+                      {% else %}
+                        <span class="status-badge status-pending">No Invoice</span>
+                      {% endif %}
+                    </td>
+                    <td>
+                      <div class="flex space-x-2">
+                        
+                        {% if purchase.invoice %}
+                        <a href="{% url 'admin_purchase_invoice_detail' purchase.invoice.invoice_number %}" class="text-blue-600 hover:text-blue-900" title="Invoice">
+                          <i class="fas fa-file-invoice"></i>
+                        </a>
+                        {% endif %}
+                      </div>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            {% else %}
+            <div class="px-6 py-8 text-center">
+              <i class="fas fa-shopping-cart text-gray-400 text-3xl mb-2"></i>
+              <p class="text-sm text-gray-500">No purchases found</p>
+              <a href="{% url 'admin_purchase_add' %}?supplier={{ supplier.id }}" 
+                 class="inline-block mt-2 px-4 py-2 text-sm text-gray-900 hover:text-gray-700 font-medium">
+                <i class="fas fa-plus mr-1"></i> Add first purchase
+              </a>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Products Tab -->
+        <div id="productsContent" class="tab-content hidden">
+          <div class="bg-white border border-gray-200 rounded-lg">
+            <div class="px-6 py-4 border-b border-gray-200">
+              <h2 class="text-lg font-semibold text-gray-900">Supplied Products</h2>
+              <p class="text-sm text-gray-500 mt-1">{{ supplier_products.count }} products supplied</p>
+            </div>
+            
+            {% if supplier_products %}
+            <div class="p-4">
+              <table id="productsTable" class="display w-full" style="width:100%">
+                <thead>
+                  <tr>
+                    <th>Product</th>
+                    <th>SKU</th>
+                    <th>Price</th>
+                    <th>Cost Price</th>
+                    <th>Discount %</th>
+                    <th>Tax %</th>
+                    <th>Stock</th>
+                    <th>Last Purchase</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for product in supplier_products %}
+                  <tr>
+                    <td>
+                      <div class="flex items-center">
+                        {% if product.main_image %}
+                        <div class="h-8 w-8 rounded overflow-hidden mr-3 bg-gray-100">
+                          <img src="{{ product.main_image.url }}" alt="{{ product.name }}" class="h-full w-full object-cover">
+                        </div>
+                        {% endif %}
+                        <div>
+                          <p class="text-sm font-medium text-gray-900">{{ product.name }}</p>
+                          <p class="text-xs text-gray-500">{{ product.category.name|default:"-" }}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td>{{ product.sku|default:"-" }}</td>
+                    <td>Rs. {{ product.price|floatformat:2 }}</td>
+                    <td>
+                      {% if product.cost_price %}
+                        Rs. {{ product.cost_price|floatformat:2 }}
+                        {% if product.price > product.cost_price %}
+                          <span class="text-xs text-green-600 ml-1">(+{{ product.discount_percentage }}%)</span>
+                        {% endif %}
+                      {% else %}
+                        -
+                      {% endif %}
+                    </td>
+                    <td>{{ product.discount_percentage }}%</td>
+                    <td>
+                      {% comment %} Get global tax setting - you might need to pass this in context {% endcomment %}
+                      {% if tax_setting %}
+                        {{ tax_setting.tax|default:"0.00" }}%
+                      {% else %}
+                        0.00%
+                      {% endif %}
+                    </td>
+                    <td>
+                      <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium 
+                        {% if product.stock <= product.low_stock_alert %}bg-red-100 text-red-800 border border-red-200
+                        {% elif product.stock == 0 %}bg-gray-100 text-gray-800 border border-gray-200
+                        {% else %}bg-green-100 text-green-800 border border-green-200{% endif %}">
+                        {{ product.stock }}
+                      </span>
+                    </td>
+                    <td>
+                      {% if product.last_purchase_date %}
+                        {{ product.last_purchase_date|date:"M d, Y" }}
+                      {% else %}
+                        <span class="text-gray-400">-</span>
+                      {% endif %}
+                    </td>
+                    <td>
+                      {% if product.is_active %}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                          Active
+                        </span>
+                      {% else %}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                          Inactive
+                        </span>
+                      {% endif %}
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            {% else %}
+            <div class="px-6 py-8 text-center">
+              <i class="fas fa-box-open text-gray-400 text-3xl mb-2"></i>
+              <p class="text-sm text-gray-500">No products supplied yet</p>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Invoices Tab -->
+        <div id="invoicesContent" class="tab-content hidden">
+          <div class="bg-white border border-gray-200 rounded-lg">
+            <div class="px-6 py-4 border-b border-gray-200">
+              <h2 class="text-lg font-semibold text-gray-900">All Invoices</h2>
+              <p class="text-sm text-gray-500 mt-1">
+                <!-- Manual calculation of outstanding invoices -->
+                {% with outstanding_count=0 %}
+                  {% for invoice in invoices %}
+                    {% if invoice.payment_status == 'pending' or invoice.payment_status == 'partial' or invoice.payment_status == 'overdue' %}
+                      {% with outstanding_count=outstanding_count|add:1 %}
+                      {% endwith %}
+                    {% endif %}
+                  {% endfor %}
+                  {{ outstanding_count }} outstanding • {{ invoices.count }} total
+                {% endwith %}
+              </p>
+            </div>
+            
+            {% if invoices %}
+            <div class="p-4">
+              <table id="invoicesTable" class="display w-full" style="width:100%">
+                <thead>
+                  <tr>
+                    <th>Invoice No.</th>
+                    <th>Date</th>
+                    <th>Supplier Invoice</th>
+                    <th>Subtotal</th>
+                    <th>Tax</th>
+                    <th>Discount</th>
+                    <th>Total</th>
+                    <th>Status</th>
+                    <th>Payment Date</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for invoice in invoices %}
+                  <tr>
+                    <td>{{ invoice.invoice_number }}</td>
+                    <td>{{ invoice.purchase_date|date:"Y-m-d" }}</td>
+                    <td>{{ invoice.supplier_invoice_number|default:"-" }}</td>
+                    <td>Rs. {{ invoice.subtotal|floatformat:2 }}</td>
+                    <td>Rs. {{ invoice.tax_amount|floatformat:2 }}</td>
+                    <td>Rs. {{ invoice.discount|floatformat:2 }}</td>
+                    <td>Rs. {{ invoice.total_amount|floatformat:2 }}</td>
+                    <td>
+                      <span class="status-badge status-{{ invoice.payment_status }}">
+                        {{ invoice.payment_status|title }}
+                      </span>
+                    </td>
+                    <td>
+                      {% if invoice.payment_date %}
+                        {{ invoice.payment_date|date:"Y-m-d" }}
+                      {% else %}
+                        <span class="text-gray-400">-</span>
+                      {% endif %}
+                    </td>
+                    <td>
+                      <div class="flex space-x-2">
+                        <a href="{% url 'admin_purchase_invoice_detail' invoice.invoice_number %}" class="text-blue-600 hover:text-blue-900" title="View">
+                          <i class="fas fa-eye"></i>
+                        </a>
+                        {% if invoice.payment_status == 'pending' or invoice.payment_status == 'partial' or invoice.payment_status == 'overdue' %}
+                        <button class="pay-invoice-btn text-green-600 hover:text-green-900" 
+                                data-invoice-id="{{ invoice.id }}"
+                                data-invoice-number="{{ invoice.invoice_number }}"
+                                data-outstanding="{{ invoice.total_amount }}"
+                                title="Pay Invoice">
+                          <i class="fas fa-credit-card"></i>
+                        </button>
+                        {% endif %}
+                      </div>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            {% else %}
+            <div class="px-6 py-8 text-center">
+              <i class="fas fa-file-invoice-dollar text-gray-400 text-3xl mb-2"></i>
+              <p class="text-sm text-gray-500">No invoices found</p>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* Status badges */
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.5rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    line-height: 1;
+  }
+  
+  .status-paid {
+    background-color: #d1fae5;
+    color: #065f46;
+    border: 1px solid #a7f3d0;
+  }
+  
+  .status-pending {
+    background-color: #fef3c7;
+    color: #92400e;
+    border: 1px solid #fde68a;
+  }
+  
+  .status-partial {
+    background-color: #fef3c7;
+    color: #92400e;
+    border: 1px solid #fde68a;
+  }
+  
+  .status-overdue {
+    background-color: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+  }
+  
+  /* DataTables customization */
+  .dataTables_wrapper {
+    padding: 0 !important;
+  }
+  
+  .dataTables_length select {
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    padding: 0.25rem 2rem 0.25rem 0.5rem;
+  }
+  
+  .dataTables_filter input {
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    padding: 0.375rem 0.75rem;
+  }
+  
+  /* Tab styles */
+  .tab-button.active {
+    border-bottom-color: #111827;
+    color: #111827;
+  }
+  
+  .tab-content {
+    animation: fadeIn 0.3s ease-in-out;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+  // Calculate outstanding invoices count for the summary
+  let outstandingCount = 0;
+  $('.pay-invoice-btn').each(function() {
+    outstandingCount++;
+  });
+  
+  // Update the summary text if needed
+  const summaryText = `${outstandingCount} outstanding • ${$('#invoicesTable tbody tr').length} total`;
+  $('#invoicesTab').siblings().first().find('.text-sm').text(summaryText);
+
+  // Initialize DataTables
+  const purchasesTable = $('#purchasesTable').DataTable({
+    pageLength: 10,
+    lengthChange: true,
+    searching: true,
+    ordering: true,
+    responsive: true,
+    language: {
+      search: "_INPUT_",
+      searchPlaceholder: "Search purchases..."
+    },
+    columnDefs: [
+      { orderable: false, targets: -1 } // Actions column
+    ]
+  });
+
+  const productsTable = $('#productsTable').DataTable({
+    pageLength: 10,
+    lengthChange: true,
+    searching: true,
+    ordering: true,
+    responsive: true,
+    language: {
+      search: "_INPUT_",
+      searchPlaceholder: "Search products..."
+    }
+  });
+
+  const invoicesTable = $('#invoicesTable').DataTable({
+    pageLength: 10,
+    lengthChange: true,
+    searching: true,
+    ordering: true,
+    responsive: true,
+    language: {
+      search: "_INPUT_",
+      searchPlaceholder: "Search invoices..."
+    },
+    columnDefs: [
+      { orderable: false, targets: -1 } // Actions column
+    ]
+  });
+
+  // Tab functionality
+  $('.tab-button').on('click', function() {
+    const tabId = $(this).data('tab');
+    
+    // Update active tab
+    $('.tab-button').removeClass('active').addClass('border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300');
+    $('.tab-button').removeClass('border-gray-900 text-gray-900');
+    $(this).addClass('active border-gray-900 text-gray-900');
+    $(this).removeClass('border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300');
+    
+    // Show active content
+    $('.tab-content').addClass('hidden');
+    $(`#${tabId}Content`).removeClass('hidden');
+    
+    // Trigger DataTables resize
+    setTimeout(() => {
+      if (tabId === 'purchases') purchasesTable.columns.adjust().responsive.recalc();
+      if (tabId === 'products') productsTable.columns.adjust().responsive.recalc();
+      if (tabId === 'invoices') invoicesTable.columns.adjust().responsive.recalc();
+    }, 100);
+  });
+
+  // Payment modal functionality
+  const paymentModal = $('#paymentModal');
+  const paymentForm = $('#paymentForm');
+  const paymentAmount = $('#paymentAmount');
+  const modalOutstandingAmount = $('#modalOutstandingAmount');
+  const paymentWarning = $('#paymentWarning');
+  const submitPayment = $('#submitPayment');
+
+  // Open payment modal for overall outstanding
+  $('#payOutstandingBtn').on('click', function() {
+    const outstandingAmount = parseFloat('{{ stats.outstanding_amount|floatformat:2 }}');
+    modalOutstandingAmount.val(outstandingAmount.toFixed(2));
+    paymentAmount.attr('max', outstandingAmount);
+    paymentAmount.val(outstandingAmount.toFixed(2));
+    paymentModal.removeClass('hidden');
+    // Remove any existing invoice_id field
+    $('input[name="invoice_id"]').remove();
+  });
+
+  // Open payment modal for specific invoice
+  $(document).on('click', '.pay-invoice-btn', function() {
+    const invoiceId = $(this).data('invoice-id');
+    const invoiceNumber = $(this).data('invoice-number');
+    const outstanding = parseFloat($(this).data('outstanding'));
+    
+    // Set hidden field for invoice-specific payment
+    $('input[name="invoice_id"]').remove(); // Remove any existing
+    paymentForm.append(`<input type="hidden" name="invoice_id" value="${invoiceId}">`);
+    modalOutstandingAmount.val(outstanding.toFixed(2));
+    paymentAmount.attr('max', outstanding);
+    paymentAmount.val(outstanding.toFixed(2));
+    paymentModal.removeClass('hidden');
+  });
+
+  // Close modal
+  $('#cancelPayment').on('click', function() {
+    paymentModal.addClass('hidden');
+    paymentForm[0].reset();
+    $('input[name="invoice_id"]').remove();
+  });
+
+  // Close modal when clicking outside
+  paymentModal.on('click', function(e) {
+    if (e.target === this) {
+      paymentModal.addClass('hidden');
+      paymentForm[0].reset();
+      $('input[name="invoice_id"]').remove();
+    }
+  });
+
+  // Validate payment amount
+  paymentAmount.on('input', function() {
+    const maxAmount = parseFloat(modalOutstandingAmount.val());
+    const enteredAmount = parseFloat(this.value) || 0;
+    
+    if (enteredAmount > maxAmount) {
+      paymentWarning.removeClass('hidden');
+      submitPayment.prop('disabled', true);
+    } else {
+      paymentWarning.addClass('hidden');
+      submitPayment.prop('disabled', false);
+    }
+  });
+
+  // Form submission
+  paymentForm.on('submit', function(e) {
+    const amount = parseFloat(paymentAmount.val());
+    const maxAmount = parseFloat(modalOutstandingAmount.val());
+    
+    if (amount <= 0) {
+      e.preventDefault();
+      alert('Please enter a valid payment amount');
+      return;
+    }
+    
+    if (amount > maxAmount) {
+      e.preventDefault();
+      alert('Payment amount cannot exceed outstanding amount');
+      return;
+    }
+    
+    // Show loading state
+    submitPayment.html('<i class="fas fa-spinner fa-spin mr-1"></i> Processing...');
+    submitPayment.prop('disabled', true);
+  });
+
+  // Auto-focus payment amount when modal opens
+  paymentModal.on('shown', function() {
+    paymentAmount.focus();
+  });
+
+  // Keyboard shortcuts
+  $(document).on('keydown', function(e) {
+    // Escape closes modal
+    if (e.key === 'Escape' && !paymentModal.hasClass('hidden')) {
+      paymentModal.addClass('hidden');
+      paymentForm[0].reset();
+      $('input[name="invoice_id"]').remove();
+    }
+    
+    // Ctrl+P opens payment modal if there's outstanding
+    if (e.ctrlKey && e.key === 'p' && {{ stats.outstanding_amount }} > 0) {
+      e.preventDefault();
+      $('#payOutstandingBtn').click();
+    }
+  });
+
+  // Initialize first tab as active
+  $('#purchasesTab').addClass('active border-gray-900 text-gray-900');
+});
+</script>
+{% endblock %}

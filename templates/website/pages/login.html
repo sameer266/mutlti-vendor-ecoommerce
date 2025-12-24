@@ -1,68 +1,132 @@
-{% extends 'website/components/base.html' %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login - Online Store</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- SweetAlert2 -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 
-{% block title %}Login{% endblock %}
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
 
-{% block content %}
-<div class="min-h-screen flex items-center justify-center bg-[var(--bg-light)] py-12 px-4">
-  <div class="max-w-md w-full bg-white rounded-lg shadow-md p-8 space-y-6">
-    
-    <!-- Title -->
-    <div class="text-center">
-      <h2 class="text-2xl font-bold text-[var(--text-primary)]">Welcome Back</h2>
-      <p class="text-gray-500 mt-1">Sign in to your account</p>
+    body {
+      background: #000000;
+      min-height: 100vh;
+    }
+
+    /* Premium Card */
+    .premium-card {
+      background: #ffffff;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Subtle fade-in */
+    .fade-in {
+      animation: fadeIn 0.8s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Minimal focus effect */
+    .minimal-input:focus {
+      border-color: #3b82f6;
+    }
+
+    /* Line accent */
+    .line-accent {
+      position: relative;
+    }
+
+    .line-accent::after {
+      content: '';
+      position: absolute;
+      bottom: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 40px;
+      height: 2px;
+      background: linear-gradient(to right, #000000, #3b82f6);
+    }
+  </style>
+
+</head>
+<body class="min-h-screen flex items-center justify-center py-12 px-4">
+
+  <div class="max-w-sm w-full premium-card rounded-none p-12 space-y-10 fade-in">
+
+    <!-- Logo & Title -->
+    <div class="text-center space-y-6">
+      <div class="inline-block">
+        <svg class="w-8 h-8 text-black mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+        </svg>
+      </div>
+      <div>
+        <h1 class="text-2xl font-light tracking-wide text-gray-900 line-accent pb-3"> CHANCE ONLINE STORE</h1>
+        <p class="text-xs tracking-widest text-gray-500 uppercase mt-6">Admin Panel</p>
+      </div>
     </div>
 
     <!-- Login Form -->
-    <form method="POST" action="" class="space-y-4">
+    <form action="{% url 'login_page' %}" method="POST" class="space-y-6 mt-12">
       {% csrf_token %}
       
+  
+
       <!-- Email -->
       <div>
-        <label for="email" class="block text-sm font-semibold text-gray-700">Email</label>
-        <input type="email" name="email" id="email" required
-               class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:ring-[var(--primary)] focus:border-[var(--primary)] sm:text-sm">
+        <input type="email" id="email" name="email" required
+          class="minimal-input block w-full px-0 py-3 border-0 border-b border-gray-200 bg-transparent text-gray-900 text-sm placeholder-gray-400 focus:border-blue-600 focus:ring-0 outline-none transition-colors duration-300"
+          placeholder="Email Address">
       </div>
 
       <!-- Password -->
       <div>
-        <label for="password" class="block text-sm font-semibold text-gray-700">Password</label>
-        <input type="password" name="password" id="password" required
-               class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:ring-[var(--primary)] focus:border-[var(--primary)] sm:text-sm">
-      </div>
-
-      <!-- Remember Me + Forgot -->
-      <div class="flex items-center justify-between text-sm">
-        <label class="flex items-center space-x-2 text-gray-600">
-          <input type="checkbox" name="remember" class="h-4 w-4 text-[var(--primary)] focus:ring-[var(--primary)] border-gray-300 rounded">
-          <span>Remember me</span>
-        </label>
-        <a href="{% url 'forget_password'%}" class="text-[var(--primary)] hover:text-[var(--primary-dark)] font-semibold">Forgot password?</a>
+        <input type="password" id="password" name="password" required
+          class="minimal-input block w-full px-0 py-3 border-0 border-b border-gray-200 bg-transparent text-gray-900 text-sm placeholder-gray-400 focus:border-blue-600 focus:ring-0 outline-none transition-colors duration-300"
+          placeholder="Password">
       </div>
 
       <!-- Submit Button -->
-      <div>
+      <div class="pt-4">
         <button type="submit"
-                class="w-full py-2 px-4 bg-[var(--bg-brown)] text-white font-semibold rounded-lg hover:bg-[var(--primary-dark)] cursor-pointer transition">
+          class="w-full py-4 px-4 bg-black text-white text-xs tracking-widest font-medium uppercase hover:bg-gray-900 transition duration-500 border border-black hover:border-blue-600">
           Sign In
         </button>
       </div>
     </form>
 
-    <!-- Divider -->
-    <div class="flex items-center my-4">
-      <hr class="flex-grow border-gray-300">
-      <span class="mx-2 text-gray-400 text-sm">OR</span>
-      <hr class="flex-grow border-gray-300">
-    </div>
-
-
-
-    <!-- Register Link -->
-    <p class="text-center text-gray-500 text-sm mt-4">
-      Don't have an account? <a href="{% url 'signup_page'%}" class="text-[var(--primary)] font-semibold hover:text-[var(--primary-dark)]">Sign Up</a>
-    </p>
 
   </div>
-</div>
 
-{% endblock %}
+  <!-- SweetAlert2 Message Script -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      {% if messages %}
+        {% for message in messages %}
+          Swal.fire({
+            icon: "{% if message.tags == 'error' %}error{% else %}success{% endif %}",
+            title: "{{ message|escapejs }}",
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true
+          });
+        {% endfor %}
+      {% endif %}
+    });
+  </script>
+
+</body>
+</html>

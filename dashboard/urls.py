@@ -11,28 +11,12 @@ urlpatterns = [
     path('users/<int:pk>/update/', views.admin_user_update, name='admin_user_update'),
     path('users/<int:pk>/delete/', views.admin_user_delete, name='admin_user_delete'),
 
-    # Vendor Management
-    path('vendors/', views.admin_vendors_list, name='admin_vendors_list'),
-    path('vendors/pending-kyc/', views.admin_vendors_pending_kyc, name='admin_vendors_pending_kyc'),
-    path('vendors/verified-kyc/', views.admin_vendors_verified_kyc, name='admin_vendors_verified_kyc'),
-    path('vendors/add/', views.admin_vendor_add, name='admin_vendor_add'),
-    path('vendors/<int:pk>/update/', views.admin_vendor_update, name='admin_vendor_update'),
-    path('vendors/<int:pk>/delete/', views.admin_vendor_delete, name='admin_vendor_delete'),
-    path('vendors/<int:pk>/status/', views.admin_vendor_change_status, name='admin_vendor_change_status'),
 
     
     # Payment Management
     path('payments/', views.admin_payments_overview, name='admin_payments_overview'),
-    path('payments/vendor/<int:vendor_id>/', views.admin_vendor_payments_detail, name='admin_vendor_payments_detail'),
-    
-    # Commission
-    path('admin/api/commission/update/', views.admin_update_commission, name='admin-update-commission'),
+ 
 
-    # Payout Requests
-    path('payout-requests/', views.admin_payout_requests_list, name='admin_payout_requests_list'),
-    path('payout-requests/pending/', views.admin_payout_requests_pending, name='admin_payout_requests_pending'),
-    path('payout-requests/rejected/', views.admin_payout_requests_rejected, name='admin_payout_requests_rejected'),
-    path('payout-requests/<int:pk>/status/', views.admin_payout_request_change_status, name='admin_payout_request_change_status'),
 
     # Product Management
     path('products/', views.admin_products_list, name='admin_products_list'),
@@ -50,10 +34,12 @@ urlpatterns = [
 
     # Order Management
     path('orders/', views.admin_orders_list, name='admin_orders_list'),
+    path('odrer-details/<str:order_number>/',views.admin_order_details,name='admin_order_details'),
     path('orders/pending/', views.admin_orders_pending, name='admin_orders_pending'),
     path('orders/delivered/', views.admin_orders_delivered, name='admin_orders_delivered'),
     path('orders/<str:order_number>/status/', views.admin_order_change_status, name='admin_order_change_status'),
     path('orders/<str:order_number>/items/', views.admin_order_items_json, name='admin_order_items_json'),
+    path('api/orders/<str:order_number>/payment-status/', views.api_update_order_payment_status, name='api_update_order_payment_status'),
     path('orders/<str:order_number>/delete/', views.admin_order_delete, name='admin_order_delete'),
     
     path('orders/<str:order_number>/invoice/',views.admin_order_invoice_view,name="admin_orders_invoice_list"),
@@ -67,22 +53,12 @@ urlpatterns = [
     path('reviews/<int:pk>/update/', views.admin_review_update, name='admin_review_update'),
     path('reviews/<int:pk>/delete/', views.admin_review_delete, name='admin_review_delete'),
 
-    # Contact Management
-    path('contacts/', views.admin_contacts_list, name='admin_contacts_list'),
-    path('contacts/<int:pk>/delete/', views.admin_contact_delete, name='admin_contact_delete'),
-    path('contacts/unread/',views.admin_contacts_unread,name="admin_contact_unread"),
-    path('contacts/read/', views.admin_read_contact, name='admin_read_contacts'),
-
-    # Shipping Cost Management
-    path('shipping-cost/', views.shipping_cost_view,name="admin_shipping_cost"),
-    path('shipping-cost/edit/<int:pk>/',views.shipping_cost_edit,name="admin_shipping_update"),
+ 
+    # Tax Settings (replaced previous Shipping Cost global setting)
+    path('tax-settings/', views.tax_settings_view, name="admin_tax_settings"),
+    path('tax-settings/edit/<int:pk>/', views.tax_settings_edit, name="admin_tax_settings_update"),
     
     
-    # Newsletter Management
-    path('newsletter/', views.admin_newsletter_list, name='admin_newsletter_list'),
-    path('newsletter/add/', views.admin_newsletter_add, name='admin_newsletter_add'),
-    path('newsletter/<int:pk>/update/', views.admin_newsletter_update, name='admin_newsletter_update'),
-    path('newsletter/<int:pk>/delete/', views.admin_newsletter_delete, name='admin_newsletter_delete'),
 
     # Slider Management
     path('sliders/', views.admin_sliders_list, name='admin_sliders_list'),
@@ -122,46 +98,52 @@ urlpatterns = [
     # Change Password
     path('change-password/',views.change_password_view,name="change_password"),
     
+    # Supplier Management
+    path('suppliers/', views.admin_suppliers_list, name='admin_suppliers_list'),
+    path('suppliers/add/', views.admin_supplier_add, name='admin_supplier_add'),
+    path('suppliers/<int:pk>/update/', views.admin_supplier_update, name='admin_supplier_update'),
+    path('suppliers/<int:pk>/', views.admin_supplier_detail, name='admin_supplier_detail'),
+    path('suppliers/<int:pk>/delete/', views.admin_supplier_delete, name='admin_supplier_delete'),
+    path('supplier/update-payment/',views.admin_supplier_payments_update,name="admin_supplier_payment_update"),
     
-    # =================================
-    #   Vendor
-    # =================================
-    path('vendor-dashboard/', views.vendor_dashboard, name='vendor_dashboard'),
-    path('vendor/products/', views.vendor_products_list, name='vendor_products_list'),
-    path('vendor/products/add/', views.vendor_product_add, name='vendor_product_add'),
-    path('vendor/products/<int:pk>/update/', views.vendor_product_update, name='vendor_product_update'),
-    path('vendor/products/<int:pk>/delete/', views.vendor_product_delete, name='vendor_product_delete'),
-    path('vendor/products/low-stock/', views.vendor_products_low_stock, name='vendor_products_low_stock'),
+    # Purchase Management
+    path('purchases/', views.admin_purchases_list, name='admin_purchases_list'),
+    path('purchases/add/', views.admin_purchase_add, name='admin_purchase_add'),
+    path('purchases/<int:pk>/update/', views.admin_purchase_update, name='admin_purchase_update'),
+    path('purchases/<int:pk>/delete/', views.admin_purchase_delete, name='admin_purchase_delete'),
     
-    path('vendor/orders/', views.vendor_orders_list, name='vendor_orders_list'),
-    path('vendor/orders/pending/', views.vendor_orders_pending, name='vendor_orders_pending'),
-    path('vendor/orders/delivered/', views.vendor_orders_delivered, name='vendor_orders_delivered'),
-    path('vendor/api/orders/<str:order_number>/update-estimated-date/', views.vendor_update_estimated_date, name='vendor_update_estimated_date'),
-    path('vendor/orders/<str:order_number>/invoice/',views.vendor_order_invoice_view,name="vendor_orders_invoice_list"),
-    
-    
-    
-    
-    path('vendor/payout-lists/', views.vendor_payouts_list, name='vendor_payout_list'),
-    path('vendor/payout-requests/add/', views.vendor_payout_request_add, name='vendor_payout_requests_add'),
-    path('vendor/payouts/pending/', views.pending_payout_requests, name='vendor_pending_payout'),
-    path('vendor/payouts/rejected/', views.rejected_payout_requests, name='vendor_rejected_payout'),
+    # Purchase Invoice Management
+    path('purchase-invoices/', views.admin_purchase_invoices_list, name='admin_purchase_invoices_list'),
+    path('purchase-invoices/<str:invoice_number>/', views.admin_purchase_invoice_detail, name='admin_purchase_invoice_detail'),
+    path('purchase-invoices/<str:invoice_number>/update-payment/', views.admin_purchase_invoice_update_payment, name='admin_purchase_invoice_update_payment'),
+    path('api/purchase-invoices/<str:invoice_number>/payment-status/', views.api_update_purchase_invoice_payment_status, name='api_update_purchase_invoice_payment_status'),
     
     
+    # Sales Management (Physical/Offline)
+    path('sales/', views.admin_sales_list, name='admin_sales_list'),
+    path('sales/add/', views.admin_sales_add, name='admin_sales_add'),
+    path('sales/<int:pk>/edit/', views.admin_sales_edit, name='admin_sales_edit'),
+    path('sales/<int:pk>/', views.admin_sales_detail, name='admin_sales_detail'),
+    path('sales/<int:pk>/delete/', views.admin_sales_delete, name='admin_sales_delete'),
+    path('sales/customers/', views.admin_sales_customers, name='admin_sales_customers'),
+    path('sales/customer/<int:pk>/', views.admin_sales_customer_detail, name='admin_sales_customer_detail'),
+    path('sales/customer/<int:pk>/payment/', views.admin_sales_customer_payment, name='admin_sales_customer_payment'),
+    path('sales/<int:pk>/payment/', views.admin_sales_detail_payment, name='admin_sales_detail_payment'),
+    
+    # Services Module
+    path('services/', views.admin_services_list, name='admin_services_list'),
+    path('services/add/', views.admin_service_add, name='admin_service_add'),
+    path('services/<int:pk>/update/', views.admin_service_update, name='admin_service_update'),
+    path('services/<int:pk>/delete/', views.admin_service_delete, name='admin_service_delete'),
 
-    path('vendor/wallet/', views.vendor_wallet_view, name='vendor_wallet_view'),
-    
-    
-    # Review
-    path('vendor/reviews/', views.vendor_reviews_list, name='vendor_reviews_list'),
+    # Service Bookings (admin)
+    path('service-bookings/', views.admin_service_bookings_list, name='admin_service_bookings_list'),
+    path('service-bookings/add/', views.admin_service_booking_add, name='admin_service_booking_add'),
+    path('service-bookings/<int:pk>/update/', views.admin_service_booking_update, name='admin_service_booking_update'),
+    path('service-bookings/<int:pk>/delete/', views.admin_service_booking_delete, name='admin_service_booking_delete'),
 
-    # Invoice
-    path('vendor/invoice/',views.vendor_invoices,name="vendor_invoices_list"),
-    path('vendor/invoice-details/<str:invoice_number>/',views.vendor_invoice_detail,name='vendor_invoice_detail'),
-    
-    #Vendor Profile 
-    path('vendor/profile/',views.vendor_profile_view,name='vendor_profile'),
-    path('vendor/profile/edit/', views.vendor_profile_edit_view, name='vendor_edit_profile'),
+    # Customer booking (public/simple)
+    path('services/book/', views.customer_book_service, name='customer_book_service'),
 ]
     
     
